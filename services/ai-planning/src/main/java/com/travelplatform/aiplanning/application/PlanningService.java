@@ -6,6 +6,7 @@ import com.travelplatform.aiplanning.domain.PlanningTaskRepository;
 import com.travelplatform.aiplanning.domain.PlanningTaskStateMachine;
 import com.travelplatform.aiplanning.domain.PlanningTaskStatus;
 import com.travelplatform.aiplanning.infrastructure.ItineraryClient;
+import com.travelplatform.aiplanning.infrastructure.InventoryClient;
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,7 +19,9 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -29,6 +32,7 @@ public class PlanningService {
     private final PlanningTaskRepository repository;
     private final PlannerClient planner;
     private final ItineraryClient itineraryClient;
+    private final RecommendationTool recommendationTool;
     private final ObjectMapper objectMapper;
     private final PlanningTaskStateMachine stateMachine = new PlanningTaskStateMachine();
     private final TaskExecutor executor;
@@ -36,11 +40,13 @@ public class PlanningService {
     public PlanningService(PlanningTaskRepository repository,
                            PlannerClient planner,
                            ItineraryClient itineraryClient,
+                           RecommendationTool recommendationTool,
                            ObjectMapper objectMapper,
                            TaskExecutor executor) {
         this.repository = repository;
         this.planner = planner;
         this.itineraryClient = itineraryClient;
+        this.recommendationTool = recommendationTool;
         this.objectMapper = objectMapper;
         this.executor = executor;
     }
@@ -85,9 +91,12 @@ public class PlanningService {
         task.setUpdatedAt(Instant.now());
         repository.save(task);
         try {
-            String result = planner.generate(task);
+            List<InventoryClient.Candidate> candidates =
+                    recommendationTool.fetchCandidates(task.getDestination(), LocalDate.now());
+            String candidateContext = recommendationTool.buildCandidateContext(candidates);
+            String result = planner.generate(task, candidateContext);
             task.setResult(result);
-            materializeItinerary(task, result);
+            materializeItinerary(task, result, candidates);
             stateMachine.succeed(task);
         } catch (Exception e) {
             stateMachine.fail(task, e.getMessage());
@@ -96,8 +105,16 @@ public class PlanningService {
         repository.save(task);
     }
 
-    private void materializeItinerary(PlanningTask task, String resultJson) {
+    private void materializeItinerary(PlanningTask task, String resultJson,
+                                      List<InventoryClient.Candidate> candidates) {
         try {
+            Set<String> validPairs = new HashSet<>();
+            for (InventoryClient.Candidate candidate : candidates) {
+                for (InventoryClient.Spec spec : candidate.specs()) {
+                    validPairs.add(candidate.resourceId() + "|" + spec.specId());
+                }
+            }
+
             JsonNode root = objectMapper.readTree(resultJson);
             String destination = root.hasNonNull("destination")
                     ? root.get("destination").asText()
@@ -118,6 +135,36 @@ public class PlanningService {
                         null,
                         null,
                         null,
+                        "AI"));
+            }
+
+            for (JsonNode hotel : root.path("hotels")) {
+                String resourceId = hotel.path("resourceId").asText(null);
+                String specId = hotel.path("specId").asText(null);
+                boolean valid = resourceId != null && specId != null
+                        && validPairs.contains(resourceId + "|" + specId);
+                int hotelDayIndex = hotel.path("dayIndex").asInt(1);
+                items.add(new ItineraryClient.Item(
+                        startDate.plusDays(Math.max(0, hotelDayIndex - 1)),
+                        hotel.path("name").asText("酒店"),
+                        valid ? "HOTEL" : null,
+                        valid ? resourceId : null,
+                        valid ? specId : null,
+                        "AI"));
+            }
+
+            for (JsonNode attraction : root.path("attractions")) {
+                String resourceId = attraction.path("resourceId").asText(null);
+                String specId = attraction.path("specId").asText(null);
+                boolean valid = resourceId != null && specId != null
+                        && validPairs.contains(resourceId + "|" + specId);
+                int attractionDayIndex = attraction.path("dayIndex").asInt(1);
+                items.add(new ItineraryClient.Item(
+                        startDate.plusDays(Math.max(0, attractionDayIndex - 1)),
+                        attraction.path("name").asText("景点"),
+                        valid ? "ATTRACTION" : null,
+                        valid ? resourceId : null,
+                        valid ? specId : null,
                         "AI"));
             }
 

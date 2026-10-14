@@ -36,10 +36,14 @@ public class DeepSeekPlannerClient implements PlannerClient {
               "partySize": 人数,
               "estimatedBudget": 预算金额,
               "days": [{"day": 1, "arrangements": ["...", "..."]}],
-              "hotels": [{"name": "酒店名"}],
-              "attractions": [{"name": "景点名"}],
+              "hotels": [{"name": "酒店名", "resourceId": "r-xxx", "specId": "s-xxx", "dayIndex": 1}],
+              "attractions": [{"name": "景点名", "resourceId": "r-xxx", "specId": "s-xxx", "dayIndex": 1}],
               "foods": [{"name": "美食名"}]
             }
+            hotels 与 attractions 必须从「候选可订资源清单」中选择，并填写对应的
+            resourceId / specId；dayIndex 表示该资源安排在第几天（从 1 开始）。
+            resourceId / specId 必须逐字符复制候选清单中的值，禁止自行编造；
+            若候选清单没有合适的资源，相应字段返回空字符串 ""。
             """;
 
     private final RestTemplate restTemplate;
@@ -52,7 +56,7 @@ public class DeepSeekPlannerClient implements PlannerClient {
     }
 
     @Override
-    public String generate(PlanningTask task) {
+    public String generate(PlanningTask task, String candidateContext) {
         String userPrompt = "目的地=%s，天数=%d，人数=%d，预算=%d元，偏好=%s"
                 .formatted(
                         task.getDestination(),
@@ -60,6 +64,9 @@ public class DeepSeekPlannerClient implements PlannerClient {
                         task.getPartySize(),
                         task.getBudget(),
                         task.getPreferences() == null ? "无" : task.getPreferences());
+        if (candidateContext != null && !candidateContext.isBlank()) {
+            userPrompt = userPrompt + "\n" + candidateContext;
+        }
 
         Map<String, Object> request = Map.of(
                 "model", "deepseek-chat",

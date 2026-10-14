@@ -8,5 +8,5 @@ import com.travelplatform.aiplanning.domain.PlanningTask;
  */
 public interface PlannerClient {
 
-    String generate(PlanningTask task);
+    String generate(PlanningTask task, String candidateContext);
 }

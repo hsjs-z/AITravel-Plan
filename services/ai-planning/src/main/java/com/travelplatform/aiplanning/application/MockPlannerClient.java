@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class MockPlannerClient implements PlannerClient {
 
     @Override
-    public String generate(PlanningTask task) {
+    public String generate(PlanningTask task, String candidateContext) {
         return """
                 {
                   "destination": "%s",
@@ -22,11 +22,11 @@ public class MockPlannerClient implements PlannerClient {
                   "estimatedBudget": %d,
                   "days": [
                     {"day": 1, "arrangements": ["抵达", "入住酒店"]},
-                    {"day": 2, "arrangements": ["游览景点", "品尝美食"]}
+                    {"day": 2, "arrangements": ["游览玉龙雪山", "品尝美食"]}
                   ],
-                  "hotels": [{"name": "示例酒店", "resourceId": null, "specId": null}],
-                  "attractions": [{"name": "示例景点", "resourceId": null, "specId": null}],
-                  "foods": [{"name": "示例美食", "resourceId": null}]
+                  "hotels": [{"name": "丽江古城精品酒店", "resourceId": "r-hotel-1", "specId": "s-room-1", "dayIndex": 1}],
+                  "attractions": [{"name": "玉龙雪山", "resourceId": "r-attraction-1", "specId": "s-ticket-1", "dayIndex": 2}],
+                  "foods": [{"name": "过桥米线"}]
                 }
                 """.formatted(task.getDestination(), task.getDays(), task.getPartySize(), task.getBudget());
     }
