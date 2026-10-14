@@ -104,3 +104,14 @@
   回调翻成 `SUCCEEDED`。
 - **要求**: 接入真实支付通道前必须修复——为 `FAILED`（以及未来的终态）加
   状态机守卫，终态不可逆；重复/乱序回调只能对 `PENDING` 生效。
+
+## 13. Schema 演进方案：Flyway 替代 ddl-auto=update
+
+- **结论**: 引入 Flyway。每个服务以 `db/migration/V1__init.sql` 为基线迁移，
+  并将 `spring.jpa.hibernate.ddl-auto` 置为 `none`，Schema 完全由 Flyway 管理。
+- **枚举演进规则**: 以后新增/删除 Java 枚举值，必须同步提交一条 Flyway 迁移
+  `ALTER TABLE ... MODIFY COLUMN <col> enum(...)`，禁止只改 Java 枚举。
+- **理由**: `ddl-auto=update` 不会修改已存在的 ENUM 列，导致 Java 枚举与库不一致；
+  `order_item.status` 缺 `RELEASED` 即由此产生，并在取消时造成
+  「退款已提交、库存已释放、订单事务回滚」的三方不一致。Flyway 版本化迁移
+  使 Schema 变更可审计、可复现，杜绝此类漂移。
