@@ -138,15 +138,15 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] 实现 Itinerary 与 ItineraryItem 实体 + Repository（字段与约束按 data-model.md），
+- [X] T024 [US2] 实现 Itinerary 与 ItineraryItem 实体 + Repository（字段与约束按 data-model.md），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/domain/`
-- [ ] T025 [US2] 实现行程状态机 `DRAFT → CONFIRMED → LOCKED → COMPLETED`（无订单时编辑回 DRAFT），
+- [X] T025 [US2] 实现行程状态机 `DRAFT → CONFIRMED → LOCKED → COMPLETED`（无订单时编辑回 DRAFT），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/domain/ItineraryStateMachine.java`
-- [ ] T026 [US2] 实现行程服务（创建/查看/编辑/确认/删除，全部按 userId 隔离），
+- [X] T026 [US2] 实现行程服务（创建/查看/编辑/确认/删除，全部按 userId 隔离），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`
 - [ ] T027 [US2] 实现生命周期服务（订单支付成功锁定已订项/解锁未订项；取消/失败回 CONFIRMED），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryLifecycleService.java`
-- [ ] T028 [US2] 实现 Controller 与 OpenAPI 文档，
+- [X] T028 [US2] 实现 Controller（OpenAPI 文档统一在收尾阶段接入），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`
 - [ ] T029 [US2] 实现 ItineraryConfirmed/ItineraryChanged 事件（Outbox，已下单行程修改才发 Changed），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryEventPublisher.java`
