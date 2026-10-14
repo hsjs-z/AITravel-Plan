@@ -96,3 +96,11 @@
 - **待办**: 主线闭环后评估 Spring AI 1.0.x GA（需匹配 Spring Boot 版本且镜像可解析）；
   若可解析则切换回 Spring AI 客户端，切换须保持 `PlannerClient` 接口不变，
   仅替换 `DeepSeekPlannerClient` 实现。
+
+## 12. 技术债：回调对账缺少 FAILED 终态守卫
+
+- **现状**: `PaymentService.reconcileCallback` 只校验金额一致与回调状态，
+  不校验支付当前状态；一笔已 `FAILED` 的支付可能被「金额一致 + SUCCESS」的
+  回调翻成 `SUCCEEDED`。
+- **要求**: 接入真实支付通道前必须修复——为 `FAILED`（以及未来的终态）加
+  状态机守卫，终态不可逆；重复/乱序回调只能对 `PENDING` 生效。

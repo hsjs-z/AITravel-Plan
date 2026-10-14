@@ -179,6 +179,9 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/infrastructure/`
 - [X] T035 [US3] 实现 Saga 编排器（逐项 `purpose=BOOKING` 锁定；任一失败对已锁定项幂等释放补偿），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/SagaOrchestrator.java`
+- [X] T075 [US3] 实现补偿重试器：定时扫描 FAILED/CANCELLED 订单中仍 BOOKED 且带 lockId 的明细，
+  重试 release 直至 COMPENSATED（承接 FR-016/FR-017 的「补偿最终完成」），
+  文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/CompensationRetryScheduler.java`
 - [X] T036 [US3] 实现一键预订服务（幂等键，同一行程重复提交只产生一张订单），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderService.java`
 - [ ] T037 [US3] 实现未支付超时处理（15 分钟 → 自动 `CANCELLED` + 释放库存），

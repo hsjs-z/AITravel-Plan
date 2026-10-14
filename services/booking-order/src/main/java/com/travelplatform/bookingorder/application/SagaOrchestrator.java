@@ -4,6 +4,7 @@ import com.travelplatform.bookingorder.domain.BookingSettlementLog;
 import com.travelplatform.bookingorder.domain.BookingSettlementLogRepository;
 import com.travelplatform.bookingorder.domain.Order;
 import com.travelplatform.bookingorder.domain.OrderItem;
+import com.travelplatform.bookingorder.domain.OrderItemRepository;
 import com.travelplatform.bookingorder.domain.OrderItemStatus;
 import com.travelplatform.bookingorder.domain.SettlementStatus;
 import com.travelplatform.bookingorder.infrastructure.InventoryClient;
@@ -30,13 +31,16 @@ public class SagaOrchestrator {
     private final InventoryClient inventoryClient;
     private final ItineraryClient itineraryClient;
     private final BookingSettlementLogRepository logRepository;
+    private final OrderItemRepository itemRepository;
 
     public SagaOrchestrator(InventoryClient inventoryClient,
                             ItineraryClient itineraryClient,
-                            BookingSettlementLogRepository logRepository) {
+                            BookingSettlementLogRepository logRepository,
+                            OrderItemRepository itemRepository) {
         this.inventoryClient = inventoryClient;
         this.itineraryClient = itineraryClient;
         this.logRepository = logRepository;
+        this.itemRepository = itemRepository;
     }
 
     public boolean book(Order order, List<OrderItem> items) {
@@ -85,6 +89,17 @@ public class SagaOrchestrator {
         releaseItineraryQuietly(order);
     }
 
+    /**
+     * Retries a failed compensation for a still-locked item. Release is
+     * idempotent on the inventory side, so repeated retries are safe.
+     */
+    public void retryCompensation(Order order, OrderItem item) {
+        if (item.getLockId() == null || item.getStatus() != OrderItemStatus.BOOKED) {
+            return;
+        }
+        releaseQuietly(order, item);
+    }
+
     private void compensate(Order order, List<OrderItem> locked) {
         for (OrderItem item : locked) {
             releaseQuietly(order, item);
@@ -95,6 +110,8 @@ public class SagaOrchestrator {
     private void releaseQuietly(Order order, OrderItem item) {
         try {
             inventoryClient.release(item.getLockId());
+            item.setStatus(OrderItemStatus.RELEASED);
+            itemRepository.save(item);
             record(order, "inventory.release." + item.getResourceId(), SettlementStatus.COMPENSATED);
         } catch (Exception e) {
             record(order, "inventory.release." + item.getResourceId(), SettlementStatus.COMPENSATING);
