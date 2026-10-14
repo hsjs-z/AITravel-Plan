@@ -34,7 +34,7 @@ public class InventoryUnit {
     private Integer locked;
 
     @Version
-    private Long version;
+    private Long version = 0L;
 
     public String getId() {
         return id;
