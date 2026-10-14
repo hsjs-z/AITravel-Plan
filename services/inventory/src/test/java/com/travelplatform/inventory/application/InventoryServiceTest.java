@@ -31,7 +31,8 @@ class InventoryServiceTest {
     private final InventoryLockRepository lockRepository = mock(InventoryLockRepository.class);
     private final InventoryLockRedis redis = mock(InventoryLockRedis.class);
 
-    private final InventoryService service = new InventoryService(unitRepository, lockRepository, redis);
+    private final InventoryUnitPersister persister = new InventoryUnitPersister(unitRepository, lockRepository);
+    private final InventoryService service = new InventoryService(unitRepository, lockRepository, redis, persister);
 
     @Test
     void releaseIsIdempotentWhenLockAlreadyReleased() {

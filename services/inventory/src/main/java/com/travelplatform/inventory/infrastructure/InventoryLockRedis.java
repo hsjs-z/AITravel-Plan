@@ -31,6 +31,7 @@ public class InventoryLockRedis {
             """
             local flag = redis.call('SETNX', KEYS[2], '1')
             if flag == 1 then
+              redis.call('EXPIRE', KEYS[2], 604800)
               local locked = tonumber(redis.call('HGET', KEYS[1], 'locked') or '0')
               if locked >= tonumber(ARGV[1]) then
                 redis.call('HINCRBY', KEYS[1], 'locked', -tonumber(ARGV[1]))

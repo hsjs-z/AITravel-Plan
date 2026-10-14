@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.LocalDate;
 
@@ -31,6 +32,9 @@ public class InventoryUnit {
 
     @Column(nullable = false)
     private Integer locked;
+
+    @Version
+    private Long version;
 
     public String getId() {
         return id;
@@ -86,5 +90,13 @@ public class InventoryUnit {
 
     public void setLocked(Integer locked) {
         this.locked = locked;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }
