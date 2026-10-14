@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+    gateway:
+      routes:
+        - id: user-auth
+          uri: lb://user-auth
+          predicates:
+            - Path=/auth/**,/users/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+auth:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-please-0123456789}
