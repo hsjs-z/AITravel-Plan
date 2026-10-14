@@ -116,7 +116,7 @@ research.md、data-model.md、contracts/、quickstart.md）
 - [ ] T019 [US1] 实现推荐工具：经 inventory 的 query/locks 按「资源+日期+规格」查询并以
   `purpose=PLANNING` 短 TTL 软占位候选库存，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/RecommendationTool.java`
-- [ ] T020 [US1] 实现 itinerary 创建草稿行程的 Feign 客户端，
+- [X] T020 [US1] 实现 itinerary 创建草稿行程的 Feign 客户端（规划成功即落为草稿行程），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/ItineraryClient.java`
 - [X] T021 [US1] 实现规划服务（提交/查询/重试；同一需求重试只保留最后成功草稿），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningService.java`
