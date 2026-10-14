@@ -4,10 +4,24 @@ server:
 spring:
   application:
     name: booking-order
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/travel_booking_order?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: ${MYSQL_ROOT_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
   cloud:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
 
 management:
   endpoints:

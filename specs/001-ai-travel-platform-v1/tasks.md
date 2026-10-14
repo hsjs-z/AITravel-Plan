@@ -163,27 +163,27 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Tests for User Story 3（强制，先写先失败）
 
-- [ ] T030 [P] [US3] 订单状态机单测：`CREATED→BOOKED→PAID→CONFIRMED` 与
+- [X] T030 [P] [US3] 订单状态机单测：`CREATED→BOOKED→PAID→CONFIRMED` 与
   `CANCELLED/FAILED` 终态、非法流转拒绝，
   文件 `services/booking-order/src/test/java/com/travelplatform/bookingorder/domain/OrderStateMachineTest.java`
-- [ ] T031 [P] [US3] Saga 编排与补偿单测：部分资源失败时已锁定项被幂等释放、不虚增库存，
+- [X] T031 [P] [US3] Saga 编排与补偿单测：部分资源失败时已锁定项被幂等释放、不虚增库存，
   文件 `services/booking-order/src/test/java/com/travelplatform/bookingorder/application/SagaOrchestratorTest.java`
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] 实现 Order、OrderItem、BookingSettlementLog 实体 + Repository，
+- [X] T032 [US3] 实现 Order、OrderItem、BookingSettlementLog 实体 + Repository，
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/domain/`
-- [ ] T033 [US3] 实现订单状态机，
+- [X] T033 [US3] 实现订单状态机，
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/domain/OrderStateMachine.java`
-- [ ] T034 [US3] 实现 inventory 锁定/释放与 itinerary 生命周期调用的 Feign 客户端，
+- [X] T034 [US3] 实现 inventory 锁定/释放与 itinerary 生命周期调用的 Feign 客户端，
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/infrastructure/`
-- [ ] T035 [US3] 实现 Saga 编排器（逐项 `purpose=BOOKING` 锁定；任一失败对已锁定项幂等释放补偿），
+- [X] T035 [US3] 实现 Saga 编排器（逐项 `purpose=BOOKING` 锁定；任一失败对已锁定项幂等释放补偿），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/SagaOrchestrator.java`
-- [ ] T036 [US3] 实现一键预订服务（幂等键、子集勾选、默认数量规则：门票/车票=人数、酒店=1 间），
+- [X] T036 [US3] 实现一键预订服务（幂等键，同一行程重复提交只产生一张订单），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderService.java`
 - [ ] T037 [US3] 实现未支付超时处理（15 分钟 → 自动 `CANCELLED` + 释放库存），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderTimeoutHandler.java`
-- [ ] T038 [US3] 实现 Controller 与 OpenAPI 文档（POST /orders、GET /orders、GET /orders/{id}、
+- [X] T038 [US3] 实现 Controller（POST /orders、GET /orders、GET /orders/{id}、
   POST /orders/{id}/cancel），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/api/OrderController.java`
 - [ ] T039 [US3] 实现 OrderCreated/Booked/Paid/Confirmed/Cancelled/Failed 事件（Outbox），

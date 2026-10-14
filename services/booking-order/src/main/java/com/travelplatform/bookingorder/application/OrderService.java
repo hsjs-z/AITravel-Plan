@@ -1,0 +1,129 @@
+package com.travelplatform.bookingorder.application;
+
+import com.travelplatform.bookingorder.api.OrderController;
+import com.travelplatform.bookingorder.domain.Order;
+import com.travelplatform.bookingorder.domain.OrderItem;
+import com.travelplatform.bookingorder.domain.OrderItemRepository;
+import com.travelplatform.bookingorder.domain.OrderItemStatus;
+import com.travelplatform.bookingorder.domain.OrderRepository;
+import com.travelplatform.bookingorder.domain.OrderStateMachine;
+import com.travelplatform.bookingorder.domain.OrderStatus;
+import com.travelplatform.common.api.BusinessException;
+import com.travelplatform.common.api.ErrorCode;
+import com.travelplatform.common.idempotency.IdempotencyKeys;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository itemRepository;
+    private final SagaOrchestrator orchestrator;
+    private final OrderStateMachine stateMachine = new OrderStateMachine();
+
+    public OrderService(OrderRepository orderRepository,
+                        OrderItemRepository itemRepository,
+                        SagaOrchestrator orchestrator) {
+        this.orderRepository = orderRepository;
+        this.itemRepository = itemRepository;
+        this.orchestrator = orchestrator;
+    }
+
+    @Transactional
+    public Order create(String userId, OrderController.CreateOrderRequest request) {
+        String idempotencyKey = request.idempotencyKey() != null
+                ? request.idempotencyKey()
+                : deriveIdempotencyKey(request);
+
+        Order existing = orderRepository.findByIdempotencyKey(idempotencyKey).orElse(null);
+        if (existing != null) {
+            return existing;
+        }
+
+        Order order = new Order();
+        order.setId(UUID.randomUUID().toString());
+        order.setUserId(userId);
+        order.setItineraryId(request.itineraryId());
+        order.setIdempotencyKey(idempotencyKey);
+        order.setStatus(OrderStatus.CREATED);
+        order.setTotalAmount(totalAmount(request));
+        order.setCreatedAt(Instant.now());
+        try {
+            orderRepository.saveAndFlush(order);
+        } catch (DataIntegrityViolationException e) {
+            return orderRepository.findByIdempotencyKey(idempotencyKey).orElseThrow();
+        }
+
+        List<OrderItem> items = request.items().stream()
+                .map(item -> toItem(order.getId(), item))
+                .toList();
+        itemRepository.saveAll(items);
+
+        boolean booked = orchestrator.book(order, items);
+        itemRepository.saveAll(items);
+        if (booked) {
+            stateMachine.booked(order);
+        } else {
+            stateMachine.fail(order, "joint booking failed; already-held resources were released");
+        }
+        orderRepository.save(order);
+        return order;
+    }
+
+    public Order get(String userId, String orderId) {
+        return orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "order not found"));
+    }
+
+    public List<Order> list(String userId) {
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    public List<OrderItem> items(String orderId) {
+        return itemRepository.findByOrderId(orderId);
+    }
+
+    @Transactional
+    public Order cancel(String userId, String orderId) {
+        Order order = get(userId, orderId);
+        stateMachine.cancel(order);
+        List<OrderItem> items = itemRepository.findByOrderId(orderId);
+        orchestrator.cancel(order, items);
+        orderRepository.save(order);
+        return order;
+    }
+
+    private String deriveIdempotencyKey(OrderController.CreateOrderRequest request) {
+        String items = request.items().stream()
+                .map(i -> i.resourceId() + ":" + i.specId() + ":" + i.date() + ":" + i.quantity())
+                .sorted()
+                .collect(Collectors.joining("|"));
+        return IdempotencyKeys.of(request.itineraryId(), items);
+    }
+
+    private long totalAmount(OrderController.CreateOrderRequest request) {
+        return request.items().stream()
+                .mapToLong(i -> i.unitPrice() * i.quantity())
+                .sum();
+    }
+
+    private OrderItem toItem(String orderId, OrderController.OrderItemRequest request) {
+        OrderItem item = new OrderItem();
+        item.setId(UUID.randomUUID().toString());
+        item.setOrderId(orderId);
+        item.setResourceId(request.resourceId());
+        item.setSpecId(request.specId());
+        item.setDate(request.date());
+        item.setQuantity(request.quantity());
+        item.setUnitPrice(request.unitPrice());
+        item.setStatus(OrderItemStatus.PENDING);
+        return item;
+    }
+}
