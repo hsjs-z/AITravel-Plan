@@ -102,15 +102,45 @@ public class OrderService {
     @Transactional
     public Order cancel(String userId, String orderId) {
         Order order = get(userId, orderId);
-        if (order.getStatus() == OrderStatus.PAID && order.getPaymentId() != null) {
-            paymentClient.refund(new PaymentClient.RefundRequest(
-                    order.getPaymentId(), orderId, order.getTotalAmount(), "refund:" + orderId));
+        if (order.getStatus() == OrderStatus.PAID
+                && order.getPaymentId() != null
+                && order.getRefundId() == null) {
+            PaymentClient.RefundApiResponse refund = paymentClient.refund(
+                    new PaymentClient.RefundRequest(
+                            order.getPaymentId(), orderId, order.getTotalAmount(), "refund:" + orderId));
+            order.setRefundId(refund.data().id());
         }
         stateMachine.cancel(order);
         List<OrderItem> items = itemRepository.findByOrderId(orderId);
         orchestrator.cancel(order, items);
         orderRepository.save(order);
         return order;
+    }
+
+    /**
+     * Reconciles an order whose refund already succeeded but whose local cancel
+     * may have failed: the refund record is the source of truth, so the order
+     * is forced to CANCELLED and its inventory released (idempotently).
+     */
+    @Transactional
+    public void convergeToCancelled(Order order) {
+        if (order.getStatus() != OrderStatus.CANCELLED) {
+            order.setStatus(OrderStatus.CANCELLED);
+        }
+        List<OrderItem> items = itemRepository.findByOrderId(order.getId());
+        orchestrator.cancel(order, items);
+        orderRepository.save(order);
+    }
+
+    public boolean hasSucceededRefund(String orderId) {
+        try {
+            PaymentClient.RefundListApiResponse response = paymentClient.refundsByOrder(orderId);
+            return response != null && response.data() != null
+                    && response.data().stream().anyMatch(r -> "SUCCEEDED".equals(r.status()));
+        } catch (Exception e) {
+            log.warn("failed to query refunds for order {}: {}", orderId, e.toString());
+            return false;
+        }
     }
 
     @Transactional

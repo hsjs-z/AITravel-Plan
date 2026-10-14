@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 /**
  * Drives time-based order transitions: auto-confirm paid orders (ADR-0001)
@@ -19,26 +19,31 @@ public class OrderLifecycleScheduler {
 
     private final OrderRepository orderRepository;
     private final OrderService orderService;
-    private final long timeoutMinutes;
+    private final long timeoutSeconds;
 
     public OrderLifecycleScheduler(OrderRepository orderRepository,
                                    OrderService orderService,
-                                   @Value("${booking.order-timeout-minutes:15}") long timeoutMinutes) {
+                                   @Value("${booking.timeout-seconds:900}") long timeoutSeconds) {
         this.orderRepository = orderRepository;
         this.orderService = orderService;
-        this.timeoutMinutes = timeoutMinutes;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     @Scheduled(fixedDelayString = "${booking.auto-confirm-ms:10000}")
-    public void autoConfirmPaidOrders() {
-        for (Order order : orderRepository.findByStatus(OrderStatus.PAID)) {
-            orderService.autoConfirm(order);
+    public void reconcilePaidOrders() {
+        for (Order order : orderRepository.findByStatusIn(
+                List.of(OrderStatus.PAID, OrderStatus.CONFIRMED))) {
+            if (order.getRefundId() != null || orderService.hasSucceededRefund(order.getId())) {
+                orderService.convergeToCancelled(order);
+            } else if (order.getStatus() == OrderStatus.PAID) {
+                orderService.autoConfirm(order);
+            }
         }
     }
 
     @Scheduled(fixedDelayString = "${booking.order-timeout-ms:30000}")
     public void cancelExpiredBookedOrders() {
-        Instant cutoff = Instant.now().minus(timeoutMinutes, ChronoUnit.MINUTES);
+        Instant cutoff = Instant.now().minusSeconds(timeoutSeconds);
         for (Order order : orderRepository.findByStatus(OrderStatus.BOOKED)) {
             if (order.getBookedAt() != null && order.getBookedAt().isBefore(cutoff)) {
                 orderService.cancelExpired(order);

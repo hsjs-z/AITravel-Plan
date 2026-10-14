@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class PaymentController {
 
@@ -50,6 +52,14 @@ public class PaymentController {
         Refund refund = paymentService.refund(
                 request.paymentId(), request.orderId(), request.amount(), request.idempotencyKey());
         return ApiResponse.success(new RefundResponse(refund.getId(), refund.getStatus().name()));
+    }
+
+    @GetMapping("/refunds/order/{orderId}")
+    public ApiResponse<List<RefundResponse>> refundsByOrder(@PathVariable("orderId") String orderId) {
+        List<RefundResponse> refunds = paymentService.refundsByOrder(orderId).stream()
+                .map(r -> new RefundResponse(r.getId(), r.getStatus().name()))
+                .toList();
+        return ApiResponse.success(refunds);
     }
 
     private PaymentResponse toResponse(Payment payment) {

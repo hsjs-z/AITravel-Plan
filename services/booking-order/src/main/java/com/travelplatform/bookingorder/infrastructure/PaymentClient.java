@@ -1,11 +1,13 @@
 package com.travelplatform.bookingorder.infrastructure;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.Instant;
+import java.util.List;
 
 @FeignClient(name = "payment")
 public interface PaymentClient {
@@ -18,6 +20,9 @@ public interface PaymentClient {
 
     @PostMapping("/refunds")
     RefundApiResponse refund(@RequestBody RefundRequest request);
+
+    @GetMapping("/refunds/order/{orderId}")
+    RefundListApiResponse refundsByOrder(@PathVariable("orderId") String orderId);
 
     record CreatePaymentRequest(String orderId, Long amount, String idempotencyKey) {
     }
@@ -35,5 +40,8 @@ public interface PaymentClient {
     }
 
     record RefundData(String id, String status) {
+    }
+
+    record RefundListApiResponse(int code, String message, List<RefundData> data) {
     }
 }

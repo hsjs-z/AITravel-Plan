@@ -152,10 +152,31 @@ class OrderServiceIdempotencyTest {
         paid.setPaymentId("pay-1");
         when(orderRepository.findByIdAndUserId("order-1", "user-1")).thenReturn(Optional.of(paid));
         when(itemRepository.findByOrderId("order-1")).thenReturn(List.of());
+        when(paymentClient.refund(any())).thenReturn(new PaymentClient.RefundApiResponse(
+                0, "OK", new PaymentClient.RefundData("refund-1", "SUCCEEDED")));
 
         Order result = service.cancel("user-1", "order-1");
 
         assertEquals(OrderStatus.CANCELLED, result.getStatus());
+        assertEquals("refund-1", result.getRefundId());
         verify(paymentClient).refund(any());
+    }
+
+    /**
+     * 测试退款事实源收敛：已退款但本地取消失败的订单，被强制收敛为 CANCELLED。
+     */
+    @Test
+    void convergeToCancelledForcesCancelledWhenRefundExists() {
+        Order paid = new Order();
+        paid.setId("order-1");
+        paid.setStatus(OrderStatus.PAID);
+        paid.setPaymentId("pay-1");
+        paid.setRefundId("refund-1");
+        when(itemRepository.findByOrderId("order-1")).thenReturn(List.of());
+
+        service.convergeToCancelled(paid);
+
+        assertEquals(OrderStatus.CANCELLED, paid.getStatus());
+        verify(orchestrator).cancel(any(), any());
     }
 }

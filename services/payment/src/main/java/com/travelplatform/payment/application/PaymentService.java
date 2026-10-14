@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -119,5 +120,9 @@ public class PaymentService {
         boolean success = gateway.refund(refund);
         refund.setStatus(success ? RefundStatus.SUCCEEDED : RefundStatus.FAILED);
         return refundRepository.save(refund);
+    }
+
+    public List<Refund> refundsByOrder(String orderId) {
+        return refundRepository.findByOrderId(orderId);
     }
 }

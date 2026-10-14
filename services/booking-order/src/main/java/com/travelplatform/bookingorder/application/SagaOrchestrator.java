@@ -82,7 +82,7 @@ public class SagaOrchestrator {
 
     public void cancel(Order order, List<OrderItem> items) {
         for (OrderItem item : items) {
-            if (item.getLockId() != null) {
+            if (item.getLockId() != null && item.getStatus() != OrderItemStatus.RELEASED) {
                 releaseQuietly(order, item);
             }
         }

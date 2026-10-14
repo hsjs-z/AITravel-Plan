@@ -46,6 +46,8 @@ public class Order {
 
     private String paymentId;
 
+    private String refundId;
+
     public String getId() {
         return id;
     }
@@ -140,5 +142,13 @@ public class Order {
 
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;
+    }
+
+    public String getRefundId() {
+        return refundId;
+    }
+
+    public void setRefundId(String refundId) {
+        this.refundId = refundId;
     }
 }
