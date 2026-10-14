@@ -44,6 +44,8 @@ public class Order {
     @Column(length = 512)
     private String failureReason;
 
+    private String paymentId;
+
     public String getId() {
         return id;
     }
@@ -130,5 +132,13 @@ public class Order {
 
     public void setFailureReason(String failureReason) {
         this.failureReason = failureReason;
+    }
+
+    public String getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
     }
 }

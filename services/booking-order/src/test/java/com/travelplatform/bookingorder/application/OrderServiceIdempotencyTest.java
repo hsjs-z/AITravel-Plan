@@ -5,10 +5,12 @@ import com.travelplatform.bookingorder.domain.Order;
 import com.travelplatform.bookingorder.domain.OrderItemRepository;
 import com.travelplatform.bookingorder.domain.OrderRepository;
 import com.travelplatform.bookingorder.domain.OrderStatus;
+import com.travelplatform.bookingorder.infrastructure.PaymentClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,9 +31,11 @@ class OrderServiceIdempotencyTest {
     private final OrderRepository orderRepository = mock(OrderRepository.class);
     private final OrderItemRepository itemRepository = mock(OrderItemRepository.class);
     private final SagaOrchestrator orchestrator = mock(SagaOrchestrator.class);
+    private final PaymentClient paymentClient = mock(PaymentClient.class);
 
     // 待测试的OrderService实例
-    private final OrderService service = new OrderService(orderRepository, itemRepository, orchestrator);
+    private final OrderService service =
+            new OrderService(orderRepository, itemRepository, orchestrator, paymentClient);
 
     /**
      * 测试重复提交时返回已存在的订单且不重新运行Saga
@@ -115,5 +119,43 @@ class OrderServiceIdempotencyTest {
                 idempotencyKey,
                 List.of(new OrderController.OrderItemRequest(
                         "r-1", "s-1", LocalDate.of(2026, 11, 1), 1, 100L)));
+    }
+
+    /**
+     * 测试支付：BOOKED 订单确认支付后推进到 PAID。
+     */
+    @Test
+    void payMovesBookedOrderToPaid() {
+        Order booked = new Order();
+        booked.setId("order-1");
+        booked.setStatus(OrderStatus.BOOKED);
+        booked.setTotalAmount(100L);
+        booked.setPaymentId("pay-1");
+        when(orderRepository.findByIdAndUserId("order-1", "user-1")).thenReturn(Optional.of(booked));
+        when(paymentClient.confirm("pay-1")).thenReturn(new PaymentClient.PaymentApiResponse(
+                0, "OK", new PaymentClient.PaymentData("pay-1", "order-1", 100L, "SUCCEEDED", "MOCK", Instant.now())));
+
+        Order result = service.pay("user-1", "order-1");
+
+        assertEquals(OrderStatus.PAID, result.getStatus());
+    }
+
+    /**
+     * 测试取消已支付订单触发退款。
+     */
+    @Test
+    void cancelPaidOrderTriggersRefund() {
+        Order paid = new Order();
+        paid.setId("order-1");
+        paid.setStatus(OrderStatus.PAID);
+        paid.setTotalAmount(100L);
+        paid.setPaymentId("pay-1");
+        when(orderRepository.findByIdAndUserId("order-1", "user-1")).thenReturn(Optional.of(paid));
+        when(itemRepository.findByOrderId("order-1")).thenReturn(List.of());
+
+        Order result = service.cancel("user-1", "order-1");
+
+        assertEquals(OrderStatus.CANCELLED, result.getStatus());
+        verify(paymentClient).refund(any());
     }
 }

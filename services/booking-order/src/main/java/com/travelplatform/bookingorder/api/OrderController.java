@@ -56,6 +56,13 @@ public class OrderController {
         return ApiResponse.success(toResponse(orderService.cancel(userId, orderId)));
     }
 
+    @PostMapping("/orders/{orderId}/pay")
+    public ApiResponse<OrderResponse> pay(
+            @RequestHeader("X-User-Id") String userId,
+            @PathVariable("orderId") String orderId) {
+        return ApiResponse.success(toResponse(orderService.pay(userId, orderId)));
+    }
+
     private OrderResponse toResponse(Order order) {
         List<OrderItemResponse> items = orderService.items(order.getId()).stream()
                 .map(i -> new OrderItemResponse(

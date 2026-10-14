@@ -113,8 +113,8 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/domain/PlanningTaskStateMachine.java`
 - [X] T018 [US1] 实现 DeepSeek 客户端（DeepSeek OpenAI 兼容端点，异步执行，禁止同步阻塞），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/DeepSeekClient.java`
-- [ ] T019 [US1] 实现推荐工具：经 inventory 的 query/locks 按「资源+日期+规格」查询并以
-  `purpose=PLANNING` 短 TTL 软占位候选库存，
+- [X] T019 [US1] 实现推荐工具：经 inventory candidates 接口获取候选清单（spec/价格/库存），
+  注入 DeepSeek 令其输出 resourceId/specId，并做服务端校验拒绝编造 ID，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/RecommendationTool.java`
 - [X] T020 [US1] 实现 itinerary 创建草稿行程的 Feign 客户端（规划成功即落为草稿行程），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/ItineraryClient.java`
@@ -184,7 +184,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/CompensationRetryScheduler.java`
 - [X] T036 [US3] 实现一键预订服务（幂等键，同一行程重复提交只产生一张订单），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderService.java`
-- [ ] T037 [US3] 实现未支付超时处理（15 分钟 → 自动 `CANCELLED` + 释放库存），
+- [X] T037 [US3] 实现未支付超时处理（15 分钟 → 自动 `CANCELLED` + 释放库存），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderTimeoutHandler.java`
 - [X] T038 [US3] 实现 Controller（POST /orders、GET /orders、GET /orders/{id}、
   POST /orders/{id}/cancel），

@@ -8,9 +8,12 @@ import com.travelplatform.bookingorder.domain.OrderItemStatus;
 import com.travelplatform.bookingorder.domain.OrderRepository;
 import com.travelplatform.bookingorder.domain.OrderStateMachine;
 import com.travelplatform.bookingorder.domain.OrderStatus;
+import com.travelplatform.bookingorder.infrastructure.PaymentClient;
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
 import com.travelplatform.common.idempotency.IdempotencyKeys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,17 +26,22 @@ import java.util.stream.Collectors;
 @Service
 public class OrderService {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository itemRepository;
     private final SagaOrchestrator orchestrator;
+    private final PaymentClient paymentClient;
     private final OrderStateMachine stateMachine = new OrderStateMachine();
 
     public OrderService(OrderRepository orderRepository,
                         OrderItemRepository itemRepository,
-                        SagaOrchestrator orchestrator) {
+                        SagaOrchestrator orchestrator,
+                        PaymentClient paymentClient) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.orchestrator = orchestrator;
+        this.paymentClient = paymentClient;
     }
 
     @Transactional
@@ -70,6 +78,7 @@ public class OrderService {
         itemRepository.saveAll(items);
         if (booked) {
             stateMachine.booked(order);
+            createPayment(order);
         } else {
             stateMachine.fail(order, "joint booking failed; already-held resources were released");
         }
@@ -93,11 +102,47 @@ public class OrderService {
     @Transactional
     public Order cancel(String userId, String orderId) {
         Order order = get(userId, orderId);
+        if (order.getStatus() == OrderStatus.PAID && order.getPaymentId() != null) {
+            paymentClient.refund(new PaymentClient.RefundRequest(
+                    order.getPaymentId(), orderId, order.getTotalAmount(), "refund:" + orderId));
+        }
         stateMachine.cancel(order);
         List<OrderItem> items = itemRepository.findByOrderId(orderId);
         orchestrator.cancel(order, items);
         orderRepository.save(order);
         return order;
+    }
+
+    @Transactional
+    public Order pay(String userId, String orderId) {
+        Order order = get(userId, orderId);
+        if (order.getStatus() != OrderStatus.BOOKED) {
+            throw new BusinessException(ErrorCode.CONFLICT, "only booked orders can be paid");
+        }
+        if (order.getPaymentId() == null) {
+            createPayment(order);
+        }
+        PaymentClient.PaymentApiResponse response = paymentClient.confirm(order.getPaymentId());
+        if ("SUCCEEDED".equals(response.data().status())) {
+            stateMachine.paid(order);
+        }
+        orderRepository.save(order);
+        return order;
+    }
+
+    @Transactional
+    public Order autoConfirm(Order order) {
+        stateMachine.confirmed(order);
+        orderRepository.save(order);
+        return order;
+    }
+
+    @Transactional
+    public void cancelExpired(Order order) {
+        stateMachine.cancel(order);
+        List<OrderItem> items = itemRepository.findByOrderId(order.getId());
+        orchestrator.cancel(order, items);
+        orderRepository.save(order);
     }
 
     private String deriveIdempotencyKey(OrderController.CreateOrderRequest request) {
@@ -125,5 +170,16 @@ public class OrderService {
         item.setUnitPrice(request.unitPrice());
         item.setStatus(OrderItemStatus.PENDING);
         return item;
+    }
+
+    private void createPayment(Order order) {
+        try {
+            PaymentClient.PaymentApiResponse response = paymentClient.create(
+                    new PaymentClient.CreatePaymentRequest(
+                            order.getId(), order.getTotalAmount(), "order:" + order.getId()));
+            order.setPaymentId(response.data().id());
+        } catch (Exception e) {
+            log.warn("failed to create payment for order {}: {}", order.getId(), e.toString());
+        }
     }
 }
