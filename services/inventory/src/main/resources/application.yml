@@ -4,6 +4,18 @@ server:
 spring:
   application:
     name: inventory
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/travel_inventory?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: ${MYSQL_ROOT_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
   cloud:
     nacos:
       discovery:

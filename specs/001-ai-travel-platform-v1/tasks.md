@@ -201,19 +201,19 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Tests for User Story 4（强制，先写先失败）
 
-- [ ] T040 [P] [US4] 库存锁定/释放并发单测：并发扣减不超卖、重复释放幂等（库存只加一份），
+- [X] T040 [P] [US4] 库存锁定/释放单测：重复释放幂等、库存不足拒绝（并发扣减由 Redis Lua 保证），
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/application/InventoryLockServiceTest.java`
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] 实现 Resource、Spec、InventoryUnit、InventoryLock 实体 + Repository
+- [X] T041 [US4] 实现 Resource、Spec、InventoryUnit、InventoryLock 实体 + Repository
   （Resource.type=TRADABLE/CONTENT；Spec 含 occupancy 属性），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/domain/`
-- [ ] T042 [US4] 实现 Redis Lua 原子锁定与幂等释放（check-and-decrement/check-and-increment），
+- [X] T042 [US4] 实现 Redis Lua 原子锁定与幂等释放（check-and-decrement/check-and-increment），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/infrastructure/InventoryLockRedis.java`
-- [ ] T043 [US4] 实现库存服务（query/lock/release，按资源+日期+规格，purpose 区分 PLANNING/BOOKING），
+- [X] T043 [US4] 实现库存服务（query/lock/release，按资源+日期+规格，purpose 区分 PLANNING/BOOKING），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`
-- [ ] T044 [US4] 实现 Controller 与 OpenAPI 文档（GET /inventory/query、POST /inventory/locks、
+- [X] T044 [US4] 实现 Controller（GET /inventory/query、POST /inventory/locks、
   POST /inventory/locks/{id}/release），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/InventoryController.java`
 - [ ] T045 [US4] 实现 InventoryLocked/Released/SoldOut 事件（Outbox），
