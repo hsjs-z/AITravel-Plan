@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: payment
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/travel_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: ${MYSQL_ROOT_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
   cloud:
     nacos:
       discovery:

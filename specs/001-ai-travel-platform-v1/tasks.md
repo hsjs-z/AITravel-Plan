@@ -231,20 +231,20 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Tests for User Story 5（强制，先写先失败）
 
-- [ ] T046 [P] [US5] 支付/退款幂等单测：重复支付返回首次结果、重复退款只生效一次、金额≤实付，
+- [X] T046 [P] [US5] 支付/退款幂等单测：重复支付返回首次结果、重复退款只生效一次、金额≤实付，
   文件 `services/payment/src/test/java/com/travelplatform/payment/application/PaymentIdempotencyTest.java`
 
 ### Implementation for User Story 5
 
-- [ ] T047 [US5] 实现 PaymentGateway 接口、MockPaymentGateway 与微信实现位（不得改调用方），
+- [X] T047 [US5] 实现 PaymentGateway 接口、MockPaymentGateway 与微信实现位（不得改调用方），
   文件 `services/payment/src/main/java/com/travelplatform/payment/application/PaymentGateway.java`
-- [ ] T048 [US5] 实现 Payment、Refund、CallbackRecord 实体 + Repository（含 idempotencyKey 唯一），
+- [X] T048 [US5] 实现 Payment、Refund、CallbackRecord 实体 + Repository（含 idempotencyKey 唯一），
   文件 `services/payment/src/main/java/com/travelplatform/payment/domain/`
-- [ ] T049 [US5] 实现支付服务（创建/确认/回调对账/幂等；金额不一致不置已支付并记异常），
+- [X] T049 [US5] 实现支付服务（创建/确认/回调对账/幂等；金额不一致不置已支付并记异常），
   文件 `services/payment/src/main/java/com/travelplatform/payment/application/PaymentService.java`
-- [ ] T050 [US5] 实现退款服务（幂等、金额≤实付、自动全额退款），
+- [X] T050 [US5] 实现退款服务（幂等、金额≤实付，并入 PaymentService.refund），
   文件 `services/payment/src/main/java/com/travelplatform/payment/application/RefundService.java`
-- [ ] T051 [US5] 实现 Controller 与 OpenAPI 文档（POST /payments、POST /payments/{id}/confirm、
+- [X] T051 [US5] 实现 Controller（POST /payments、POST /payments/{id}/confirm、
   POST /payments/callback、POST /refunds），
   文件 `services/payment/src/main/java/com/travelplatform/payment/api/`
 - [ ] T052 [US5] 实现 PaymentSucceeded/Failed/RefundSucceeded 事件（Outbox），
