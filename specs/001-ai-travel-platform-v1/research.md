@@ -85,3 +85,14 @@
   支付凭据等敏感项仅经环境变量注入，禁止入库/入仓。
 - **Rationale**: 宪章 IX。
 - **Alternatives**: 全部放 Nacos 明文——敏感信息暴露，拒绝。
+
+## 11. 技术债与临时偏离：Spring AI 暂以直连端点替代
+
+- **现状**: `spring-ai-bom:0.8.1` 已过时，且本机 Maven 镜像（alimaven）无法解析该构件；
+  T018 因此临时改用 Spring `RestTemplate` 直连 DeepSeek 的 OpenAI 兼容端点
+  `https://api.deepseek.com/chat/completions`，未引入 Spring AI 依赖。
+- **偏离说明**: 这与本文件第 5 节「Spring AI 调用 DeepSeek」的原始决定存在临时偏离，
+  特此记录，不做静默偏离。
+- **待办**: 主线闭环后评估 Spring AI 1.0.x GA（需匹配 Spring Boot 版本且镜像可解析）；
+  若可解析则切换回 Spring AI 客户端，切换须保持 `PlannerClient` 接口不变，
+  仅替换 `DeepSeekPlannerClient` 实现。
