@@ -7,6 +7,8 @@ import com.travelplatform.inventory.domain.InventoryLockRepository;
 import com.travelplatform.inventory.domain.InventoryUnit;
 import com.travelplatform.inventory.domain.InventoryUnitRepository;
 import com.travelplatform.inventory.domain.LockStatus;
+import com.travelplatform.inventory.domain.ResourceRepository;
+import com.travelplatform.inventory.domain.SpecRepository;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
 import org.junit.jupiter.api.Test;
 
@@ -30,9 +32,12 @@ class InventoryServiceTest {
     private final InventoryUnitRepository unitRepository = mock(InventoryUnitRepository.class);
     private final InventoryLockRepository lockRepository = mock(InventoryLockRepository.class);
     private final InventoryLockRedis redis = mock(InventoryLockRedis.class);
+    private final ResourceRepository resourceRepository = mock(ResourceRepository.class);
+    private final SpecRepository specRepository = mock(SpecRepository.class);
 
     private final InventoryUnitPersister persister = new InventoryUnitPersister(unitRepository, lockRepository);
-    private final InventoryService service = new InventoryService(unitRepository, lockRepository, redis, persister);
+    private final InventoryService service = new InventoryService(
+            unitRepository, lockRepository, resourceRepository, specRepository, redis, persister);
 
     @Test
     void releaseIsIdempotentWhenLockAlreadyReleased() {

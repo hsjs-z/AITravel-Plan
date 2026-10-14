@@ -9,12 +9,19 @@ import com.travelplatform.inventory.domain.InventoryUnit;
 import com.travelplatform.inventory.domain.InventoryUnitRepository;
 import com.travelplatform.inventory.domain.LockPurpose;
 import com.travelplatform.inventory.domain.LockStatus;
+import com.travelplatform.inventory.domain.Resource;
+import com.travelplatform.inventory.domain.ResourceRepository;
+import com.travelplatform.inventory.domain.ResourceType;
+import com.travelplatform.inventory.domain.Spec;
+import com.travelplatform.inventory.domain.SpecRepository;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,15 +31,21 @@ public class InventoryService {
 
     private final InventoryUnitRepository unitRepository;
     private final InventoryLockRepository lockRepository;
+    private final ResourceRepository resourceRepository;
+    private final SpecRepository specRepository;
     private final InventoryLockRedis redis;
     private final InventoryUnitPersister persister;
 
     public InventoryService(InventoryUnitRepository unitRepository,
                             InventoryLockRepository lockRepository,
+                            ResourceRepository resourceRepository,
+                            SpecRepository specRepository,
                             InventoryLockRedis redis,
                             InventoryUnitPersister persister) {
         this.unitRepository = unitRepository;
         this.lockRepository = lockRepository;
+        this.resourceRepository = resourceRepository;
+        this.specRepository = specRepository;
         this.redis = redis;
         this.persister = persister;
     }
@@ -42,6 +55,31 @@ public class InventoryService {
         redis.initialize(unit);
         Integer available = redis.available(unit.getId());
         return available != null ? available : unit.getAvailable();
+    }
+
+    public List<InventoryController.Candidate> candidates(String destination, LocalDate date) {
+        List<Resource> resources = resourceRepository.findByDestinationAndType(destination, ResourceType.TRADABLE);
+        List<InventoryController.Candidate> result = new ArrayList<>();
+        for (Resource resource : resources) {
+            List<InventoryController.Spec> specs = new ArrayList<>();
+            for (Spec spec : specRepository.findByResourceId(resource.getId())) {
+                Integer available = unitRepository
+                        .findByResourceIdAndDateAndSpecId(resource.getId(), date, spec.getId())
+                        .map(unit -> {
+                            redis.initialize(unit);
+                            Integer redisAvailable = redis.available(unit.getId());
+                            return redisAvailable != null ? redisAvailable : unit.getAvailable();
+                        })
+                        .orElse(0);
+                specs.add(new InventoryController.Spec(
+                        spec.getId(), spec.getName(), spec.getPrice(), available));
+            }
+            if (!specs.isEmpty()) {
+                result.add(new InventoryController.Candidate(
+                        resource.getId(), resource.getName(), resource.getType().name(), specs));
+            }
+        }
+        return result;
     }
 
     public InventoryController.LockResponse lock(InventoryController.LockRequest request) {

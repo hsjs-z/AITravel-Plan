@@ -26,6 +26,8 @@ public class Spec {
 
     private Integer occupancy;
 
+    private Long price;
+
     public String getId() {
         return id;
     }
@@ -64,5 +66,13 @@ public class Spec {
 
     public void setOccupancy(Integer occupancy) {
         this.occupancy = occupancy;
+    }
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public void setPrice(Long price) {
+        this.price = price;
     }
 }

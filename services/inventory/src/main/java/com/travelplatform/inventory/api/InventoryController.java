@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 public class InventoryController {
@@ -32,6 +33,13 @@ public class InventoryController {
             @RequestParam("specId") String specId) {
         Integer available = inventoryService.query(resourceId, date, specId);
         return ApiResponse.success(new QueryResponse(resourceId, date, specId, available));
+    }
+
+    @GetMapping("/inventory/candidates")
+    public ApiResponse<List<Candidate>> candidates(
+            @RequestParam("destination") String destination,
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ApiResponse.success(inventoryService.candidates(destination, date));
     }
 
     @PostMapping("/inventory/locks")
@@ -63,5 +71,11 @@ public class InventoryController {
     }
 
     public record QueryResponse(String resourceId, LocalDate date, String specId, Integer available) {
+    }
+
+    public record Candidate(String resourceId, String resourceName, String type, List<Spec> specs) {
+    }
+
+    public record Spec(String specId, String specName, Long price, Integer available) {
     }
 }
