@@ -26,7 +26,7 @@ public class RecommendationTool {
 
     public List<InventoryClient.Candidate> fetchCandidates(String destination, LocalDate date) {
         try {
-            InventoryClient.CandidateApiResponse response = inventoryClient.candidates(destination, date);
+            InventoryClient.CandidateApiResponse response = inventoryClient.candidates(destination, date.toString());
             return (response == null || response.data() == null) ? List.of() : response.data();
         } catch (Exception e) {
             log.warn("failed to load inventory candidates: {}", e.toString());

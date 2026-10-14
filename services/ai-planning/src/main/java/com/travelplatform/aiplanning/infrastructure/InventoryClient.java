@@ -13,7 +13,7 @@ public interface InventoryClient {
     @GetMapping("/inventory/candidates")
     CandidateApiResponse candidates(
             @RequestParam("destination") String destination,
-            @RequestParam("date") LocalDate date);
+            @RequestParam("date") String date);
 
     record CandidateApiResponse(int code, String message, List<Candidate> data) {
     }
