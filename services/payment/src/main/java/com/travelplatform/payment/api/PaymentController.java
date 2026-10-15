@@ -27,7 +27,8 @@ public class PaymentController {
 
     @PostMapping("/payments")
     public ApiResponse<PaymentResponse> create(@Valid @RequestBody CreatePaymentRequest request) {
-        Payment payment = paymentService.create(request.orderId(), request.amount(), request.idempotencyKey());
+        Payment payment = paymentService.create(
+                request.orderId(), request.userId(), request.amount(), request.idempotencyKey());
         return ApiResponse.success(toResponse(payment));
     }
 
@@ -66,6 +67,7 @@ public class PaymentController {
         return new PaymentResponse(
                 payment.getId(),
                 payment.getOrderId(),
+                payment.getUserId(),
                 payment.getAmount(),
                 payment.getStatus().name(),
                 payment.getChannel(),
@@ -74,6 +76,7 @@ public class PaymentController {
 
     public record CreatePaymentRequest(
             @NotBlank String orderId,
+            String userId,
             @NotNull @Positive Long amount,
             @NotBlank String idempotencyKey) {
     }
@@ -91,6 +94,7 @@ public class PaymentController {
     public record PaymentResponse(
             String id,
             String orderId,
+            String userId,
             Long amount,
             String status,
             String channel,

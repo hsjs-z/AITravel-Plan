@@ -15,6 +15,8 @@ import com.travelplatform.inventory.domain.ResourceType;
 import com.travelplatform.inventory.domain.Spec;
 import com.travelplatform.inventory.domain.SpecRepository;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ import java.util.UUID;
 public class InventoryService {
 
     private static final int MAX_RETRY_ATTEMPTS = 5;
+    private static final Logger log = LoggerFactory.getLogger(InventoryService.class);
 
     private final InventoryUnitRepository unitRepository;
     private final InventoryLockRepository lockRepository;
@@ -35,19 +38,22 @@ public class InventoryService {
     private final SpecRepository specRepository;
     private final InventoryLockRedis redis;
     private final InventoryUnitPersister persister;
+    private final InventoryEventPublisher events;
 
     public InventoryService(InventoryUnitRepository unitRepository,
                             InventoryLockRepository lockRepository,
                             ResourceRepository resourceRepository,
                             SpecRepository specRepository,
                             InventoryLockRedis redis,
-                            InventoryUnitPersister persister) {
+                            InventoryUnitPersister persister,
+                            InventoryEventPublisher events) {
         this.unitRepository = unitRepository;
         this.lockRepository = lockRepository;
         this.resourceRepository = resourceRepository;
         this.specRepository = specRepository;
         this.redis = redis;
         this.persister = persister;
+        this.events = events;
     }
 
     public Integer query(String resourceId, LocalDate date, String specId) {
@@ -88,6 +94,7 @@ public class InventoryService {
 
         long result = redis.tryLock(unit.getId(), request.quantity());
         if (result != 1) {
+            recordSoldOutQuietly(request);
             throw new BusinessException(ErrorCode.CONFLICT, "insufficient stock for requested unit");
         }
 
@@ -137,6 +144,20 @@ public class InventoryService {
                     throw e;
                 }
             }
+        }
+    }
+
+    /**
+     * 库存不足是「拒绝预订」的业务结果，没有业务写入可与其同事务提交，
+     * 因此该提示性事件不得掩盖拒绝本身：发布失败只记日志（FR-024 优先）。
+     */
+    private void recordSoldOutQuietly(InventoryController.LockRequest request) {
+        try {
+            events.inventorySoldOut(request.resourceId(), request.date(), request.specId(),
+                    request.quantity(), request.holderType(), request.holderId());
+        } catch (RuntimeException e) {
+            log.warn("failed to record InventorySoldOut for {}/{}/{}: {}",
+                    request.resourceId(), request.specId(), request.date(), e.toString());
         }
     }
 }

@@ -24,19 +24,22 @@ public class PaymentService {
     private final RefundRepository refundRepository;
     private final CallbackRecordRepository callbackRepository;
     private final PaymentGateway gateway;
+    private final PaymentEventPublisher events;
 
     public PaymentService(PaymentRepository paymentRepository,
                           RefundRepository refundRepository,
                           CallbackRecordRepository callbackRepository,
-                          PaymentGateway gateway) {
+                          PaymentGateway gateway,
+                          PaymentEventPublisher events) {
         this.paymentRepository = paymentRepository;
         this.refundRepository = refundRepository;
         this.callbackRepository = callbackRepository;
         this.gateway = gateway;
+        this.events = events;
     }
 
     @Transactional
-    public Payment create(String orderId, Long amount, String idempotencyKey) {
+    public Payment create(String orderId, String userId, Long amount, String idempotencyKey) {
         Payment existing = paymentRepository.findByIdempotencyKey(idempotencyKey).orElse(null);
         if (existing != null) {
             return existing;
@@ -44,6 +47,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setId(UUID.randomUUID().toString());
         payment.setOrderId(orderId);
+        payment.setUserId(userId);
         payment.setIdempotencyKey(idempotencyKey);
         payment.setAmount(amount);
         payment.setStatus(PaymentStatus.PENDING);
@@ -70,6 +74,11 @@ public class PaymentService {
                 payment.setPaidAt(Instant.now());
             }
             paymentRepository.save(payment);
+            if (success) {
+                events.paymentSucceeded(payment);
+            } else {
+                events.paymentFailed(payment);
+            }
         }
         return payment;
     }
@@ -88,12 +97,16 @@ public class PaymentService {
         record.setReceivedAt(Instant.now());
         callbackRepository.save(record);
 
-        if (reconciled && "SUCCESS".equalsIgnoreCase(status)) {
+        // 终态不可逆：重复/乱序回调只能把 PENDING 支付推进为 SUCCEEDED，不得翻回已 FAILED
+        // （research.md 技术债 12；同时保证 PaymentSucceeded 只对同一笔支付发出一次）。
+        if (reconciled && payment.getStatus() == PaymentStatus.PENDING
+                && "SUCCESS".equalsIgnoreCase(status)) {
             payment.setStatus(PaymentStatus.SUCCEEDED);
             if (payment.getPaidAt() == null) {
                 payment.setPaidAt(Instant.now());
             }
             paymentRepository.save(payment);
+            events.paymentSucceeded(payment);
         }
         return payment;
     }
@@ -119,7 +132,11 @@ public class PaymentService {
         refundRepository.save(refund);
         boolean success = gateway.refund(refund);
         refund.setStatus(success ? RefundStatus.SUCCEEDED : RefundStatus.FAILED);
-        return refundRepository.save(refund);
+        Refund saved = refundRepository.save(refund);
+        if (success) {
+            events.refundSucceeded(saved, payment);
+        }
+        return saved;
     }
 
     public List<Refund> refundsByOrder(String orderId) {

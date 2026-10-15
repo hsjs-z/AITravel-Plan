@@ -6,6 +6,8 @@ import com.travelplatform.aiplanning.domain.PlanningTask;
 import com.travelplatform.aiplanning.domain.PlanningTaskRepository;
 import com.travelplatform.aiplanning.infrastructure.InventoryClient;
 import com.travelplatform.aiplanning.infrastructure.ItineraryClient;
+import com.travelplatform.common.outbox.OutboxRecorder;
+import com.travelplatform.common.outbox.OutboxStore;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.TaskExecutor;
 
@@ -31,8 +33,14 @@ class PlanningServiceMaterializeTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TaskExecutor executor = Runnable::run;
 
+    private final PlanningEventPublisher events =
+            new PlanningEventPublisher(new OutboxRecorder(
+                    mock(OutboxStore.class), new ObjectMapper().findAndRegisterModules()));
+    private final PlanningTaskWriter writer = new PlanningTaskWriter(repository, events);
+
     private final PlanningService service =
-            new PlanningService(repository, planner, itineraryClient, recommendationTool, objectMapper, executor);
+            new PlanningService(
+                    repository, planner, itineraryClient, recommendationTool, objectMapper, writer, executor);
 
     @Test
     void materializesResourceIdsIntoItineraryItems() {

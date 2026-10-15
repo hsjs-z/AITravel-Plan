@@ -22,11 +22,15 @@ public class ItineraryService {
 
     private final ItineraryRepository repository;
     private final ItineraryItemRepository itemRepository;
+    private final ItineraryEventPublisher events;
     private final ItineraryStateMachine stateMachine = new ItineraryStateMachine();
 
-    public ItineraryService(ItineraryRepository repository, ItineraryItemRepository itemRepository) {
+    public ItineraryService(ItineraryRepository repository,
+                            ItineraryItemRepository itemRepository,
+                            ItineraryEventPublisher events) {
         this.repository = repository;
         this.itemRepository = itemRepository;
+        this.events = events;
     }
 
     @Transactional
@@ -80,6 +84,10 @@ public class ItineraryService {
                 itemRepository.save(toItem(itineraryId, itemRequest));
             }
         }
+        // 行程变更通知只在「已存在订单」的行程被修改时触发（GLOSSARY 行程变更通知）。
+        if (Boolean.TRUE.equals(itinerary.getHasOrder())) {
+            events.itineraryChanged(itinerary);
+        }
         return itinerary;
     }
 
@@ -88,7 +96,9 @@ public class ItineraryService {
         Itinerary itinerary = get(userId, itineraryId);
         stateMachine.confirm(itinerary);
         itinerary.setUpdatedAt(Instant.now());
-        return repository.save(itinerary);
+        Itinerary confirmed = repository.save(itinerary);
+        events.itineraryConfirmed(confirmed);
+        return confirmed;
     }
 
     @Transactional

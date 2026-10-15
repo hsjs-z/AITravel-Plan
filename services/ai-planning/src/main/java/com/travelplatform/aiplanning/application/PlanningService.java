@@ -3,7 +3,6 @@ package com.travelplatform.aiplanning.application;
 import com.travelplatform.aiplanning.api.PlanningController;
 import com.travelplatform.aiplanning.domain.PlanningTask;
 import com.travelplatform.aiplanning.domain.PlanningTaskRepository;
-import com.travelplatform.aiplanning.domain.PlanningTaskStateMachine;
 import com.travelplatform.aiplanning.domain.PlanningTaskStatus;
 import com.travelplatform.aiplanning.infrastructure.ItineraryClient;
 import com.travelplatform.aiplanning.infrastructure.InventoryClient;
@@ -34,7 +33,7 @@ public class PlanningService {
     private final ItineraryClient itineraryClient;
     private final RecommendationTool recommendationTool;
     private final ObjectMapper objectMapper;
-    private final PlanningTaskStateMachine stateMachine = new PlanningTaskStateMachine();
+    private final PlanningTaskWriter writer;
     private final TaskExecutor executor;
 
     public PlanningService(PlanningTaskRepository repository,
@@ -42,12 +41,14 @@ public class PlanningService {
                            ItineraryClient itineraryClient,
                            RecommendationTool recommendationTool,
                            ObjectMapper objectMapper,
+                           PlanningTaskWriter writer,
                            TaskExecutor executor) {
         this.repository = repository;
         this.planner = planner;
         this.itineraryClient = itineraryClient;
         this.recommendationTool = recommendationTool;
         this.objectMapper = objectMapper;
+        this.writer = writer;
         this.executor = executor;
     }
 
@@ -75,9 +76,7 @@ public class PlanningService {
 
     public PlanningTask retry(String userId, String taskId) {
         PlanningTask task = get(userId, taskId);
-        stateMachine.retry(task);
-        task.setUpdatedAt(Instant.now());
-        repository.save(task);
+        writer.retry(task);
         executor.execute(() -> run(task.getId()));
         return task;
     }
@@ -87,26 +86,27 @@ public class PlanningService {
         if (task == null) {
             return;
         }
-        stateMachine.start(task);
-        task.setUpdatedAt(Instant.now());
-        repository.save(task);
+        writer.start(taskId);
         try {
             List<InventoryClient.Candidate> candidates =
                     recommendationTool.fetchCandidates(task.getDestination(), LocalDate.now());
             String candidateContext = recommendationTool.buildCandidateContext(candidates);
             String result = planner.generate(task, candidateContext);
-            task.setResult(result);
-            materializeItinerary(task, result, candidates);
-            stateMachine.succeed(task);
+            String itineraryId = materializeItinerary(task, result, candidates);
+            writer.succeed(taskId, result, itineraryId);
         } catch (Exception e) {
-            stateMachine.fail(task, e.getMessage());
+            writer.fail(taskId, e.getMessage());
         }
-        task.setUpdatedAt(Instant.now());
-        repository.save(task);
     }
 
-    private void materializeItinerary(PlanningTask task, String resultJson,
-                                      List<InventoryClient.Candidate> candidates) {
+    /**
+     * Creates the draft itinerary for a successful planning run.
+     *
+     * @return the created itinerary id, or {@code null} when materialization failed
+     *         (the planning task itself still succeeds, exactly as before).
+     */
+    private String materializeItinerary(PlanningTask task, String resultJson,
+                                       List<InventoryClient.Candidate> candidates) {
         try {
             Set<String> validPairs = new HashSet<>();
             for (InventoryClient.Candidate candidate : candidates) {
@@ -178,9 +178,10 @@ public class PlanningService {
 
             ItineraryClient.ItineraryApiResponse response =
                     itineraryClient.create(task.getUserId(), request);
-            task.setItineraryId(response.data().id());
+            return response.data().id();
         } catch (Exception e) {
             log.warn("failed to materialize itinerary for task {}: {}", task.getId(), e.toString());
+            return null;
         }
     }
 }

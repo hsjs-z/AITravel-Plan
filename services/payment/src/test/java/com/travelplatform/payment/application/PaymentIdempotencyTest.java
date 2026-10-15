@@ -1,6 +1,9 @@
 package com.travelplatform.payment.application;
 
 import com.travelplatform.common.api.BusinessException;
+import com.travelplatform.common.outbox.OutboxRecorder;
+import com.travelplatform.common.outbox.OutboxStore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travelplatform.payment.domain.CallbackRecordRepository;
 import com.travelplatform.payment.domain.Payment;
 import com.travelplatform.payment.domain.PaymentRepository;
@@ -37,9 +40,13 @@ class PaymentIdempotencyTest {
     // 使用mock创建支付网关对象
     private final PaymentGateway gateway = mock(PaymentGateway.class);
 
+    private final PaymentEventPublisher events =
+            new PaymentEventPublisher(new OutboxRecorder(
+                    mock(OutboxStore.class), new ObjectMapper().findAndRegisterModules()));
+
     // 创建支付服务实例，注入所有依赖的仓库和网关
     private final PaymentService service =
-            new PaymentService(paymentRepository, refundRepository, callbackRepository, gateway);
+            new PaymentService(paymentRepository, refundRepository, callbackRepository, gateway, events);
 
     /**
      * 测试支付创建操作的幂等性
@@ -54,7 +61,7 @@ class PaymentIdempotencyTest {
         when(paymentRepository.findByIdempotencyKey("key-1")).thenReturn(Optional.of(existing));
 
         // 尝试创建支付
-        Payment result = service.create("order-1", 100L, "key-1");
+        Payment result = service.create("order-1", "user-1", 100L, "key-1");
 
         // 验证返回的支付ID与已存在的支付相同
         assertEquals("p-1", result.getId());

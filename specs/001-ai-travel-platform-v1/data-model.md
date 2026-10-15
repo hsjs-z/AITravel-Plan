@@ -74,8 +74,14 @@
 
 - **Notification**: `id`, `userId`, `type`(预订成功/失败、支付成功、订单确认、行程变更),
   `channel`(`IN_APP` | `EMAIL`), `businessRef`, `dedupKey`(唯一),
-  `readStatus`(`UNREAD` | `READ`), `createdAt`。
-  - 站内信必达并带未读/已读与未读数；邮件可选副本；同一业务事件对同一用户只产生一条站内信。
+  `readStatus`(`UNREAD` | `READ`), `title`, `body`,
+  `deliveryStatus`(`PENDING` | `SENT` | `FAILED`), `deliveryAttempts`, `lastError`,
+  `createdAt`, `readAt`。
+  - `type` 为 GLOSSARY 列表的超集（见 contracts/notification.md）。
+  - 站内信必达并带未读/已读与未读数；邮件为可选副本，`PENDING` 后由调度器重试至 `SENT`
+    （补齐，FR-034）；同一业务事件对同一用户只产生一条站内信（dedupKey 唯一）。
+- **ProcessedEvent**: `eventId`(主键), `eventType`, `topic`, `outcome`, `processedAt`。
+  - 消费侧幂等：同一事件 `id` 只处理一次（宪法 IV、FR-035）。
 
 ## 跨服务标识符关系
 

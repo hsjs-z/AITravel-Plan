@@ -9,10 +9,12 @@ import java.time.Instant;
 public final class OutboxMessage {
 
     private String id;
+    private String topic;
     private String aggregateType;
     private String aggregateId;
     private String eventType;
     private String payload;
+    private String traceId;
     private String status;
     private Instant createdAt;
     private Instant publishedAt;
@@ -23,6 +25,14 @@ public final class OutboxMessage {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public String getAggregateType() {
@@ -55,6 +65,14 @@ public final class OutboxMessage {
 
     public void setPayload(String payload) {
         this.payload = payload;
+    }
+
+    public String getTraceId() {
+        return traceId;
+    }
+
+    public void setTraceId(String traceId) {
+        this.traceId = traceId;
     }
 
     public String getStatus() {

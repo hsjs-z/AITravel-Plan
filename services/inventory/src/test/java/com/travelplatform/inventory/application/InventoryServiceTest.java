@@ -1,6 +1,9 @@
 package com.travelplatform.inventory.application;
 
 import com.travelplatform.common.api.BusinessException;
+import com.travelplatform.common.outbox.OutboxRecorder;
+import com.travelplatform.common.outbox.OutboxStore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travelplatform.inventory.api.InventoryController;
 import com.travelplatform.inventory.domain.InventoryLock;
 import com.travelplatform.inventory.domain.InventoryLockRepository;
@@ -35,9 +38,13 @@ class InventoryServiceTest {
     private final ResourceRepository resourceRepository = mock(ResourceRepository.class);
     private final SpecRepository specRepository = mock(SpecRepository.class);
 
-    private final InventoryUnitPersister persister = new InventoryUnitPersister(unitRepository, lockRepository);
+    private final InventoryEventPublisher events =
+            new InventoryEventPublisher(new OutboxRecorder(
+                    mock(OutboxStore.class), new ObjectMapper().findAndRegisterModules()));
+    private final InventoryUnitPersister persister =
+            new InventoryUnitPersister(unitRepository, lockRepository, events);
     private final InventoryService service = new InventoryService(
-            unitRepository, lockRepository, resourceRepository, specRepository, redis, persister);
+            unitRepository, lockRepository, resourceRepository, specRepository, redis, persister, events);
 
     @Test
     void releaseIsIdempotentWhenLockAlreadyReleased() {

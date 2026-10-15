@@ -8,6 +8,14 @@
 - JDK 17、Maven 3.9+、Docker（用于本地中间件）
 - 本地中间件：MySQL、Redis、Kafka、Nacos（`deploy/` 提供编排文件）
 
+## 部署检查清单（强制，见 research.md §15）
+
+1. 部署前执行 `mvn clean install`；确认目标服务产物 `target/<svc>-*.jar` 为
+   fat jar（体积 > 80MB），且 `jar` 内 `Main-Class=org.springframework.boot.loader.launch.JarLauncher`。
+2. 启动后对本次新增的每个端点做真实 HTTP 探活（200 或预期错误码），
+   不得仅以 `/actuator/health` 的 UP 作为「已就绪」依据。
+3. 同一服务不得新旧两个实例同时注册 Nacos；临时验证用独立端口并关闭 discovery。
+
 ## 启动步骤
 
 1. 启动中间件：在 `deploy/` 执行容器编排，确认 MySQL/Redis/Kafka/Nacos 就绪。

@@ -6,6 +6,9 @@ import com.travelplatform.bookingorder.domain.OrderItemRepository;
 import com.travelplatform.bookingorder.domain.OrderRepository;
 import com.travelplatform.bookingorder.domain.OrderStatus;
 import com.travelplatform.bookingorder.infrastructure.PaymentClient;
+import com.travelplatform.common.outbox.OutboxRecorder;
+import com.travelplatform.common.outbox.OutboxStore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -33,9 +36,13 @@ class OrderServiceIdempotencyTest {
     private final SagaOrchestrator orchestrator = mock(SagaOrchestrator.class);
     private final PaymentClient paymentClient = mock(PaymentClient.class);
 
+    private final OrderEventPublisher events =
+            new OrderEventPublisher(new OutboxRecorder(
+                    mock(OutboxStore.class), new ObjectMapper().findAndRegisterModules()));
+
     // 待测试的OrderService实例
     private final OrderService service =
-            new OrderService(orderRepository, itemRepository, orchestrator, paymentClient);
+            new OrderService(orderRepository, itemRepository, orchestrator, paymentClient, events);
 
     /**
      * 测试重复提交时返回已存在的订单且不重新运行Saga
@@ -133,7 +140,8 @@ class OrderServiceIdempotencyTest {
         booked.setPaymentId("pay-1");
         when(orderRepository.findByIdAndUserId("order-1", "user-1")).thenReturn(Optional.of(booked));
         when(paymentClient.confirm("pay-1")).thenReturn(new PaymentClient.PaymentApiResponse(
-                0, "OK", new PaymentClient.PaymentData("pay-1", "order-1", 100L, "SUCCEEDED", "MOCK", Instant.now())));
+                0, "OK", new PaymentClient.PaymentData(
+                        "pay-1", "order-1", "user-1", 100L, "SUCCEEDED", "MOCK", Instant.now())));
 
         Order result = service.pay("user-1", "order-1");
 

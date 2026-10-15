@@ -32,16 +32,19 @@ public class OrderService {
     private final OrderItemRepository itemRepository;
     private final SagaOrchestrator orchestrator;
     private final PaymentClient paymentClient;
+    private final OrderEventPublisher events;
     private final OrderStateMachine stateMachine = new OrderStateMachine();
 
     public OrderService(OrderRepository orderRepository,
                         OrderItemRepository itemRepository,
                         SagaOrchestrator orchestrator,
-                        PaymentClient paymentClient) {
+                        PaymentClient paymentClient,
+                        OrderEventPublisher events) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.orchestrator = orchestrator;
         this.paymentClient = paymentClient;
+        this.events = events;
     }
 
     @Transactional
@@ -73,16 +76,20 @@ public class OrderService {
                 .map(item -> toItem(order.getId(), item))
                 .toList();
         itemRepository.saveAll(items);
+        events.orderCreated(order, items.size());
 
         boolean booked = orchestrator.book(order, items);
         itemRepository.saveAll(items);
         if (booked) {
             stateMachine.booked(order);
             createPayment(order);
+            orderRepository.save(order);
+            events.orderBooked(order, items);
         } else {
             stateMachine.fail(order, "joint booking failed; already-held resources were released");
+            orderRepository.save(order);
+            events.orderFailed(order, failedItems(items));
         }
-        orderRepository.save(order);
         return order;
     }
 
@@ -114,6 +121,7 @@ public class OrderService {
         List<OrderItem> items = itemRepository.findByOrderId(orderId);
         orchestrator.cancel(order, items);
         orderRepository.save(order);
+        events.orderCancelled(order);
         return order;
     }
 
@@ -124,12 +132,16 @@ public class OrderService {
      */
     @Transactional
     public void convergeToCancelled(Order order) {
+        boolean wasCancelled = order.getStatus() == OrderStatus.CANCELLED;
         if (order.getStatus() != OrderStatus.CANCELLED) {
             order.setStatus(OrderStatus.CANCELLED);
         }
         List<OrderItem> items = itemRepository.findByOrderId(order.getId());
         orchestrator.cancel(order, items);
         orderRepository.save(order);
+        if (!wasCancelled) {
+            events.orderCancelled(order);
+        }
     }
 
     public boolean hasSucceededRefund(String orderId) {
@@ -153,10 +165,14 @@ public class OrderService {
             createPayment(order);
         }
         PaymentClient.PaymentApiResponse response = paymentClient.confirm(order.getPaymentId());
-        if ("SUCCEEDED".equals(response.data().status())) {
+        boolean paid = "SUCCEEDED".equals(response.data().status());
+        if (paid) {
             stateMachine.paid(order);
         }
         orderRepository.save(order);
+        if (paid) {
+            events.orderPaid(order);
+        }
         return order;
     }
 
@@ -164,6 +180,7 @@ public class OrderService {
     public Order autoConfirm(Order order) {
         stateMachine.confirmed(order);
         orderRepository.save(order);
+        events.orderConfirmed(order);
         return order;
     }
 
@@ -173,6 +190,13 @@ public class OrderService {
         List<OrderItem> items = itemRepository.findByOrderId(order.getId());
         orchestrator.cancel(order, items);
         orderRepository.save(order);
+        events.orderCancelled(order);
+    }
+
+    private List<OrderItem> failedItems(List<OrderItem> items) {
+        return items.stream()
+                .filter(item -> item.getStatus() == OrderItemStatus.FAILED)
+                .toList();
     }
 
     private String deriveIdempotencyKey(OrderController.CreateOrderRequest request) {
@@ -206,7 +230,8 @@ public class OrderService {
         try {
             PaymentClient.PaymentApiResponse response = paymentClient.create(
                     new PaymentClient.CreatePaymentRequest(
-                            order.getId(), order.getTotalAmount(), "order:" + order.getId()));
+                            order.getId(), order.getUserId(),
+                            order.getTotalAmount(), "order:" + order.getId()));
             order.setPaymentId(response.data().id());
         } catch (Exception e) {
             log.warn("failed to create payment for order {}: {}", order.getId(), e.toString());

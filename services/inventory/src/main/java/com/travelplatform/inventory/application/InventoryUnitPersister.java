@@ -21,11 +21,14 @@ public class InventoryUnitPersister {
 
     private final InventoryUnitRepository unitRepository;
     private final InventoryLockRepository lockRepository;
+    private final InventoryEventPublisher events;
 
     public InventoryUnitPersister(InventoryUnitRepository unitRepository,
-                                  InventoryLockRepository lockRepository) {
+                                  InventoryLockRepository lockRepository,
+                                  InventoryEventPublisher events) {
         this.unitRepository = unitRepository;
         this.lockRepository = lockRepository;
+        this.events = events;
     }
 
     @Transactional
@@ -35,6 +38,7 @@ public class InventoryUnitPersister {
         unit.setAvailable(unit.getAvailable() - quantity);
         unitRepository.save(unit);
         lockRepository.save(lock);
+        events.inventoryLocked(lock);
     }
 
     @Transactional
@@ -45,6 +49,7 @@ public class InventoryUnitPersister {
         unitRepository.save(unit);
         lock.setStatus(LockStatus.RELEASED);
         lockRepository.save(lock);
+        events.inventoryReleased(lock);
     }
 
     @Transactional

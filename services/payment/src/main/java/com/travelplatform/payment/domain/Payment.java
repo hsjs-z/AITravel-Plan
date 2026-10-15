@@ -19,6 +19,10 @@ public class Payment {
     @Column(nullable = false)
     private String orderId;
 
+    /** Order owner; carried so payment events can be routed to the user (FR-033). */
+    @Column(name = "user_id")
+    private String userId;
+
     @Column(nullable = false, unique = true)
     private String idempotencyKey;
 
@@ -51,6 +55,14 @@ public class Payment {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getIdempotencyKey() {

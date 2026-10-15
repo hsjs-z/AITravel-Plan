@@ -24,13 +24,14 @@ public interface PaymentClient {
     @GetMapping("/refunds/order/{orderId}")
     RefundListApiResponse refundsByOrder(@PathVariable("orderId") String orderId);
 
-    record CreatePaymentRequest(String orderId, Long amount, String idempotencyKey) {
+    record CreatePaymentRequest(String orderId, String userId, Long amount, String idempotencyKey) {
     }
 
     record PaymentApiResponse(int code, String message, PaymentData data) {
     }
 
-    record PaymentData(String id, String orderId, Long amount, String status, String channel, Instant paidAt) {
+    record PaymentData(String id, String orderId, String userId, Long amount, String status,
+                       String channel, Instant paidAt) {
     }
 
     record RefundRequest(String paymentId, String orderId, Long amount, String idempotencyKey) {

@@ -99,11 +99,10 @@
 
 ## 12. 技术债：回调对账缺少 FAILED 终态守卫
 
-- **现状**: `PaymentService.reconcileCallback` 只校验金额一致与回调状态，
-  不校验支付当前状态；一笔已 `FAILED` 的支付可能被「金额一致 + SUCCESS」的
-  回调翻成 `SUCCEEDED`。
-- **要求**: 接入真实支付通道前必须修复——为 `FAILED`（以及未来的终态）加
-  状态机守卫，终态不可逆；重复/乱序回调只能对 `PENDING` 生效。
+- **现状（已修复，2026-10-15 M2）**: `PaymentService.reconcileCallback` 现仅在
+  当前状态为 `PENDING` 且金额一致、回调为 SUCCESS 时推进为 `SUCCEEDED`；
+  终态（`SUCCEEDED`/`FAILED`）不可逆，重复/乱序回调不会翻状态，也不会对同一笔
+  支付重复发出 `PaymentSucceeded` 事件（同时满足 FR-035 的业务级去重）。
 
 ## 13. Schema 演进方案：Flyway 替代 ddl-auto=update
 
@@ -115,3 +114,33 @@
   `order_item.status` 缺 `RELEASED` 即由此产生，并在取消时造成
   「退款已提交、库存已释放、订单事务回滚」的三方不一致。Flyway 版本化迁移
   使 Schema 变更可审计、可复现，杜绝此类漂移。
+
+## 14. US6 检索路径压测证据（T074）
+
+- **方法**: `SearchLoadTest`（`services/inventory/src/test/java/com/travelplatform/inventory/performance/SearchLoadTest.java`）
+  以 `@SpringBootTest` 打真实 MySQL + Redis，预置 1 个 TRADABLE 资源、3 个规格与
+  3 个库存单元，随后单次突发派发 1000 次 `search(destination, date)` 调用，
+  线程池并发 200。阈值以断言形式写入测试（95% < 1s、错误率 < 1%）。
+- **实测（2026-10-15 13:10，本地 Docker 中间件刚启动、连接池冷启动）**:
+  `totalRequests=1000, concurrency=200, p95=436.56ms, p99=459.34ms, errorRate=0.0, mismatches=0`。
+- **结论**: 达标。该证据随测试输出打印 `[T074-SEARCH-LOAD]` 一行，CI/手工验收
+  均可直接核对；后续若要作为基线对比，应以相同中间件预热后复测。
+
+## 15. 部署事故复盘（2026-10-15）与部署规约
+
+- **现象**: 08:34 启动的旧 inventory JVM 进入「TCP 已接受、应用层永不处理」的挂死
+  状态——HTTP 请求悬挂约 40 分钟无响应、`jstack` 无有效线程栈；同时
+  `services/inventory/target/` 残留一个 68.6MB、无 `Main-Class`/`Start-Class`
+  清单属性的 plain jar，说明发生过一次不完整构建。旧 JVM 与 plain jar 已被后续
+  的干净构建取代（当前 `target/inventory-0.1.0-SNAPSHOT.jar` 为 87.78MB 的 fat jar，
+  含 `JarLauncher`/`Start-Class`）。
+- **根因归纳**: 部署前未做 `mvn clean install` 的产物完整性校验，也未对新增端点做
+  真实 HTTP 探活（仅看 `/actuator/health` 的 UP）。M2 期间一次 `mvn install` 曾在
+  `spring-boot:repackage` 步骤因 jar 被运行中 JVM 占用而失败，这类失败可能把
+  `target/` 留在可被误部署的半成品状态。挂死的直接诱因仍以运行期证据为准，
+  不排除线程池耗尽或上游调用无超时，后续复现时优先抓取 `jstack` 与线程池指标。
+- **部署规约（强制）**:
+  1. 部署前 `mvn clean install`，并校验产物 jar 大小（fat jar 应 > 80MB）与
+     `jar` 内 `Main-Class=org.springframework.boot.loader.launch.JarLauncher`。
+  2. 启动后对本次新增的每个端点做真实 HTTP 探活（200/预期错误码），不得只看 health UP。
+  3. 同一服务不得新旧两个实例同时注册 Nacos；本地验证用临时端口并关闭 discovery。

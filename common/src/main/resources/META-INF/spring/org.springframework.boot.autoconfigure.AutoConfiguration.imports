@@ -1,1 +1,2 @@
 com.travelplatform.common.api.CommonWebAutoConfiguration
+com.travelplatform.common.outbox.CommonOutboxAutoConfiguration

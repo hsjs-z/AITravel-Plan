@@ -4,6 +4,28 @@ server:
 spring:
   application:
     name: notification
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/travel_notification?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: ${MYSQL_ROOT_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: notification
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   cloud:
     nacos:
       discovery:
@@ -14,3 +36,9 @@ management:
     web:
       exposure:
         include: health,info
+
+notification:
+  email:
+    # 邮件为可选渠道：投递失败保留 PENDING，由调度器在下游恢复后补齐（FR-034）。
+    retry-ms: 15000
+    batch-size: 50

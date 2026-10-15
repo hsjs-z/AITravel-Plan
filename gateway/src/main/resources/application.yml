@@ -14,6 +14,30 @@ spring:
           uri: lb://user-auth
           predicates:
             - Path=/auth/**,/users/**
+        - id: inventory
+          uri: lb://inventory
+          predicates:
+            - Path=/resources/**,/inventory/**
+        - id: itinerary
+          uri: lb://itinerary
+          predicates:
+            - Path=/itineraries/**
+        - id: ai-planning
+          uri: lb://ai-planning
+          predicates:
+            - Path=/planning/**
+        - id: payment
+          uri: lb://payment
+          predicates:
+            - Path=/payments/**,/refunds/**
+        - id: booking-order
+          uri: lb://booking-order
+          predicates:
+            - Path=/orders/**
+        - id: notification
+          uri: lb://notification
+          predicates:
+            - Path=/notifications/**
 
 management:
   endpoints:

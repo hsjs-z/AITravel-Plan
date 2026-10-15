@@ -20,6 +20,11 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 > 修订说明：T073（user-auth Controller）与 T074（检索压测）为 analyze 后追加，
 > ID 采用追加编号；任务实际执行顺序以所在 Phase 与依赖关系为准。
+>
+> M2 执行说明（2026-10-15）：进入 M2 时核查发现 M1 的事件发布任务
+> T023/T029/T039/T045/T052 未落地（全仓库无 Kafka 依赖、无 Outbox 投递器、
+> notification 模块为空骨架），而 US7 的独立验证依赖这些事件。因此 M2 实际执行顺序为：
+> 先补 Outbox + Kafka 事件底座与上述 5 个事件发布任务，再实现 US7；US6 不受阻塞先行。
 
 ## 服务启动顺序与依赖
 
@@ -123,7 +128,7 @@ research.md、data-model.md、contracts/、quickstart.md）
 - [ ] T022 [US1] 实现 Controller 与 OpenAPI 文档（POST /planning/tasks、GET /planning/tasks/{id}、
   POST /planning/tasks/{id}/retry），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/api/PlanningController.java`
-- [ ] T023 [US1] 实现 PlanningSucceeded/PlanningFailed 事件（Outbox 发布），
+- [X] T023 [US1] 实现 PlanningSucceeded/PlanningFailed 事件（Outbox 发布），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningEventPublisher.java`
 
 **Checkpoint**: US1 可独立演示（MVP）
@@ -148,7 +153,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryLifecycleService.java`
 - [X] T028 [US2] 实现 Controller（OpenAPI 文档统一在收尾阶段接入），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`
-- [ ] T029 [US2] 实现 ItineraryConfirmed/ItineraryChanged 事件（Outbox，已下单行程修改才发 Changed），
+- [X] T029 [US2] 实现 ItineraryConfirmed/ItineraryChanged 事件（Outbox，已下单行程修改才发 Changed），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryEventPublisher.java`
 
 **Checkpoint**: US1+US2 均独立可用
@@ -189,7 +194,7 @@ research.md、data-model.md、contracts/、quickstart.md）
 - [X] T038 [US3] 实现 Controller（POST /orders、GET /orders、GET /orders/{id}、
   POST /orders/{id}/cancel），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/api/OrderController.java`
-- [ ] T039 [US3] 实现 OrderCreated/Booked/Paid/Confirmed/Cancelled/Failed 事件（Outbox），
+- [X] T039 [US3] 实现 OrderCreated/Booked/Paid/Confirmed/Cancelled/Failed 事件（Outbox），
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderEventPublisher.java`
 
 **Checkpoint**: 联合预订闭环可用（不含支付，下一故事衔接）
@@ -219,7 +224,7 @@ research.md、data-model.md、contracts/、quickstart.md）
 - [X] T044 [US4] 实现 Controller（GET /inventory/query、POST /inventory/locks、
   POST /inventory/locks/{id}/release），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/InventoryController.java`
-- [ ] T045 [US4] 实现 InventoryLocked/Released/SoldOut 事件（Outbox），
+- [X] T045 [US4] 实现 InventoryLocked/Released/SoldOut 事件（Outbox），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryEventPublisher.java`
 
 **Checkpoint**: 库存原语就绪，US3 的锁依赖真实可用
@@ -250,7 +255,7 @@ research.md、data-model.md、contracts/、quickstart.md）
 - [X] T051 [US5] 实现 Controller（POST /payments、POST /payments/{id}/confirm、
   POST /payments/callback、POST /refunds），
   文件 `services/payment/src/main/java/com/travelplatform/payment/api/`
-- [ ] T052 [US5] 实现 PaymentSucceeded/Failed/RefundSucceeded 事件（Outbox），
+- [X] T052 [US5] 实现 PaymentSucceeded/Failed/RefundSucceeded 事件（Outbox），
   文件 `services/payment/src/main/java/com/travelplatform/payment/application/PaymentEventPublisher.java`
 
 **Checkpoint**: P1 主线（规划→行程→预订→库存→支付）端到端跑通
@@ -265,11 +270,11 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Implementation for User Story 6
 
-- [ ] T053 [US6] 实现资源检索/筛选/排序查询（目的地、日期、价格区间），
+- [X] T053 [US6] 实现资源检索/筛选/排序查询（目的地、日期、价格区间），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/ResourceSearchService.java`
-- [ ] T054 [US6] 实现 Controller 与 OpenAPI 文档（GET /resources/search、GET /resources/{id}），
+- [X] T054 [US6] 实现 Controller 与 OpenAPI 文档（GET /resources/search、GET /resources/{id}），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/ResourceController.java`
-- [ ] T055 [US6] 在资源详情 DTO 中按 type 返回可交易/内容标识，售罄或下架不提供下单入口，
+- [X] T055 [US6] 在资源详情 DTO 中按 type 返回可交易/内容标识，售罄或下架不提供下单入口，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/ResourceResponse.java`
 
 **Checkpoint**: US6 独立可用
@@ -284,13 +289,13 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Implementation for User Story 7
 
-- [ ] T056 [US7] 实现 Notification 实体 + Repository（type/channel/readStatus/dedupKey 唯一），
+- [X] T056 [US7] 实现 Notification 实体 + Repository（type/channel/readStatus/dedupKey 唯一），
   文件 `services/notification/src/main/java/com/travelplatform/notification/domain/Notification.java`
-- [ ] T057 [US7] 实现事件消费者（按事件 id 去重；站内信必达、邮件可选；下游不可用补齐），
+- [X] T057 [US7] 实现事件消费者（按事件 id 去重；站内信必达、邮件可选；下游不可用补齐），
   文件 `services/notification/src/main/java/com/travelplatform/notification/application/NotificationConsumer.java`
-- [ ] T058 [US7] 实现通知服务（列表/未读数/标记已读，owner 隔离），
+- [X] T058 [US7] 实现通知服务（列表/未读数/标记已读，owner 隔离），
   文件 `services/notification/src/main/java/com/travelplatform/notification/application/NotificationService.java`
-- [ ] T059 [US7] 实现 Controller 与 OpenAPI 文档（GET /notifications、GET /notifications/unread-count、
+- [X] T059 [US7] 实现 Controller 与 OpenAPI 文档（GET /notifications、GET /notifications/unread-count、
   POST /notifications/{id}/read），
   文件 `services/notification/src/main/java/com/travelplatform/notification/api/NotificationController.java`
 
@@ -339,7 +344,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/booking-order/src/test/`、`services/payment/src/test/`、`services/inventory/src/test/`
 - [ ] T071 按 quickstart.md 跑 S1–S7 全场景端到端验证并修复问题，
   文件 `specs/001-ai-travel-platform-v1/quickstart.md`
-- [ ] T074 [US6] 实现检索路径性能/负载验证：95% 检索 <1s、1000 并发错误率 <1%
+- [X] T074 [US6] 实现检索路径性能/负载验证：95% 检索 <1s、1000 并发错误率 <1%
   （阈值写入断言），
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/performance/SearchLoadTest.java`
 - [ ] T072 执行最终 Constitution Check 复检（原则 I–X）并同步 OpenAPI/GLOSSARY/ADR 文档
