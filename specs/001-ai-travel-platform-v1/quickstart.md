@@ -86,3 +86,31 @@
 
 任一次端到端操作，在观测后台可按同一 `traceId` 还原 AI 规划 → 订单 → 支付全链路，
 并查询关键接口的 QPS 与 P99 延迟。
+
+## 实测记录（M4 T071，2026-10-15）
+
+经 gateway 8080 对 S1–S7 逐一实测，结果如下（命令见各场景）：
+
+- S1 注册/登录：`register code=0`、`login code=0 + token`。
+- S2 AI 生成行程：任务 `PENDING→RUNNING→SUCCEEDED`，回填 `itineraryId`（DRAFT）。
+- S3 查看/编辑/确认：查看 DRAFT；PUT 编辑后仍 DRAFT；confirm → CONFIRMED；
+  他人 GET 该行程 → HTTP 404。
+- S4 一键预订：POST /orders → `BOOKED`，total=1020（500×1 + 260×2）；同 payload 二次
+  提交返回同一 orderId（幂等，FR-018）。
+- S5 支付与幂等：POST /orders/{id}/pay → `PAID`；二次 pay → HTTP 409（不重复扣款）；
+  订单由调度器 `reconcilePaidOrders`（默认 10s，ADR-0001）自动推进为 `CONFIRMED`。
+- S6 通知与未读：支付后未读数 2（PAYMENT_SUCCEEDED、BOOKING_SUCCEEDED）；标一条已读
+  后未读数 2→1。
+- S7 取消与退款：对 PAID 订单 cancel → `CANCELLED`，退款 `SUCCEEDED`（金额 ≤ 实付），
+  库存释放，行程回 `CONFIRMED`。
+
+压测量化（并发数 / 总请求 / P95 / P99）：
+
+| 场景 | 并发 | 总请求 | P95 | P99 | 错误率 |
+|------|------|--------|-----|-----|--------|
+| 检索路径（SearchLoadTest，直连 inventory） | 200 | 1000 | 533.2ms | 557.1ms | 0.0 |
+| 检索路径（经 gateway，`GET /resources/search?type=CONTENT`） | 30 | 300 | 83.9ms | 128.3ms | 0.0 |
+
+说明：检索路径压测阈值已写入 `SearchLoadTest` 断言（95% < 1s、错误率 < 1%），
+`[T074-SEARCH-LOAD]` 输出行可复核；网关侧的 P95/P99 为客户端采样，服务端同口径指标
+见 Prometheus `http_server_requests_seconds_bucket`（T068）。
