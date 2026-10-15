@@ -99,3 +99,47 @@ export interface PlanningResult {
   attractions?: PlanningNamedItem[]
   foods?: PlanningNamedItem[]
 }
+
+export type ItineraryStatus = 'DRAFT' | 'CONFIRMED' | 'LOCKED' | 'COMPLETED'
+export type ItineraryItemSource = 'AI' | 'MANUAL'
+
+export interface ItineraryItem {
+  id: string
+  dayDate: string
+  description: string
+  resourceType: string | null
+  resourceId: string | null
+  specId: string | null
+  source: ItineraryItemSource
+}
+
+export interface Itinerary {
+  id: string
+  userId: string
+  destination: string
+  startDate: string
+  endDate: string
+  partySize: number
+  budget: number
+  status: ItineraryStatus
+  hasOrder: boolean
+  items: ItineraryItem[]
+}
+
+export interface ItineraryItemPayload {
+  dayDate: string
+  description: string
+  resourceType?: string
+  resourceId?: string
+  specId?: string
+  source: ItineraryItemSource
+}
+
+export interface UpdateItineraryPayload {
+  destination: string
+  startDate: string
+  endDate: string
+  partySize: number
+  budget: number
+  items: ItineraryItemPayload[]
+}

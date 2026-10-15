@@ -58,7 +58,7 @@
             class="block-hint"
           />
           <p v-if="task.itineraryId" class="itinerary-hint">
-            已生成草稿行程（ID：{{ task.itineraryId }}），行程查看页将在 T065 接入。
+            已生成草稿行程，<router-link :to="`/itineraries/${task.itineraryId}`">去查看行程</router-link>
           </p>
           <div v-if="result" class="result-preview">
             <h3>{{ result.destination }} · {{ result.totalDays ?? form.days }} 天 · 预算约 {{ result.estimatedBudget ?? form.budget }} 元</h3>
