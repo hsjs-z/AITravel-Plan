@@ -1,6 +1,7 @@
 package com.travelplatform.common.outbox;
 
 import com.travelplatform.common.observability.TraceContext;
+import com.travelplatform.common.observability.TraceContinuation;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -33,6 +34,10 @@ public class KafkaOutboxPublisher implements OutboxPublisher {
         record.headers().add(HEADER_EVENT_TYPE, bytes(message.getEventType()));
         if (message.getTraceId() != null) {
             record.headers().add(TraceContext.KEY, bytes(message.getTraceId()));
+            String traceparent = TraceContinuation.traceparentFor(message.getTraceId());
+            if (traceparent != null) {
+                record.headers().add("traceparent", bytes(traceparent));
+            }
         }
         try {
             kafkaTemplate.send(record).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);

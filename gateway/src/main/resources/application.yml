@@ -48,6 +48,16 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://127.0.0.1:4318/v1/traces
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
 
 auth:
   jwt:

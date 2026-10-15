@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travelplatform.notification.domain.NotificationType;
 import com.travelplatform.notification.domain.ProcessedEventRepository;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +26,10 @@ class NotificationConsumerTest {
     private final NotificationService notificationService = mock(NotificationService.class);
     private final ProcessedEventRepository processedEvents = mock(ProcessedEventRepository.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Tracer tracer = mock(Tracer.class);
+    private final Propagator propagator = mock(Propagator.class);
     private final NotificationConsumer consumer =
-            new NotificationConsumer(notificationService, processedEvents, objectMapper);
+            new NotificationConsumer(notificationService, processedEvents, objectMapper, tracer, propagator);
 
     @Test
     void mapsOrderBookedToBookingSucceeded() {

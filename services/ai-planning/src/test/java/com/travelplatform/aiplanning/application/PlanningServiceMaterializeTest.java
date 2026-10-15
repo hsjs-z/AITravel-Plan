@@ -8,6 +8,8 @@ import com.travelplatform.aiplanning.infrastructure.InventoryClient;
 import com.travelplatform.aiplanning.infrastructure.ItineraryClient;
 import com.travelplatform.common.outbox.OutboxRecorder;
 import com.travelplatform.common.outbox.OutboxStore;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.TaskExecutor;
 
@@ -32,6 +34,8 @@ class PlanningServiceMaterializeTest {
     private final RecommendationTool recommendationTool = mock(RecommendationTool.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TaskExecutor executor = Runnable::run;
+    private final Tracer tracer = mock(Tracer.class);
+    private final Propagator propagator = mock(Propagator.class);
 
     private final PlanningEventPublisher events =
             new PlanningEventPublisher(new OutboxRecorder(
@@ -40,7 +44,8 @@ class PlanningServiceMaterializeTest {
 
     private final PlanningService service =
             new PlanningService(
-                    repository, planner, itineraryClient, recommendationTool, objectMapper, writer, executor);
+                    repository, planner, itineraryClient, recommendationTool, objectMapper, writer, executor,
+                    tracer, propagator);
 
     @Test
     void materializesResourceIdsIntoItineraryItems() {

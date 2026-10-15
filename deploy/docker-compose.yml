@@ -78,3 +78,13 @@ services:
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: travel-tempo
+    ports:
+      - "4318:4318"
+      - "3200:3200"
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+    command: ["-config.file=/etc/tempo.yaml"]

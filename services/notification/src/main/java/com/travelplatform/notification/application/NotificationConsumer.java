@@ -3,6 +3,7 @@ package com.travelplatform.notification.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travelplatform.common.observability.TraceContext;
+import com.travelplatform.common.observability.TraceContinuation;
 import com.travelplatform.common.outbox.EventTypes;
 import com.travelplatform.common.outbox.OutboxTopics;
 import com.travelplatform.notification.domain.NotificationType;
@@ -10,6 +11,9 @@ import com.travelplatform.notification.domain.ProcessedEvent;
 import com.travelplatform.notification.domain.ProcessedEventRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -37,26 +41,40 @@ public class NotificationConsumer {
     private final NotificationService notificationService;
     private final ProcessedEventRepository processedEvents;
     private final ObjectMapper objectMapper;
+    private final Tracer tracer;
+    private final Propagator propagator;
 
     public NotificationConsumer(NotificationService notificationService,
                                 ProcessedEventRepository processedEvents,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                Tracer tracer,
+                                Propagator propagator) {
         this.notificationService = notificationService;
         this.processedEvents = processedEvents;
         this.objectMapper = objectMapper;
+        this.tracer = tracer;
+        this.propagator = propagator;
     }
 
     @KafkaListener(
             topics = {OutboxTopics.ITINERARY_EVENTS, OutboxTopics.ORDER_EVENTS, OutboxTopics.PAYMENT_EVENTS},
             groupId = "${spring.kafka.consumer.group-id:notification}")
     public void onEvent(ConsumerRecord<String, String> record) {
-        String traceId = header(record, TraceContext.KEY);
+        String traceparent = header(record, "traceparent");
+        Span span = traceparent != null
+                ? TraceContinuation.startFromRemote(propagator, traceparent, "notification.consume")
+                : null;
+        String traceId = span != null ? span.context().traceId() : header(record, TraceContext.KEY);
         if (traceId != null) {
             TraceContext.put(traceId);
         }
-        try {
+        log.info("consuming {} traceId={}", record.topic(), traceId == null ? "-" : traceId);
+        try (Tracer.SpanInScope ignored = span != null ? tracer.withSpan(span) : null) {
             consume(record);
         } finally {
+            if (span != null) {
+                span.end();
+            }
             if (traceId != null) {
                 TraceContext.clear();
             }

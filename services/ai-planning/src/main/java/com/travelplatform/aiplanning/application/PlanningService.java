@@ -8,6 +8,11 @@ import com.travelplatform.aiplanning.infrastructure.ItineraryClient;
 import com.travelplatform.aiplanning.infrastructure.InventoryClient;
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
+import com.travelplatform.common.observability.TraceContext;
+import com.travelplatform.common.observability.TraceContinuation;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.task.TaskExecutor;
@@ -36,6 +41,8 @@ public class PlanningService {
     private final ObjectMapper objectMapper;
     private final PlanningTaskWriter writer;
     private final TaskExecutor executor;
+    private final Tracer tracer;
+    private final Propagator propagator;
 
     public PlanningService(PlanningTaskRepository repository,
                            PlannerClient planner,
@@ -43,7 +50,9 @@ public class PlanningService {
                            RecommendationTool recommendationTool,
                            ObjectMapper objectMapper,
                            PlanningTaskWriter writer,
-                           @Qualifier("applicationTaskExecutor") TaskExecutor executor) {
+                           @Qualifier("applicationTaskExecutor") TaskExecutor executor,
+                           Tracer tracer,
+                           Propagator propagator) {
         this.repository = repository;
         this.planner = planner;
         this.itineraryClient = itineraryClient;
@@ -51,6 +60,8 @@ public class PlanningService {
         this.objectMapper = objectMapper;
         this.writer = writer;
         this.executor = executor;
+        this.tracer = tracer;
+        this.propagator = propagator;
     }
 
     public PlanningTask submit(String userId, PlanningController.CreateTaskRequest request) {
@@ -66,7 +77,8 @@ public class PlanningService {
         task.setCreatedAt(Instant.now());
         task.setUpdatedAt(Instant.now());
         repository.save(task);
-        executor.execute(() -> run(task.getId()));
+        String traceId = TraceContext.current();
+        executor.execute(() -> run(task.getId(), traceId));
         return task;
     }
 
@@ -78,26 +90,45 @@ public class PlanningService {
     public PlanningTask retry(String userId, String taskId) {
         PlanningTask task = get(userId, taskId);
         writer.retry(task);
-        executor.execute(() -> run(task.getId()));
+        String traceId = TraceContext.current();
+        executor.execute(() -> run(task.getId(), traceId));
         return task;
     }
 
-    private void run(String taskId) {
-        PlanningTask task = repository.findById(taskId).orElse(null);
-        if (task == null) {
-            return;
+    private void run(String taskId, String traceId) {
+        Span span = spanFor(traceId);
+        if (span != null) {
+            TraceContext.put(span.context().traceId());
         }
-        writer.start(taskId);
-        try {
-            List<InventoryClient.Candidate> candidates =
-                    recommendationTool.fetchCandidates(task.getDestination(), LocalDate.now());
-            String candidateContext = recommendationTool.buildCandidateContext(candidates);
-            String result = planner.generate(task, candidateContext);
-            String itineraryId = materializeItinerary(task, result, candidates);
-            writer.succeed(taskId, result, itineraryId);
-        } catch (Exception e) {
-            writer.fail(taskId, e.getMessage());
+        try (Tracer.SpanInScope ignored = span != null ? tracer.withSpan(span) : null) {
+            PlanningTask task = repository.findById(taskId).orElse(null);
+            if (task == null) {
+                return;
+            }
+            writer.start(taskId);
+            try {
+                List<InventoryClient.Candidate> candidates =
+                        recommendationTool.fetchCandidates(task.getDestination(), LocalDate.now());
+                String candidateContext = recommendationTool.buildCandidateContext(candidates);
+                String result = planner.generate(task, candidateContext);
+                String itineraryId = materializeItinerary(task, result, candidates);
+                writer.succeed(taskId, result, itineraryId);
+            } catch (Exception e) {
+                writer.fail(taskId, e.getMessage());
+            }
+        } finally {
+            if (span != null) {
+                span.end();
+            }
+            TraceContext.clear();
         }
+    }
+
+    private Span spanFor(String traceId) {
+        String traceparent = TraceContinuation.traceparentFor(traceId);
+        return traceparent == null
+                ? null
+                : TraceContinuation.startFromRemote(propagator, traceparent, "planning.run");
     }
 
     /**
