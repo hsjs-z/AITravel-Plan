@@ -149,8 +149,9 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/domain/ItineraryStateMachine.java`
 - [X] T026 [US2] 实现行程服务（创建/查看/编辑/确认/删除，全部按 userId 隔离），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`
-- [ ] T027 [US2] 实现生命周期服务（订单支付成功锁定已订项/解锁未订项；取消/失败回 CONFIRMED），
-  文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryLifecycleService.java`
+- [X] T027 [US2] 实现生命周期服务（实现位于 ItineraryController：
+  `POST /itineraries/{id}/lock|release|complete`；订单支付成功锁定/解锁，取消/失败回 CONFIRMED），
+  文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`
 - [X] T028 [US2] 实现 Controller（OpenAPI 文档统一在收尾阶段接入），
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`
 - [X] T029 [US2] 实现 ItineraryConfirmed/ItineraryChanged 事件（Outbox，已下单行程修改才发 Changed），
@@ -342,12 +343,12 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `deploy/observability/`
 - [X] T070 补齐并全量通过核心逻辑单测（订单状态机/Saga/幂等/库存扣减），
   文件 `services/booking-order/src/test/`、`services/payment/src/test/`、`services/inventory/src/test/`
-- [ ] T071 按 quickstart.md 跑 S1–S7 全场景端到端验证并修复问题，
+- [X] T071 按 quickstart.md 跑 S1–S7 全场景端到端验证并修复问题，
   文件 `specs/001-ai-travel-platform-v1/quickstart.md`
 - [X] T074 [US6] 实现检索路径性能/负载验证：95% 检索 <1s、1000 并发错误率 <1%
   （阈值写入断言），
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/performance/SearchLoadTest.java`
-- [ ] T072 执行最终 Constitution Check 复检（原则 I–X）并同步 OpenAPI/GLOSSARY/ADR 文档
+- [X] T072 执行最终 Constitution Check 复检（原则 I–X）并同步 OpenAPI/GLOSSARY/ADR 文档
 
 ---
 
