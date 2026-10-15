@@ -326,7 +326,7 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 **Purpose**: 前端主流程、可观测性、全量测试与端到端验证
 
-- [ ] T063 [P] 实现前端 API 客户端与登录/注册页，
+- [X] T063 [P] 实现前端 API 客户端与登录/注册页，
   文件 `frontend/src/api/`、`frontend/src/views/auth/`
 - [ ] T064 [P] 实现前端规划任务提交/状态轮询页，
   文件 `frontend/src/views/planning/`

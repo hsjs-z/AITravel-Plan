@@ -25,6 +25,9 @@
    `gateway → inventory → user-auth → ai-planning → itinerary → booking-order →
    payment → notification` 顺序启动；Nacos 中注册成功即视为服务可用。
 
+> 注意：user-auth 当前使用内存存储（见 research.md §19），user-auth 服务重启后
+> 已注册账号会丢失，需重新注册后再继续 S1–S7 验证。
+
 ## 验证场景
 
 ### S1 注册与登录（user-auth）
