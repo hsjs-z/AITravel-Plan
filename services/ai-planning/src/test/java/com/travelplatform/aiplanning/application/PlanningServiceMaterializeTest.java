@@ -92,4 +92,53 @@ class PlanningServiceMaterializeTest {
                         "r-attraction-1".equals(i.resourceId()) && "s-ticket-1".equals(i.specId())),
                 "attraction resourceId/specId must be materialized");
     }
+
+    /**
+     * AI 编造的 resourceId/specId 不在候选清单内时，绑定必须被置空；
+     * 候选清单内的绑定仍正常落库（FR-007）。
+     */
+    @Test
+    void dropsResourceBindingWhenIdsAreNotInTheCandidateList() {
+        AtomicReference<PlanningTask> saved = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            PlanningTask task = invocation.getArgument(0);
+            saved.set(task);
+            return task;
+        });
+        when(repository.findById(anyString())).thenAnswer(invocation -> Optional.of(saved.get()));
+
+        when(planner.generate(any(), any())).thenReturn("""
+                {
+                  "destination": "云南",
+                  "totalDays": 1,
+                  "partySize": 2,
+                  "estimatedBudget": 3000,
+                  "days": [{"day": 1, "arrangements": ["抵达"]}],
+                  "hotels": [{"name": "编造酒店", "resourceId": "r-fabricated", "specId": "s-fabricated", "dayIndex": 1}],
+                  "attractions": [{"name": "玉龙雪山", "resourceId": "r-attraction-1", "specId": "s-ticket-1", "dayIndex": 1}]
+                }
+                """);
+
+        when(recommendationTool.fetchCandidates(any(), any())).thenReturn(List.of(
+                new InventoryClient.Candidate("r-attraction-1", "玉龙雪山", "TRADABLE",
+                        List.of(new InventoryClient.Spec("s-ticket-1", "成人票", 260L, 20)))));
+        when(recommendationTool.buildCandidateContext(any())).thenReturn("ctx");
+        when(itineraryClient.create(any(), any()))
+                .thenReturn(new ItineraryClient.ItineraryApiResponse(0, "OK", new ItineraryClient.ItineraryData("it-1")));
+
+        service.submit("u-1", new PlanningController.CreateTaskRequest("云南", 1, 2, 3000L, null));
+
+        ArgumentCaptor<ItineraryClient.ItineraryCreateRequest> captor =
+                ArgumentCaptor.forClass(ItineraryClient.ItineraryCreateRequest.class);
+        verify(itineraryClient).create(eq("u-1"), captor.capture());
+
+        List<ItineraryClient.Item> items = captor.getValue().items();
+        assertTrue(items.stream().noneMatch(i -> "r-fabricated".equals(i.resourceId())),
+                "a fabricated resourceId must never be materialized");
+        assertTrue(items.stream().noneMatch(i -> "s-fabricated".equals(i.specId())),
+                "a fabricated specId must never be materialized");
+        assertTrue(items.stream().anyMatch(i ->
+                        "r-attraction-1".equals(i.resourceId()) && "s-ticket-1".equals(i.specId())),
+                "candidate-backed ids must still be materialized");
+    }
 }

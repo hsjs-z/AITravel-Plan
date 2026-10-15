@@ -1,6 +1,7 @@
 package com.travelplatform.bookingorder.domain;
 
 import com.travelplatform.common.api.BusinessException;
+import com.travelplatform.common.api.ErrorCode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,5 +63,30 @@ class OrderStateMachineTest {
         order.setStatus(OrderStatus.CREATED);
         // 验证尝试从CREATED状态直接转换到PAID状态是否会抛出业务异常
         assertThrows(BusinessException.class, () -> stateMachine.paid(order));
+    }
+
+    /**
+     * 已确认（CONFIRMED）后 v1 不开放取消（ADR-0001/ADR-0003）。
+     */
+    @Test
+    void cancelIsRejectedAfterConfirmation() {
+        Order order = new Order();
+        order.setStatus(OrderStatus.CONFIRMED);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> stateMachine.cancel(order));
+
+        assertEquals(ErrorCode.CONFLICT, ex.getErrorCode());
+        assertEquals(OrderStatus.CONFIRMED, order.getStatus());
+    }
+
+    /**
+     * 已支付的订单不能直接标记为失败：失败只能发生在尚未收款阶段（ADR-0001）。
+     */
+    @Test
+    void failIsRejectedAfterPayment() {
+        Order order = new Order();
+        order.setStatus(OrderStatus.PAID);
+
+        assertThrows(BusinessException.class, () -> stateMachine.fail(order, "late failure"));
     }
 }

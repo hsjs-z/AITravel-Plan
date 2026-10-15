@@ -144,4 +144,40 @@ class PaymentIdempotencyTest {
         assertEquals(PaymentStatus.PENDING, result.getStatus());
         verify(paymentRepository, never()).save(any());
     }
+
+    /**
+     * 终态守卫（research §12）：对已成功的支付重复收到成功回调不得翻状态、不得重复落库。
+     */
+    @Test
+    void repeatedSuccessCallbackOnSucceededPaymentKeepsTerminalState() {
+        when(paymentRepository.findById("p-1"))
+                .thenReturn(Optional.of(payment("p-1", 100L, PaymentStatus.SUCCEEDED)));
+
+        Payment result = service.reconcileCallback("p-1", 100L, "SUCCESS");
+
+        assertEquals(PaymentStatus.SUCCEEDED, result.getStatus());
+        verify(paymentRepository, never()).save(any());
+    }
+
+    /**
+     * 乱序回调（先成功、后失败）不得把已成功支付翻成失败（FR-030/FR-035）。
+     */
+    @Test
+    void lateFailureCallbackAfterSuccessDoesNotFlipState() {
+        when(paymentRepository.findById("p-1"))
+                .thenReturn(Optional.of(payment("p-1", 100L, PaymentStatus.SUCCEEDED)));
+
+        Payment result = service.reconcileCallback("p-1", 100L, "FAILED");
+
+        assertEquals(PaymentStatus.SUCCEEDED, result.getStatus());
+        verify(paymentRepository, never()).save(any());
+    }
+
+    private Payment payment(String id, long amount, PaymentStatus status) {
+        Payment payment = new Payment();
+        payment.setId(id);
+        payment.setAmount(amount);
+        payment.setStatus(status);
+        return payment;
+    }
 }

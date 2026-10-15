@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -118,5 +119,31 @@ class SagaOrchestratorTest {
 
         verify(inventoryClient).release("lock-1");
         assertEquals(OrderItemStatus.RELEASED, item.getStatus());
+    }
+
+    /**
+     * 取消补偿：已 BOOKED 的明细释放一次并落到 RELEASED；
+     * 已 RELEASED 的明细不重复释放（research §13 的枚举回归守卫，FR-017）。
+     */
+    @Test
+    void cancelReleasesBookedItemsOnceAndSkipsAlreadyReleasedOnes() {
+        Order order = new Order();
+        order.setId("order-1");
+        order.setItineraryId("itinerary-1");
+        order.setUserId("user-1");
+
+        OrderItem booked = item("r-1", 1);
+        booked.setStatus(OrderItemStatus.BOOKED);
+        booked.setLockId("lock-1");
+
+        OrderItem alreadyReleased = item("r-2", 1);
+        alreadyReleased.setStatus(OrderItemStatus.RELEASED);
+        alreadyReleased.setLockId("lock-2");
+
+        orchestrator.cancel(order, List.of(booked, alreadyReleased));
+
+        verify(inventoryClient).release("lock-1");
+        verify(inventoryClient, never()).release("lock-2");
+        assertEquals(OrderItemStatus.RELEASED, booked.getStatus());
     }
 }

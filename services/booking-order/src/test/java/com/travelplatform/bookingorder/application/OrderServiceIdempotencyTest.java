@@ -6,6 +6,8 @@ import com.travelplatform.bookingorder.domain.OrderItemRepository;
 import com.travelplatform.bookingorder.domain.OrderRepository;
 import com.travelplatform.bookingorder.domain.OrderStatus;
 import com.travelplatform.bookingorder.infrastructure.PaymentClient;
+import com.travelplatform.common.api.BusinessException;
+import com.travelplatform.common.api.ErrorCode;
 import com.travelplatform.common.outbox.OutboxRecorder;
 import com.travelplatform.common.outbox.OutboxStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -186,5 +189,18 @@ class OrderServiceIdempotencyTest {
 
         assertEquals(OrderStatus.CANCELLED, paid.getStatus());
         verify(orchestrator).cancel(any(), any());
+    }
+
+    /**
+     * 越权访问统一返回 404，不暴露他人订单的存在性（FR-013）。
+     */
+    @Test
+    void otherUsersOrderIsReportedAsNotFound() {
+        when(orderRepository.findByIdAndUserId("order-1", "other-user")).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.get("other-user", "order-1"));
+
+        assertEquals(ErrorCode.NOT_FOUND, ex.getErrorCode());
     }
 }
