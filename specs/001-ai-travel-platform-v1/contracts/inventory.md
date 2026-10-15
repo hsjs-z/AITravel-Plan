@@ -7,6 +7,7 @@
 | GET | /resources/search | 检索资源 | `{type?, destination?, date?, priceMin?, priceMax?, sort?}` → 列表 |
 | GET | /resources/{id} | 资源详情 | → 价格/可预订状态/规格；内容资源无下单入口 |
 | GET | /inventory/query | 可用库存查询 | `{resourceId, date, specId}` → `{available}` |
+| GET | /inventory/candidates | 候选清单（内部 Feign，ai-planning 调用） | `{destination, date}` → 资源+规格 |
 | POST | /inventory/locks | 原子锁定 | `{resourceId, date, specId, quantity, purpose, ttlSeconds}` → `{lockId}` |
 | POST | /inventory/locks/{lockId}/release | 幂等释放 | → `{released}` |
 

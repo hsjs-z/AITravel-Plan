@@ -177,8 +177,8 @@
   `POST /itineraries/{id}/complete`，语义等价、命名不同。
 - **影响**: 功能与验收行为正确（M1 已验收），仅存在实现/契约/任务文本三处的命名
   漂移，不影响运行。
-- **处置**: 暂不改动实现与端点（避免回退 M1 已验收行为）；由 M4 T072 统一收敛
-  contracts/itinerary.md、tasks.md 与代码注释，或按同样步骤评审后改端点命名。
+- **处置（2026-10-15 T072 已收敛）**: 保留实现端点 `/lock|/release|/complete` 不回退，
+  contracts/itinerary.md 与 tasks.md T027 已改为与实现一致的命名，本条目关闭。
 
 ## 19. 技术债：user-auth 使用内存存储，服务重启后丢失已注册用户
 
@@ -198,3 +198,9 @@
 - **影响**: 仅 mock 数据源局限；DeepSeek 真跑（§11 直连）时按候选清单生成，不受影响。
   演示/验收非云南目的地时需知悉此现象，避免误判为 bug。
 - **处置**: M4 可考虑让 mock 也按候选清单动态选择；本轮不改代码，只记录。
+
+## 21. 可观测性收尾备注：gateway 无访问日志行
+
+- gateway（WebFlux）未接入 `TraceAccessLogFilter`（Reactor 线程模型下 MDC 在过滤器线程
+  不可靠），因此「日志同一 traceId」证据覆盖 7 个业务服务；gateway 这一跳由 Tempo
+  的 span 链覆盖（T069 已验证 gateway → booking-order → … 的完整 span 树）。

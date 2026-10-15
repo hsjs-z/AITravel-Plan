@@ -9,8 +9,9 @@
 | PUT | /itineraries/{id} | 编辑（无订单时；编辑使 CONFIRMED 回 DRAFT） |
 | POST | /itineraries/{id}/confirm | 行程确认 → 可预订 |
 | DELETE | /itineraries/{id} | 删除（已产生订单的行程拒绝删除） |
-| POST | /itineraries/{id}/mark-paid-items | 订单支付成功后锁定已预订项/解锁其余（由 booking-order 触发） |
-| POST | /itineraries/{id}/release-lock | 订单取消/失败后回到 CONFIRMED（由 booking-order 触发） |
+| POST | /itineraries/{id}/lock | 订单预订时锁定行程（由 booking-order 触发） |
+| POST | /itineraries/{id}/release | 订单取消/失败后回到 CONFIRMED（由 booking-order 触发） |
+| POST | /itineraries/{id}/complete | 全部项已支付后置为 COMPLETED（由 booking-order 触发） |
 
 状态机：`DRAFT → CONFIRMED → LOCKED → COMPLETED`；取消/失败回 `CONFIRMED`。
 

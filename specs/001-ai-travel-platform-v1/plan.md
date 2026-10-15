@@ -53,6 +53,12 @@ Sentinel、Seata、OpenFeign）、Spring AI + DeepSeek、Kafka、Redis、MySQL
 | IX 代码标准 | ✅ | Controller/Service/Repository 分层；OpenAPI 文档；密钥仅环境变量 |
 | X 质量底线 | ✅ | 订单状态机/Saga/幂等/库存扣减单测必过，未测不得完成 |
 
+> 复检（M4 T072 收尾，2026-10-15）：I–X 逐项复核满足，例外仅一处——原则 II 的
+> 「Spring AI」按 research §11 以 RestTemplate 直连 DeepSeek 临时替代（技术债已记录，
+> 非静默偏离）。VIII 的 OTel/QPS/P99 由 T068/T069 落地（Tempo + Prometheus/Grafana）；
+> IX 的接口文档由 `contracts/*.md` 等价说明 + 端点索引承担（未引入 springdoc）；
+> GLOSSARY 与 ADR 无漂移，M3/M4 新增决策（前端 CORS、可观测性选型）已在 research §17/§21 记录。
+
 ## Project Structure
 
 ### Documentation (this feature)

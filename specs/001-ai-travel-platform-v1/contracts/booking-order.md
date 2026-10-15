@@ -4,9 +4,10 @@
 
 | 方法 | 路径 | 说明 | 关键请求/响应 |
 |------|------|------|----------------|
-| POST | /orders | 一键预订 | `{itineraryId, items:[{itemId, quantity}...], idempotencyKey}` → `{orderId}` |
+| POST | /orders | 一键预订 | `{itineraryId, items:[{resourceId, specId, date, quantity, unitPrice}...], idempotencyKey?}` → 订单 |
 | GET | /orders | 我的订单列表 | → `[{orderId, status, totalAmount}]` |
 | GET | /orders/{id} | 订单详情 | → 明细/金额/状态 |
+| POST | /orders/{id}/pay | 支付（Mock，BOOKED→PAID，自动确认由调度器触发） | → 订单 |
 | POST | /orders/{id}/cancel | 取消（可取消状态） | → `{orderId, refundStatus}` |
 
 状态机：`CREATED → BOOKED → PAID → CONFIRMED`；终态 `CANCELLED` / `FAILED`。
