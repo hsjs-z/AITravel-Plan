@@ -49,3 +49,14 @@ export interface SearchResult {
   availabilityKnown: boolean
   message: string | null
 }
+
+export interface LoginResult {
+  token: string
+  userId: string
+}
+
+export interface UserProfile {
+  id: string
+  email: string
+  phone: string | null
+}
