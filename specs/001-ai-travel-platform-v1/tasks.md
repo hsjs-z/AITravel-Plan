@@ -336,7 +336,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `frontend/src/views/order/`
 - [X] T067 [P] 实现前端支付页（Mock）与通知中心（未读/已读），
   文件 `frontend/src/views/payment/`、`frontend/src/views/notification/`
-- [ ] T068 接入关键接口 QPS/P99 指标（Micrometer/Prometheus + actuator，各服务），
+- [X] T068 接入关键接口 QPS/P99 指标（Micrometer/Prometheus + actuator，各服务），
   文件 `common/src/main/java/com/travelplatform/common/metrics/` 与 `services/*/src/main/resources/`
 - [ ] T069 验证全链路 OpenTelemetry：一次操作按 traceId 还原 AI→订单→支付（含 Kafka 头透传），
   文件 `deploy/observability/`
