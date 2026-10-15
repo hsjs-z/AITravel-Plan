@@ -1,2 +1,3 @@
 com.travelplatform.common.api.CommonWebAutoConfiguration
 com.travelplatform.common.outbox.CommonOutboxAutoConfiguration
+com.travelplatform.common.metrics.MetricsCommonAutoConfiguration
