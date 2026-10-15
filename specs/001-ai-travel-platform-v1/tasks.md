@@ -340,7 +340,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `common/src/main/java/com/travelplatform/common/metrics/` 与 `services/*/src/main/resources/`
 - [X] T069 验证全链路 OpenTelemetry：一次操作按 traceId 还原 AI→订单→支付（含 Kafka 头透传），
   文件 `deploy/observability/`
-- [ ] T070 补齐并全量通过核心逻辑单测（订单状态机/Saga/幂等/库存扣减），
+- [X] T070 补齐并全量通过核心逻辑单测（订单状态机/Saga/幂等/库存扣减），
   文件 `services/booking-order/src/test/`、`services/payment/src/test/`、`services/inventory/src/test/`
 - [ ] T071 按 quickstart.md 跑 S1–S7 全场景端到端验证并修复问题，
   文件 `specs/001-ai-travel-platform-v1/quickstart.md`
