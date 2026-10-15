@@ -144,3 +144,13 @@
      `jar` 内 `Main-Class=org.springframework.boot.loader.launch.JarLauncher`。
   2. 启动后对本次新增的每个端点做真实 HTTP 探活（200/预期错误码），不得只看 health UP。
   3. 同一服务不得新旧两个实例同时注册 Nacos；本地验证用临时端口并关闭 discovery。
+
+## 16. 工程规约：调度开关与 Executor/TaskScheduler 按类型注入
+
+- **背景**: M2 为服务接入 Outbox 调度（`@EnableScheduling`）后，ai-planning 容器
+  同时出现多个 `TaskExecutor` 候选，`PlanningService` 按类型注入 `TaskExecutor`
+  产生歧义；已用 `@Qualifier("applicationTaskExecutor")` 显式绑定修复。
+- **规约（强制）**: 给服务添加 `@EnableScheduling` / `@EnableAsync`（或引入其他
+  调度基础设施）前，必须自查该服务所有「按类型注入 `Executor` / `TaskScheduler`」
+  的构造点；一旦存在多个候选，必须用 `@Qualifier` 明确绑定，禁止依赖 Spring
+  的偶然性解析顺序。

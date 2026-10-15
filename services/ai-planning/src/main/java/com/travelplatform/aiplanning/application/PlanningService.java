@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.task.TaskExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -42,7 +43,7 @@ public class PlanningService {
                            RecommendationTool recommendationTool,
                            ObjectMapper objectMapper,
                            PlanningTaskWriter writer,
-                           TaskExecutor executor) {
+                           @Qualifier("applicationTaskExecutor") TaskExecutor executor) {
         this.repository = repository;
         this.planner = planner;
         this.itineraryClient = itineraryClient;

@@ -47,7 +47,7 @@
 `GET /itineraries/{id}` 查看 → 编辑 → `POST /itineraries/{id}/confirm`。
 
 - 期望：编辑使状态回 DRAFT；确认后状态为 CONFIRMED、可发起一键预订。
-- 越权访问他人行程返回 403 且不泄露内容。
+- 越权访问他人行程返回 404 且不泄露内容（不暴露资源存在性）。
 
 ### S4 一键联合预订 + 库存（booking-order → inventory）
 
