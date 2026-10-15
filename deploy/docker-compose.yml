@@ -9,6 +9,7 @@ services:
       - "3307:3306"
     volumes:
       - ./init:/docker-entrypoint-initdb.d:ro
+      - ./seed/content-resources.sql:/docker-entrypoint-initdb.d/03-content-resources.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s

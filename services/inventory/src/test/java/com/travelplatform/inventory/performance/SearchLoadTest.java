@@ -108,7 +108,7 @@ class SearchLoadTest {
     @Test
     void searchStaysWithinP95AndErrorRateUnderLoad() throws Exception {
         ResourceSearchService.Criteria criteria = new ResourceSearchService.Criteria(
-                "TRADABLE", DESTINATION, SEARCH_DATE, null, null, null, "price_asc");
+                "TRADABLE", DESTINATION, SEARCH_DATE, null, null, null, "price_asc", null);
 
         ResourceResponse.SearchResult warmUp = searchService.search(criteria);
         assertEquals(1, warmUp.total(), "the seeded load-test resource must be searchable");

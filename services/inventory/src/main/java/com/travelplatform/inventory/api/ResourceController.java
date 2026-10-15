@@ -32,9 +32,10 @@ public class ResourceController {
             @RequestParam(name = "priceMin", required = false) Long priceMin,
             @RequestParam(name = "priceMax", required = false) Long priceMax,
             @RequestParam(name = "keyword", required = false) String keyword,
-            @RequestParam(name = "sort", required = false) String sort) {
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "category", required = false) String category) {
         return ApiResponse.success(resourceSearchService.search(
-                new ResourceSearchService.Criteria(type, destination, date, priceMin, priceMax, keyword, sort)));
+                new ResourceSearchService.Criteria(type, destination, date, priceMin, priceMax, keyword, sort, category)));
     }
 
     @GetMapping("/resources/{resourceId}")

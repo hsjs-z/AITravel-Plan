@@ -9,6 +9,7 @@ build/
 # Node / frontend
 node_modules/
 dist/
+*.tsbuildinfo
 *.local
 
 # IDE

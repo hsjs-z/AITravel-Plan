@@ -33,7 +33,9 @@ public final class ResourceResponse {
             Long priceFrom,
             Long priceTo,
             Integer availableTotal,
-            List<SpecView> specs) {
+            List<SpecView> specs,
+            String contentCategory,
+            String description) {
     }
 
     /**
@@ -62,7 +64,8 @@ public final class ResourceResponse {
             boolean orderEntryAllowed,
             Long priceFrom,
             Long priceTo,
-            Integer availableTotal) {
+            Integer availableTotal,
+            String contentCategory) {
     }
 
     /**

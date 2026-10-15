@@ -12,6 +12,8 @@ import com.travelplatform.inventory.domain.ResourceType;
 import com.travelplatform.inventory.domain.Spec;
 import com.travelplatform.inventory.domain.SpecRepository;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -41,20 +43,24 @@ public class ResourceSearchService {
     static final String NO_DATE_MESSAGE = "未指定日期：可预订状态按资源+日期+规格判定，请选择日期后查询";
 
     private static final Set<String> SORTS = Set.of("priceasc", "pricedesc", "nameasc", "availabledesc");
+    private static final Set<String> CONTENT_CATEGORIES = Set.of("ATTRACTION", "ROUTE", "FOOD", "CULTURE");
 
     private final ResourceRepository resourceRepository;
     private final SpecRepository specRepository;
     private final InventoryUnitRepository unitRepository;
     private final InventoryLockRedis redis;
+    private final ObjectMapper objectMapper;
 
     public ResourceSearchService(ResourceRepository resourceRepository,
                                  SpecRepository specRepository,
                                  InventoryUnitRepository unitRepository,
-                                 InventoryLockRedis redis) {
+                                 InventoryLockRedis redis,
+                                 ObjectMapper objectMapper) {
         this.resourceRepository = resourceRepository;
         this.specRepository = specRepository;
         this.unitRepository = unitRepository;
         this.redis = redis;
+        this.objectMapper = objectMapper;
     }
 
     /** Search query; every filter is optional except that a price range must be coherent. */
@@ -65,15 +71,21 @@ public class ResourceSearchService {
             Long priceMin,
             Long priceMax,
             String keyword,
-            String sort) {
+            String sort,
+            String category) {
     }
 
     public ResourceResponse.SearchResult search(Criteria criteria) {
         ResourceType type = parseType(criteria.type());
         String sort = parseSort(criteria.sort());
+        String category = parseCategory(criteria.category());
         validatePriceRange(criteria.priceMin(), criteria.priceMax());
+        if (category != null && type != ResourceType.CONTENT) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "category filter only applies to CONTENT resources");
+        }
 
-        List<Resource> candidates = loadCandidates(type, criteria.destination(), criteria.keyword());
+        List<Resource> candidates = loadCandidates(type, criteria.destination(), criteria.keyword(), category);
         Map<String, List<Spec>> specsByResource = specsByResource(candidates);
         Map<String, List<InventoryUnit>> unitsByResource = unitsByResource(candidates, criteria.date());
 
@@ -97,7 +109,8 @@ public class ResourceSearchService {
                     orderEntryAllowed(resource, criteria.date(), availability),
                     priceFrom,
                     priceTo,
-                    availability.availableTotal()));
+                    availability.availableTotal(),
+                    contentInfo(resource).category()));
         }
 
         items.sort(comparator(sort));
@@ -138,17 +151,42 @@ public class ResourceSearchService {
                 minPrice(specs),
                 maxPrice(specs),
                 availability.availableTotal(),
-                specViews);
+                specViews,
+                contentInfo(resource).category(),
+                contentInfo(resource).description());
     }
 
-    private List<Resource> loadCandidates(ResourceType type, String destination, String keyword) {
+    private List<Resource> loadCandidates(ResourceType type, String destination, String keyword, String category) {
         List<Resource> resources = type == null
                 ? resourceRepository.findByStatus(ResourceStatus.ON_SHELF)
                 : resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, type);
         return resources.stream()
                 .filter(resource -> matches(destination, resource.getDestination()))
-                .filter(resource -> matches(keyword, resource.getName()))
+                .filter(resource -> matchesKeyword(resource, keyword))
+                .filter(resource -> matchesCategory(resource, category))
                 .toList();
+    }
+
+    private boolean matchesKeyword(Resource resource, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+        ContentInfo info = contentInfo(resource);
+        return contains(resource.getName(), keyword) || contains(info.description(), keyword);
+    }
+
+    private boolean matchesCategory(Resource resource, String category) {
+        if (category == null) {
+            return true;
+        }
+        return category.equalsIgnoreCase(contentInfo(resource).category());
+    }
+
+    private boolean contains(String value, String keyword) {
+        if (value == null) {
+            return false;
+        }
+        return value.toLowerCase(Locale.ROOT).contains(keyword.trim().toLowerCase(Locale.ROOT));
     }
 
     private boolean matches(String filter, String value) {
@@ -272,6 +310,18 @@ public class ResourceSearchService {
         return normalized;
     }
 
+    private String parseCategory(String category) {
+        if (category == null || category.isBlank()) {
+            return null;
+        }
+        String normalized = category.trim().toUpperCase(Locale.ROOT);
+        if (!CONTENT_CATEGORIES.contains(normalized)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "invalid category: " + category + ", expected one of " + CONTENT_CATEGORIES);
+        }
+        return normalized;
+    }
+
     private void validatePriceRange(Long priceMin, Long priceMax) {
         if (priceMin != null && priceMin < 0) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "priceMin must not be negative");
@@ -301,10 +351,35 @@ public class ResourceSearchService {
                 .max(Comparator.naturalOrder()).orElse(null);
     }
 
+    /** Display metadata carried by a resource's {@code attributes} JSON column. */
+    private ContentInfo contentInfo(Resource resource) {
+        String attributes = resource.getAttributes();
+        if (attributes == null || attributes.isBlank()) {
+            return ContentInfo.EMPTY;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(attributes);
+            return new ContentInfo(text(node, "category"), text(node, "description"));
+        } catch (Exception e) {
+            return ContentInfo.EMPTY;
+        }
+    }
+
+    private String text(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        return value == null || !value.isTextual() ? null : value.asText();
+    }
+
     /** Date-scoped availability of one resource. */
     private record Availability(Integer availableTotal, boolean soldOut, boolean hasUnits) {
 
         /** Content resources never carry sellable inventory. */
         static final Availability NOT_APPLICABLE = new Availability(null, false, false);
+    }
+
+    /** Content-only display metadata parsed from {@code resource.attributes}. */
+    private record ContentInfo(String category, String description) {
+
+        static final ContentInfo EMPTY = new ContentInfo(null, null);
     }
 }

@@ -13,6 +13,7 @@ import com.travelplatform.inventory.domain.Spec;
 import com.travelplatform.inventory.domain.SpecRepository;
 import com.travelplatform.inventory.domain.SpecType;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -38,9 +39,10 @@ class ResourceSearchServiceTest {
     private final SpecRepository specRepository = mock(SpecRepository.class);
     private final InventoryUnitRepository unitRepository = mock(InventoryUnitRepository.class);
     private final InventoryLockRedis redis = mock(InventoryLockRedis.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ResourceSearchService service =
-            new ResourceSearchService(resourceRepository, specRepository, unitRepository, redis);
+            new ResourceSearchService(resourceRepository, specRepository, unitRepository, redis, objectMapper);
 
     @Test
     void searchFiltersByDestinationAndTypeAndSortsByPriceAscending() {
@@ -58,7 +60,7 @@ class ResourceSearchServiceTest {
                 unit("u-train-1", "r-train-1", "s-schedule-1", 12)));
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria("TRADABLE", "云南", DATE, null, null, null, null));
+                new ResourceSearchService.Criteria("TRADABLE", "云南", DATE, null, null, null, null, null));
 
         assertEquals(2, result.total(), "only on-shelf tradable resources of the requested destination match");
         assertEquals(List.of("r-train-1", "r-hotel-1"),
@@ -80,7 +82,7 @@ class ResourceSearchServiceTest {
                 unit("u-hotel-1", "r-hotel-1", "s-room-1", 0)));
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria(null, "云南", DATE, null, null, null, null));
+                new ResourceSearchService.Criteria(null, "云南", DATE, null, null, null, null, null));
 
         assertEquals(1, result.total());
         assertEquals(0, result.items().get(0).availableTotal());
@@ -92,7 +94,7 @@ class ResourceSearchServiceTest {
         when(resourceRepository.findByStatus(ResourceStatus.ON_SHELF)).thenReturn(List.of());
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria(null, "云南", DATE, null, null, null, null));
+                new ResourceSearchService.Criteria(null, "云南", DATE, null, null, null, null, null));
 
         assertEquals(0, result.total());
         assertEquals(ResourceSearchService.EMPTY_RESULT_MESSAGE, result.message(),
@@ -107,7 +109,7 @@ class ResourceSearchServiceTest {
                 spec("s-room-1", "r-hotel-1", "标准大床房", 500, SpecType.ROOM_TYPE)));
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria(null, null, null, null, null, null, null));
+                new ResourceSearchService.Criteria(null, null, null, null, null, null, null, null));
 
         assertFalse(result.availabilityKnown());
         assertNull(result.items().get(0).availableTotal(), "availability is date-scoped and unknown without a date");
@@ -123,7 +125,7 @@ class ResourceSearchServiceTest {
         when(specRepository.findByResourceIdIn(any())).thenReturn(List.of());
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria("CONTENT", "云南", DATE, null, null, null, null));
+                new ResourceSearchService.Criteria("CONTENT", "云南", DATE, null, null, null, null, null));
 
         assertEquals(1, result.total());
         assertFalse(result.items().get(0).tradable());
@@ -144,7 +146,7 @@ class ResourceSearchServiceTest {
                 unit("u-train-1", "r-train-1", "s-schedule-1", 9)));
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria(null, null, DATE, 200L, 900L, null, "price_desc"));
+                new ResourceSearchService.Criteria(null, null, DATE, 200L, 900L, null, "price_desc", null));
 
         assertEquals(1, result.total(), "the 145 CNY train ticket is below the price floor");
         assertEquals("r-hotel-1", result.items().get(0).id());
@@ -163,7 +165,7 @@ class ResourceSearchServiceTest {
                 unit("u-train-1", "r-train-1", "s-schedule-1", 9)));
 
         ResourceResponse.SearchResult result = service.search(
-                new ResourceSearchService.Criteria(null, null, DATE, null, null, "动车", null));
+                new ResourceSearchService.Criteria(null, null, DATE, null, null, "动车", null, null));
 
         assertEquals(1, result.total());
         assertEquals("r-train-1", result.items().get(0).id());
@@ -172,16 +174,76 @@ class ResourceSearchServiceTest {
     @Test
     void searchRejectsInvalidFiltersInsteadOfReturningBlankResults() {
         BusinessException invalidType = assertThrows(BusinessException.class, () -> service.search(
-                new ResourceSearchService.Criteria("HOTEL", null, DATE, null, null, null, null)));
+                new ResourceSearchService.Criteria("HOTEL", null, DATE, null, null, null, null, null)));
         assertEquals(ErrorCode.BAD_REQUEST, invalidType.getErrorCode());
 
         BusinessException invalidSort = assertThrows(BusinessException.class, () -> service.search(
-                new ResourceSearchService.Criteria(null, null, DATE, null, null, null, "cheapest")));
+                new ResourceSearchService.Criteria(null, null, DATE, null, null, null, "cheapest", null)));
         assertEquals(ErrorCode.BAD_REQUEST, invalidSort.getErrorCode());
 
         BusinessException invalidRange = assertThrows(BusinessException.class, () -> service.search(
-                new ResourceSearchService.Criteria(null, null, DATE, 900L, 100L, null, null)));
+                new ResourceSearchService.Criteria(null, null, DATE, 900L, 100L, null, null, null)));
         assertEquals(ErrorCode.BAD_REQUEST, invalidRange.getErrorCode());
+    }
+
+    @Test
+    void searchFiltersContentByCategory() {
+        Resource food = content("r-food-1", "过桥米线", "云南", "FOOD", "蒙自传统米线");
+        Resource culture = content("r-culture-1", "丽江古城", "云南", "CULTURE", "纳西族古城");
+        when(resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, ResourceType.CONTENT))
+                .thenReturn(List.of(food, culture));
+        when(specRepository.findByResourceIdIn(any())).thenReturn(List.of());
+
+        ResourceResponse.SearchResult result = service.search(
+                new ResourceSearchService.Criteria("CONTENT", "云南", null, null, null, null, null, "FOOD"));
+
+        assertEquals(1, result.total(), "only the requested content category matches");
+        assertEquals("r-food-1", result.items().get(0).id());
+        assertEquals("FOOD", result.items().get(0).contentCategory());
+        assertFalse(result.items().get(0).tradable());
+        assertFalse(result.items().get(0).orderEntryAllowed(), "content resources never expose an order entry");
+    }
+
+    @Test
+    void searchMatchesKeywordAgainstContentDescription() {
+        Resource food = content("r-food-2", "汽锅鸡", "云南", "FOOD", "建水紫陶汽锅蒸制");
+        when(resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, ResourceType.CONTENT))
+                .thenReturn(List.of(food));
+        when(specRepository.findByResourceIdIn(any())).thenReturn(List.of());
+
+        ResourceResponse.SearchResult result = service.search(
+                new ResourceSearchService.Criteria("CONTENT", "云南", null, null, null, "紫陶", null, null));
+
+        assertEquals(1, result.total(), "the keyword matches the description, not only the name");
+        assertEquals("r-food-2", result.items().get(0).id());
+    }
+
+    @Test
+    void searchRejectsCategoryOnTradableResources() {
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.search(
+                new ResourceSearchService.Criteria("TRADABLE", "云南", DATE, null, null, null, null, "FOOD")));
+        assertEquals(ErrorCode.BAD_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    void searchRejectsUnknownContentCategory() {
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.search(
+                new ResourceSearchService.Criteria("CONTENT", "云南", null, null, null, null, null, "SPA")));
+        assertEquals(ErrorCode.BAD_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    void detailExposesContentCategoryAndDescription() {
+        Resource food = content("r-food-1", "过桥米线", "云南", "FOOD", "蒙自传统米线");
+        when(resourceRepository.findById("r-food-1")).thenReturn(Optional.of(food));
+        when(specRepository.findByResourceId("r-food-1")).thenReturn(List.of());
+
+        ResourceResponse.Detail detail = service.detail("r-food-1", null);
+
+        assertEquals("FOOD", detail.contentCategory());
+        assertEquals("蒙自传统米线", detail.description());
+        assertFalse(detail.tradable());
+        assertFalse(detail.orderEntryAllowed());
     }
 
     @Test
@@ -254,6 +316,17 @@ class ResourceSearchServiceTest {
         resource.setName(name);
         resource.setDestination(destination);
         resource.setStatus(status);
+        return resource;
+    }
+
+    private Resource content(String id, String name, String destination, String category, String description) {
+        Resource resource = new Resource();
+        resource.setId(id);
+        resource.setType(ResourceType.CONTENT);
+        resource.setName(name);
+        resource.setDestination(destination);
+        resource.setStatus(ResourceStatus.ON_SHELF);
+        resource.setAttributes("{\"category\":\"" + category + "\",\"description\":\"" + description + "\"}");
         return resource;
     }
 
