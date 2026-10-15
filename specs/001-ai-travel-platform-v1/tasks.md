@@ -332,7 +332,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `frontend/src/views/planning/`
 - [X] T065 [P] 实现前端行程查看/编辑/确认页，
   文件 `frontend/src/views/itinerary/`
-- [ ] T066 [P] 实现前端一键预订（子集勾选/数量调整）与订单列表/详情页，
+- [X] T066 [P] 实现前端一键预订（子集勾选/数量调整）与订单列表/详情页，
   文件 `frontend/src/views/order/`
 - [ ] T067 [P] 实现前端支付页（Mock）与通知中心（未读/已读），
   文件 `frontend/src/views/payment/`、`frontend/src/views/notification/`
