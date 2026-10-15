@@ -180,3 +180,21 @@ export interface CreateOrderPayload {
   idempotencyKey?: string
   items: CreateOrderItemPayload[]
 }
+
+export type NotificationReadStatus = 'UNREAD' | 'READ'
+
+export interface NotificationItem {
+  id: string
+  type: string
+  channel: string
+  businessRef: string | null
+  title: string
+  body: string
+  readStatus: NotificationReadStatus
+  createdAt: string
+  readAt: string | null
+}
+
+export interface UnreadCount {
+  unread: number
+}

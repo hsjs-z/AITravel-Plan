@@ -7,6 +7,8 @@ import ItineraryView from '../views/itinerary/ItineraryView.vue'
 import OrderListView from '../views/order/OrderListView.vue'
 import OrderCreateView from '../views/order/OrderCreateView.vue'
 import OrderDetailView from '../views/order/OrderDetailView.vue'
+import PaymentView from '../views/payment/PaymentView.vue'
+import NotificationView from '../views/notification/NotificationView.vue'
 import { getToken } from '../api/session'
 
 const router = createRouter({
@@ -19,6 +21,8 @@ const router = createRouter({
     { path: '/orders', name: 'orders', component: OrderListView },
     { path: '/orders/new', name: 'order-create', component: OrderCreateView },
     { path: '/orders/:orderId', name: 'order-detail', component: OrderDetailView },
+    { path: '/orders/:orderId/pay', name: 'order-pay', component: PaymentView },
+    { path: '/notifications', name: 'notifications', component: NotificationView },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/:pathMatch(.*)*', redirect: '/content' },

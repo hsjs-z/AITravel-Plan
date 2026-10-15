@@ -34,6 +34,9 @@
         </el-table>
 
         <div v-if="cancellable" class="actions">
+          <el-button v-if="order.status === 'BOOKED'" type="primary" @click="$router.push(`/orders/${order.id}/pay`)">
+            去支付
+          </el-button>
           <el-button type="danger" @click="cancel">取消订单</el-button>
         </div>
       </el-card>

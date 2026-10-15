@@ -16,3 +16,7 @@ export function getOrder(orderId: string): Promise<Order> {
 export function cancelOrder(orderId: string): Promise<Order> {
   return http.post(`/orders/${orderId}/cancel`)
 }
+
+export function payOrder(orderId: string): Promise<Order> {
+  return http.post(`/orders/${orderId}/pay`)
+}
