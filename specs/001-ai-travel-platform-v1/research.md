@@ -154,3 +154,28 @@
   调度基础设施）前，必须自查该服务所有「按类型注入 `Executor` / `TaskScheduler`」
   的构造点；一旦存在多个候选，必须用 `@Qualifier` 明确绑定，禁止依赖 Spring
   的偶然性解析顺序。
+
+## 17. 前端开发期跨域方案：Vite 代理，不在 gateway 开 CORS
+
+- **决策**: 前端 dev server 不直连 `gateway:8080`，而是经 Vite 代理转发：
+  axios `baseURL=/api`，`vite.config.ts` 将 `/api` 前缀重写为空并代理到
+  `http://localhost:8080`（gateway）。生产环境由同源部署或反向代理承接，gateway
+  不放开 CORS。
+- **理由**: 避免在 gateway 配置 `Access-Control-Allow-Origin` 通配放宽跨域；
+  dev/prod 共用同一套「相对路径 + 网关」的调用方式，token 与 `X-User-Id` 透传
+  路径不变；与既有 `frontend/vite.config.ts` 的 `/api` 代理骨架一致，改动最小。
+- **拒绝的替代**: gateway 全局 CORS 过滤器——仅在 dev 阶段有意义，却会放宽生产
+  入口的跨域面，且与「前端由网关同源代理」的部署形态冲突。
+
+## 18. 技术债：itinerary 生命周期端点与文档/Task 命名漂移
+
+- **现状（2026-10-15 M3 记录）**: `tasks.md` T027 名为
+  `ItineraryLifecycleService.java`，`contracts/itinerary.md` 记录
+  `POST /itineraries/{id}/mark-paid-items` 与 `POST /itineraries/{id}/release-lock`；
+  但实际实现位于 `ItineraryController`，端点为
+  `POST /itineraries/{id}/lock`、`POST /itineraries/{id}/release`、
+  `POST /itineraries/{id}/complete`，语义等价、命名不同。
+- **影响**: 功能与验收行为正确（M1 已验收），仅存在实现/契约/任务文本三处的命名
+  漂移，不影响运行。
+- **处置**: 暂不改动实现与端点（避免回退 M1 已验收行为）；由 M4 T072 统一收敛
+  contracts/itinerary.md、tasks.md 与代码注释，或按同样步骤评审后改端点命名。

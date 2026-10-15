@@ -125,7 +125,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/ItineraryClient.java`
 - [X] T021 [US1] 实现规划服务（提交/查询/重试；同一需求重试只保留最后成功草稿），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningService.java`
-- [ ] T022 [US1] 实现 Controller 与 OpenAPI 文档（POST /planning/tasks、GET /planning/tasks/{id}、
+- [X] T022 [US1] 实现 Controller 与 OpenAPI 文档（POST /planning/tasks、GET /planning/tasks/{id}、
   POST /planning/tasks/{id}/retry），
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/api/PlanningController.java`
 - [X] T023 [US1] 实现 PlanningSucceeded/PlanningFailed 事件（Outbox 发布），
