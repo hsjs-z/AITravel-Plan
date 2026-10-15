@@ -5,6 +5,7 @@
       <nav class="nav-links">
         <router-link to="/content">内容资源</router-link>
         <router-link to="/planning">智能规划</router-link>
+        <router-link to="/orders">我的订单</router-link>
       </nav>
       <el-button text @click="logout">退出</el-button>
     </el-header>

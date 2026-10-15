@@ -143,3 +143,40 @@ export interface UpdateItineraryPayload {
   budget: number
   items: ItineraryItemPayload[]
 }
+
+export type OrderStatus = 'CREATED' | 'BOOKED' | 'PAID' | 'CONFIRMED' | 'CANCELLED' | 'FAILED'
+export type OrderItemStatus = 'PENDING' | 'BOOKED' | 'FAILED' | 'RELEASED'
+
+export interface OrderItem {
+  id: string
+  resourceId: string
+  specId: string
+  date: string
+  quantity: number
+  unitPrice: number
+  status: OrderItemStatus
+  lockId: string | null
+}
+
+export interface Order {
+  id: string
+  itineraryId: string
+  status: OrderStatus
+  totalAmount: number
+  failureReason: string | null
+  items: OrderItem[]
+}
+
+export interface CreateOrderItemPayload {
+  resourceId: string
+  specId: string
+  date: string
+  quantity: number
+  unitPrice: number
+}
+
+export interface CreateOrderPayload {
+  itineraryId: string
+  idempotencyKey?: string
+  items: CreateOrderItemPayload[]
+}

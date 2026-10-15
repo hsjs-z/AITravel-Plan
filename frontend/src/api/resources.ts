@@ -13,6 +13,6 @@ export function searchResources(params: ResourceQuery): Promise<SearchResult> {
   return http.get('/resources/search', { params })
 }
 
-export function getResource(resourceId: string): Promise<ResourceDetail> {
-  return http.get(`/resources/${resourceId}`)
+export function getResource(resourceId: string, date?: string): Promise<ResourceDetail> {
+  return http.get(`/resources/${resourceId}`, { params: date ? { date } : undefined })
 }

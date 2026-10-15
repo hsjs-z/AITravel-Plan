@@ -26,6 +26,13 @@
                 <el-button v-if="itinerary.status === 'DRAFT'" type="success" @click="confirm">
                   确认行程
                 </el-button>
+                <el-button
+                  v-if="itinerary.status === 'CONFIRMED'"
+                  type="primary"
+                  @click="router.push(`/orders/new?itineraryId=${itinerary.id}`)"
+                >
+                  去预订
+                </el-button>
                 <el-button v-if="!itinerary.hasOrder" type="danger" plain @click="remove">
                   删除
                 </el-button>
