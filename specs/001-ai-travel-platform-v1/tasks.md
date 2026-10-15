@@ -334,7 +334,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `frontend/src/views/itinerary/`
 - [X] T066 [P] 实现前端一键预订（子集勾选/数量调整）与订单列表/详情页，
   文件 `frontend/src/views/order/`
-- [ ] T067 [P] 实现前端支付页（Mock）与通知中心（未读/已读），
+- [X] T067 [P] 实现前端支付页（Mock）与通知中心（未读/已读），
   文件 `frontend/src/views/payment/`、`frontend/src/views/notification/`
 - [ ] T068 接入关键接口 QPS/P99 指标（Micrometer/Prometheus + actuator，各服务），
   文件 `common/src/main/java/com/travelplatform/common/metrics/` 与 `services/*/src/main/resources/`
