@@ -330,7 +330,7 @@ research.md、data-model.md、contracts/、quickstart.md）
   文件 `frontend/src/api/`、`frontend/src/views/auth/`
 - [X] T064 [P] 实现前端规划任务提交/状态轮询页，
   文件 `frontend/src/views/planning/`
-- [ ] T065 [P] 实现前端行程查看/编辑/确认页，
+- [X] T065 [P] 实现前端行程查看/编辑/确认页，
   文件 `frontend/src/views/itinerary/`
 - [ ] T066 [P] 实现前端一键预订（子集勾选/数量调整）与订单列表/详情页，
   文件 `frontend/src/views/order/`
