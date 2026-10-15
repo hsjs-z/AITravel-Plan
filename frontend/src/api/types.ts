@@ -60,3 +60,42 @@ export interface UserProfile {
   email: string
   phone: string | null
 }
+
+export type PlanningStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED'
+
+export interface CreatePlanningTaskPayload {
+  destination: string
+  days: number
+  partySize: number
+  budget: number
+  preferences?: string
+}
+
+export interface PlanningTask {
+  id: string
+  status: PlanningStatus
+  itineraryId: string | null
+  failureReason: string | null
+  result: string | null
+}
+
+export interface PlanningDay {
+  day: number
+  arrangements: string[]
+}
+
+export interface PlanningNamedItem {
+  name: string
+  dayIndex?: number
+}
+
+export interface PlanningResult {
+  destination?: string
+  totalDays?: number
+  partySize?: number
+  estimatedBudget?: number
+  days?: PlanningDay[]
+  hotels?: PlanningNamedItem[]
+  attractions?: PlanningNamedItem[]
+  foods?: PlanningNamedItem[]
+}

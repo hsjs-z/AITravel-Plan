@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ContentView from '../views/content/ContentView.vue'
 import LoginView from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
+import PlanningView from '../views/planning/PlanningView.vue'
 import { getToken } from '../api/session'
 
 const router = createRouter({
@@ -9,6 +10,7 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/content' },
     { path: '/content', name: 'content', component: ContentView },
+    { path: '/planning', name: 'planning', component: PlanningView },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/:pathMatch(.*)*', redirect: '/content' },
