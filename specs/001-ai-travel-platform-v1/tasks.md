@@ -311,11 +311,11 @@ research.md、data-model.md、contracts/、quickstart.md）
 
 ### Implementation for User Story 8
 
-- [ ] T060 [US8] 预置内容资源数据（景点、线路、美食、文化体验），
+- [X] T060 [US8] 预置内容资源数据（景点、线路、美食、文化体验），
   文件 `deploy/seed/content-resources.sql`
-- [ ] T061 [US8] 扩展内容资源检索（复用 ResourceSearch，type=CONTENT，关键词/目的地），
+- [X] T061 [US8] 扩展内容资源检索（复用 ResourceSearch，type=CONTENT，关键词/目的地），
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/ResourceSearchService.java`
-- [ ] T062 [US8] 实现前端内容资源展示页（无下单/支付入口），
+- [X] T062 [US8] 实现前端内容资源展示页（无下单/支付入口），
   文件 `frontend/src/views/content/`
 
 **Checkpoint**: 全部用户故事独立可用
