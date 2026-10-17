@@ -228,44 +228,44 @@ contracts 与 quickstart。
 
 ### Tests for User Story 5
 
-- [ ] T051 [P] [US5] 字段校验测试，
+- [X] T051 [P] [US5] 字段校验测试，
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/application/seed/ScenicSpotValidatorTest.java`、
   `services/inventory/src/test/java/com/travelplatform/inventory/infrastructure/AmapGeocodingClientTest.java`、
   `services/inventory/src/test/java/com/travelplatform/inventory/application/seed/ScenicSeedRunRecoveryTest.java`、
   `services/inventory/src/test/java/com/travelplatform/inventory/api/AdminSeedControllerTest.java`
-- [ ] T052 [P] [US5] 批次重试与 insert-or-skip 测试，
+- [X] T052 [P] [US5] 批次重试与 insert-or-skip 测试，
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/application/seed/ScenicSpotSeedServiceTest.java`、
   `services/inventory/src/test/java/com/travelplatform/inventory/application/seed/ScenicSpotStoreTest.java`
 
 ### Implementation for User Story 5
 
-- [ ] T053 [US5] 新增种子运行表与状态，
+- [X] T053 [US5] 新增种子运行表与状态，
   文件 `services/inventory/src/main/resources/db/migration/V4__scenic_seed_run.sql`、
   `services/inventory/src/main/java/com/travelplatform/inventory/domain/ScenicSeedRun.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/domain/ScenicSeedRunRepository.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ScenicSeedRunRecovery.java`
-- [ ] T054 [US5] 新增管理员种子 Controller，
+- [X] T054 [US5] 新增管理员种子 Controller，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/AdminSeedController.java`
-- [ ] T055 [US5] 新增 34 省目录与 6 批规划，
+- [X] T055 [US5] 新增 34 省目录与 6 批规划，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ProvinceCatalog.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ScenicSpotSeedService.java`
-- [ ] T056 [US5] 用 Spring AI 调 DeepSeek 结构化输出，
+- [X] T056 [US5] 用 Spring AI 调 DeepSeek 结构化输出，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/infrastructure/DeepSeekScenicSpotClient.java`
-- [ ] T057 [US5] 实现字段校验与丢弃，
+- [X] T057 [US5] 实现字段校验与丢弃，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ScenicSpotValidator.java`
-- [ ] T058 [US5] 实现高德 Web 服务地理编码与坐标待补，
+- [X] T058 [US5] 实现高德 Web 服务地理编码与坐标待补，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/infrastructure/AmapGeocodingClient.java`
-- [ ] T059 [US5] 实现资源/门票规格/库存 upsert 与人工修改保护；
+- [X] T059 [US5] 实现资源/门票规格/库存 upsert 与人工修改保护；
   跳过判断口径为同 `(name, city, type)` 已存在，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ScenicSpotStore.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ScenicSpotSeedService.java`
-- [ ] T060 [US5] 实现报告汇总与查询，
+- [X] T060 [US5] 实现报告汇总与查询，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/SeedDtos.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/application/seed/ScenicSpotSeedService.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/api/AdminSeedController.java`
-- [ ] T061 [US5] 配置 Spring AI/高德 key/导入参数，
+- [X] T061 [US5] 配置 Spring AI/高德 key/导入参数，
   文件 `services/inventory/src/main/resources/application.yml`、`.env.example`
-- [ ] T062 [US5] 验证 16 城覆盖与云南省级/丽江城市检索，
+- [X] T062 [US5] 验证 16 城覆盖与云南省级/丽江城市检索，
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/application/ResourceSearchServiceTest.java`
 
 **Checkpoint**: 导入可异步运行；报告可查询；重跑安全。
