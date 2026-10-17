@@ -1,6 +1,7 @@
 # V2-06 Acceptance Plan
 
-**Status**: Proposed. No V2-06 business code has been written.
+**Status**: Approved on 2026-10-17. Implementation is complete; acceptance evidence
+is awaiting review. T018 remains unchecked until that review passes.
 
 ## 1. Scope and boundary
 
