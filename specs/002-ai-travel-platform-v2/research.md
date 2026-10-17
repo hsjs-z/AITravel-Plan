@@ -106,7 +106,7 @@ Gateway、OpenFeign、Micrometer/OTel 的兼容组合。
 
 ## R-005 数据导入与幂等
 
-**Decision**: 采用后台运行 + `202 + runId` + 报告查询；`(name, city)` 唯一；
+**Decision**: 采用后台运行 + `202 + runId` + 报告查询；`(name, city, type)` 唯一；
 已存在记录 insert-or-skip，绝不覆盖人工修改。
 
 **Rationale**: 6 次 AI 调用加约 200 次地理编码不适合同步 HTTP；批次报告需要
@@ -118,6 +118,7 @@ Gateway、OpenFeign、Micrometer/OTel 的兼容组合。
 - 并发运行返回 409。
 - 旧云南资源先回填 province/city，再参与查重。
 - 付费景区默认生成门票规格与未来 365 天库存。
+- 三列唯一键避免旧 `TRADABLE` 玉龙雪山阻塞新的 `ATTRACTION` 玉龙雪山。
 
 ## R-006 管理员鉴权
 

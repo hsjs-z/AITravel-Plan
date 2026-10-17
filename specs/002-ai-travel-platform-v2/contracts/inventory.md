@@ -52,6 +52,15 @@
 `ATTRACTION` 的 `tradable` 为 true（它不是 `CONTENT`），但只有付费且存在
 可售门票库存时 `orderEntryAllowed=true`。免费景区仍可被行程页选择和加入。
 
+### V2-04 staged semantics
+
+- V2-04 只建立 `ATTRACTION` 资源模型，不打开交易。
+- V2-04 的 `ATTRACTION` 同时返回 `tradable=true` 与 `orderEntryAllowed=false`。
+- `tradable=true` 仅表示该资源存在票务模型；前端必须以下单门禁
+  `orderEntryAllowed` 为准，不得仅凭 `tradable` 展示下单入口。
+- V2-11 打开门票交易后，付费且有库存的 ATTRACTION 才允许
+  `orderEntryAllowed=true`；免费景区仍为 false。
+
 未匹配景区不来自本接口；由 AI 生成并在规划结果中标记。
 
 ## GET /resources/{resourceId}

@@ -71,9 +71,12 @@ Status:
 - JSON 映射失败整批重试 1 次。
 - 字段不合格丢弃并计入 `skippedInvalid`。
 - 高德地理编码失败：入库，`coordinate_status=PENDING`。
-- `(name, city)` 已存在：`skippedExisting`，不更新任何字段。
+- `(name, city, type)` 已存在：`skippedExisting`，不更新任何字段。
+- 旧 `TRADABLE` 景区与新的 `ATTRACTION` 景区可以同名同城共存；跳过判断必须带 `type`。
 - 付费景区创建默认成人票规格与未来 365 天库存。
 - `image_url` 永不被种子覆盖。
+- `load-test-resource` 是压测专用资源，保留 `province/city=NULL`，
+  不参与景区导入与跳过判断。
 
 ## Report and audit
 

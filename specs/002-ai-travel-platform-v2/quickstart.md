@@ -65,7 +65,8 @@ Expected:
 - 覆盖 34 个省级行政区，约 204 条。
 - 16 个热门城市至少各命中 1 个上架景区。
 - 坐标缺失记录为 `coordinate_status=PENDING`。
-- 重跑后 `(name, city)` 无重复，人工修改字段未被覆盖。
+- 重跑后 `(name, city, type)` 无重复，人工修改字段未被覆盖；
+  `load-test-resource` 的 `province/city` 仍为 NULL。
 
 4. 鉴权：
 

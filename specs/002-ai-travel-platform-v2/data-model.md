@@ -32,8 +32,13 @@
 
 Indexes:
 
-- `UNIQUE KEY uk_resource_name_city (name, city)`
+- `UNIQUE KEY uk_resource_name_city_type (name, city, type)`
 - `KEY idx_resource_province_city_status (province, city, status)`
+
+The unique key includes `type` so a legacy `TRADABLE` attraction such as
+`(玉龙雪山, 丽江, TRADABLE)` does not block the v2 seed from inserting
+`(玉龙雪山, 丽江, ATTRACTION)`. MySQL unique indexes allow multiple NULL `city`
+values; the load-test resource intentionally keeps `province/city` NULL.
 
 Validation:
 
