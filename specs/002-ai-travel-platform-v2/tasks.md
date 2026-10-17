@@ -17,18 +17,18 @@ contracts 与 quickstart。
 
 **Purpose**: 只写 v2 规范、ADR 和任务清单；不碰业务代码。
 
-- [ ] T001 创建 v2 规范、计划、研究、数据模型和契约文档，
+- [X] T001 创建 v2 规范、计划、研究、数据模型和契约文档，
   文件 `specs/002-ai-travel-platform-v2/spec.md`、
   `specs/002-ai-travel-platform-v2/plan.md`、
   `specs/002-ai-travel-platform-v2/research.md`、
   `specs/002-ai-travel-platform-v2/data-model.md`、
   `specs/002-ai-travel-platform-v2/contracts/`
-- [ ] T002 新增景点可预订与依赖基线 ADR，
+- [X] T002 新增景点可预订与依赖基线 ADR，
   文件 `docs/adr/0005-attraction-as-bookable-resource.md`、
   `docs/adr/0006-v2-dependency-baseline.md`
-- [ ] T003 更新 Spec Kit 当前 feature 指针，
+- [X] T003 更新 Spec Kit 当前 feature 指针，
   文件 `.specify/feature.json`
-- [ ] T004 生成规格质量清单并完成自检，
+- [X] T004 生成规格质量清单并完成自检，
   文件 `specs/002-ai-travel-platform-v2/checklists/requirements.md`
 
 **Checkpoint**: V2-01 文档待用户验收；业务代码、pom、迁移、前端均未修改。
