@@ -9,35 +9,37 @@ spring:
       discovery:
         server-addr: ${NACOS_SERVER:127.0.0.1:8848}
     gateway:
-      routes:
-        - id: user-auth
-          uri: lb://user-auth
-          predicates:
-            - Path=/auth/**,/users/**
-        - id: inventory
-          uri: lb://inventory
-          predicates:
-            - Path=/resources/**,/inventory/**
-        - id: itinerary
-          uri: lb://itinerary
-          predicates:
-            - Path=/itineraries/**
-        - id: ai-planning
-          uri: lb://ai-planning
-          predicates:
-            - Path=/planning/**
-        - id: payment
-          uri: lb://payment
-          predicates:
-            - Path=/payments/**,/refunds/**
-        - id: booking-order
-          uri: lb://booking-order
-          predicates:
-            - Path=/orders/**
-        - id: notification
-          uri: lb://notification
-          predicates:
-            - Path=/notifications/**
+      server:
+        webflux:
+          routes:
+            - id: user-auth
+              uri: lb://user-auth
+              predicates:
+                - Path=/auth/**,/users/**
+            - id: inventory
+              uri: lb://inventory
+              predicates:
+                - Path=/resources/**,/inventory/**
+            - id: itinerary
+              uri: lb://itinerary
+              predicates:
+                - Path=/itineraries/**
+            - id: ai-planning
+              uri: lb://ai-planning
+              predicates:
+                - Path=/planning/**
+            - id: payment
+              uri: lb://payment
+              predicates:
+                - Path=/payments/**,/refunds/**
+            - id: booking-order
+              uri: lb://booking-order
+              predicates:
+                - Path=/orders/**
+            - id: notification
+              uri: lb://notification
+              predicates:
+                - Path=/notifications/**
 
 management:
   endpoints:
