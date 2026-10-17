@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -230,6 +231,68 @@ class ResourceSearchServiceTest {
         BusinessException ex = assertThrows(BusinessException.class, () -> service.search(
                 new ResourceSearchService.Criteria("CONTENT", "云南", null, null, null, null, null, "SPA")));
         assertEquals(ErrorCode.BAD_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    void searchReturnsAttractionMetadataWithTradingDisabled() {
+        Resource attraction = new Resource();
+        attraction.setId("r-attraction-v2");
+        attraction.setType(ResourceType.ATTRACTION);
+        attraction.setName("玉龙雪山");
+        attraction.setDestination("云南");
+        attraction.setProvince("云南");
+        attraction.setCity("丽江");
+        attraction.setLevel("5A");
+        attraction.setHonorTitle("纳西圣山");
+        attraction.setSummary("雪山与蓝月谷组成的丽江标志性景区");
+        attraction.setSuggestedHours(new BigDecimal("4.0"));
+        attraction.setTicketPrice(100L);
+        attraction.setLatitude(new BigDecimal("27.1000000"));
+        attraction.setLongitude(new BigDecimal("100.1800000"));
+        attraction.setCoordinateStatus(com.travelplatform.inventory.domain.CoordinateStatus.READY);
+        attraction.setStatus(ResourceStatus.ON_SHELF);
+        when(resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, ResourceType.ATTRACTION))
+                .thenReturn(List.of(attraction));
+        when(specRepository.findByResourceIdIn(any())).thenReturn(List.of());
+
+        ResourceResponse.SearchResult result = service.search(
+                new ResourceSearchService.Criteria("ATTRACTION", "丽江", DATE, null, null, null, null, null));
+
+        assertEquals(1, result.total());
+        ResourceResponse.Summary item = result.items().get(0);
+        assertEquals("ATTRACTION", item.type());
+        assertTrue(item.tradable(), "ATTRACTION has a ticket model");
+        assertFalse(item.orderEntryAllowed(), "V2-04 must not open attraction trading");
+        assertEquals("云南", item.province());
+        assertEquals("丽江", item.city());
+        assertEquals("5A", item.level());
+        assertEquals("纳西圣山", item.honorTitle());
+        assertEquals(0, new BigDecimal("4.0").compareTo(item.suggestedHours()));
+        assertEquals(100L, item.ticketPrice());
+        assertEquals("READY", item.coordinateStatus());
+        assertEquals("ATTRACTION", item.contentCategory());
+    }
+
+    @Test
+    void searchMatchesLegacyTradableResourceByBackfilledCity() {
+        Resource legacy = resource(
+                "r-attraction-1", ResourceType.TRADABLE, "玉龙雪山", "云南", ResourceStatus.ON_SHELF);
+        legacy.setProvince("云南");
+        legacy.setCity("丽江");
+        when(resourceRepository.findByStatus(ResourceStatus.ON_SHELF)).thenReturn(List.of(legacy));
+        when(specRepository.findByResourceIdIn(any())).thenReturn(List.of(
+                spec("s-ticket-1", "r-attraction-1", "成人票", 260, SpecType.TICKET_TYPE)));
+        when(unitRepository.findByResourceIdInAndDate(any(), eq(DATE))).thenReturn(List.of(
+                unit("u-attraction-1", "r-attraction-1", "s-ticket-1", 20)));
+        when(redis.available("u-attraction-1")).thenReturn(20);
+
+        ResourceResponse.SearchResult result = service.search(
+                new ResourceSearchService.Criteria(null, "丽江", DATE, null, null, null, null, null));
+
+        assertEquals(1, result.total());
+        assertEquals("r-attraction-1", result.items().get(0).id());
+        assertEquals("TRADABLE", result.items().get(0).type());
+        assertTrue(result.items().get(0).orderEntryAllowed(), "legacy TRADABLE behavior must remain");
     }
 
     @Test

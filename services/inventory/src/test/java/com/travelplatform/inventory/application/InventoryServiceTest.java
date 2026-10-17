@@ -10,7 +10,9 @@ import com.travelplatform.inventory.domain.InventoryLockRepository;
 import com.travelplatform.inventory.domain.InventoryUnit;
 import com.travelplatform.inventory.domain.InventoryUnitRepository;
 import com.travelplatform.inventory.domain.LockStatus;
+import com.travelplatform.inventory.domain.Resource;
 import com.travelplatform.inventory.domain.ResourceRepository;
+import com.travelplatform.inventory.domain.ResourceType;
 import com.travelplatform.inventory.domain.SpecRepository;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
 import org.junit.jupiter.api.Test;
@@ -71,6 +73,10 @@ class InventoryServiceTest {
         unit.setLocked(0);
         when(unitRepository.findByResourceIdAndDateAndSpecId("r-1", LocalDate.of(2026, 11, 1), "s-1"))
                 .thenReturn(Optional.of(unit));
+        Resource resource = new Resource();
+        resource.setId("r-1");
+        resource.setType(ResourceType.TRADABLE);
+        when(resourceRepository.findById("r-1")).thenReturn(Optional.of(resource));
         when(redis.tryLock("unit-1", 2)).thenReturn(0L);
 
         InventoryController.LockRequest request = new InventoryController.LockRequest(
@@ -78,6 +84,24 @@ class InventoryServiceTest {
 
         assertThrows(BusinessException.class, () -> service.lock(request));
         verify(lockRepository, never()).save(any());
+    }
+
+    @Test
+    void attractionCannotEnterTradingLockInV204() {
+        Resource attraction = new Resource();
+        attraction.setId("r-attraction-v2");
+        attraction.setType(ResourceType.ATTRACTION);
+        when(resourceRepository.findById("r-attraction-v2")).thenReturn(Optional.of(attraction));
+
+        InventoryController.LockRequest request = new InventoryController.LockRequest(
+                "r-attraction-v2", LocalDate.of(2026, 11, 1), "s-ticket-v2",
+                2, "BOOKING", 900, "ORDER", "o-1");
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.lock(request));
+
+        assertEquals(com.travelplatform.common.api.ErrorCode.CONFLICT, ex.getErrorCode());
+        verify(unitRepository, never()).findByResourceIdAndDateAndSpecId(any(), any(), any());
+        verify(redis, never()).tryLock(any(), anyInt());
     }
 
     @Test

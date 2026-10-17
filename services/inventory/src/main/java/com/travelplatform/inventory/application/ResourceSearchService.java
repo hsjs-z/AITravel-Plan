@@ -105,12 +105,23 @@ public class ResourceSearchService {
                     resource.getName(),
                     resource.getDestination(),
                     resource.getStatus().name(),
-                    resource.getType() == ResourceType.TRADABLE,
+                    isTradable(resource),
                     orderEntryAllowed(resource, criteria.date(), availability),
                     priceFrom,
                     priceTo,
                     availability.availableTotal(),
-                    contentInfo(resource).category()));
+                    contentCategory(resource),
+                    resource.getProvince(),
+                    resource.getCity(),
+                    resource.getLevel(),
+                    resource.getHonorTitle(),
+                    resource.getSummary(),
+                    resource.getSuggestedHours(),
+                    resource.getTicketPrice(),
+                    resource.getImageUrl(),
+                    resource.getLatitude(),
+                    resource.getLongitude(),
+                    resource.getCoordinateStatus() == null ? null : resource.getCoordinateStatus().name()));
         }
 
         items.sort(comparator(sort));
@@ -143,17 +154,28 @@ public class ResourceSearchService {
                 resource.getName(),
                 resource.getDestination(),
                 resource.getStatus().name(),
-                resource.getType() == ResourceType.TRADABLE,
+                isTradable(resource),
                 availability.soldOut(),
                 orderEntryAllowed(resource, date, availability),
                 date,
-                date != null && resource.getType() == ResourceType.TRADABLE,
+                date != null && isTradable(resource),
                 minPrice(specs),
                 maxPrice(specs),
                 availability.availableTotal(),
                 specViews,
-                contentInfo(resource).category(),
-                contentInfo(resource).description());
+                contentCategory(resource),
+                description(resource),
+                resource.getProvince(),
+                resource.getCity(),
+                resource.getLevel(),
+                resource.getHonorTitle(),
+                resource.getSummary(),
+                resource.getSuggestedHours(),
+                resource.getTicketPrice(),
+                resource.getImageUrl(),
+                resource.getLatitude(),
+                resource.getLongitude(),
+                resource.getCoordinateStatus() == null ? null : resource.getCoordinateStatus().name());
     }
 
     private List<Resource> loadCandidates(ResourceType type, String destination, String keyword, String category) {
@@ -161,10 +183,16 @@ public class ResourceSearchService {
                 ? resourceRepository.findByStatus(ResourceStatus.ON_SHELF)
                 : resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, type);
         return resources.stream()
-                .filter(resource -> matches(destination, resource.getDestination()))
+                .filter(resource -> matchesDestination(destination, resource))
                 .filter(resource -> matchesKeyword(resource, keyword))
                 .filter(resource -> matchesCategory(resource, category))
                 .toList();
+    }
+
+    private boolean matchesDestination(String destination, Resource resource) {
+        return matches(destination, resource.getDestination())
+                || matches(destination, resource.getProvince())
+                || matches(destination, resource.getCity());
     }
 
     private boolean matchesKeyword(Resource resource, String keyword) {
@@ -172,7 +200,10 @@ public class ResourceSearchService {
             return true;
         }
         ContentInfo info = contentInfo(resource);
-        return contains(resource.getName(), keyword) || contains(info.description(), keyword);
+        return contains(resource.getName(), keyword)
+                || contains(resource.getSummary(), keyword)
+                || contains(resource.getHonorTitle(), keyword)
+                || contains(info.description(), keyword);
     }
 
     private boolean matchesCategory(Resource resource, String category) {
@@ -265,6 +296,11 @@ public class ResourceSearchService {
                 && date != null
                 && availability.hasUnits()
                 && !availability.soldOut();
+    }
+
+    private boolean isTradable(Resource resource) {
+        return resource.getType() == ResourceType.TRADABLE
+                || resource.getType() == ResourceType.ATTRACTION;
     }
 
     private int available(InventoryUnit unit) {
@@ -363,6 +399,17 @@ public class ResourceSearchService {
         } catch (Exception e) {
             return ContentInfo.EMPTY;
         }
+    }
+
+    private String contentCategory(Resource resource) {
+        return resource.getType() == ResourceType.ATTRACTION
+                ? "ATTRACTION"
+                : contentInfo(resource).category();
+    }
+
+    private String description(Resource resource) {
+        String summary = resource.getSummary();
+        return summary == null || summary.isBlank() ? contentInfo(resource).description() : summary;
     }
 
     private String text(JsonNode node, String field) {

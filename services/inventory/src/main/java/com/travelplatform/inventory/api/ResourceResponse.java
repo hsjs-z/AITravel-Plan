@@ -1,5 +1,6 @@
 package com.travelplatform.inventory.api;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -7,7 +8,10 @@ import java.util.List;
  * Resource browsing DTOs (T055).
  *
  * <p>{@code tradable} separates tradable resources (hotel / ticket / train ticket)
- * from content resources (attraction / route / food / culture experience), and
+ * and ticket-bearing attractions from content resources (route / food / culture
+ * experience). {@code tradable=true} only means a ticket model exists; the UI must
+ * use {@code orderEntryAllowed} as the sole booking-entry gate. In V2-04,
+ * {@code ATTRACTION} is {@code tradable=true} but {@code orderEntryAllowed=false}.
  * {@code orderEntryAllowed} is the single flag the UI must honour before showing
  * any booking entry point: it is false for content resources, for off-shelf
  * resources and for resources without sellable inventory on the requested date
@@ -35,7 +39,18 @@ public final class ResourceResponse {
             Integer availableTotal,
             List<SpecView> specs,
             String contentCategory,
-            String description) {
+            String description,
+            String province,
+            String city,
+            String level,
+            String honorTitle,
+            String summary,
+            BigDecimal suggestedHours,
+            Long ticketPrice,
+            String imageUrl,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String coordinateStatus) {
     }
 
     /**
@@ -65,7 +80,18 @@ public final class ResourceResponse {
             Long priceFrom,
             Long priceTo,
             Integer availableTotal,
-            String contentCategory) {
+            String contentCategory,
+            String province,
+            String city,
+            String level,
+            String honorTitle,
+            String summary,
+            BigDecimal suggestedHours,
+            Long ticketPrice,
+            String imageUrl,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String coordinateStatus) {
     }
 
     /**

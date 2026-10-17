@@ -89,6 +89,11 @@ public class InventoryService {
     }
 
     public InventoryController.LockResponse lock(InventoryController.LockRequest request) {
+        Resource resource = resourceRepository.findById(request.resourceId()).orElse(null);
+        if (resource != null && resource.getType() == ResourceType.ATTRACTION) {
+            throw new BusinessException(ErrorCode.CONFLICT,
+                    "attraction trading is not enabled until V2-11");
+        }
         InventoryUnit unit = requireUnit(request.resourceId(), request.date(), request.specId());
         redis.initialize(unit);
 
