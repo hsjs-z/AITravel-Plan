@@ -99,7 +99,7 @@ contracts 与 quickstart。
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] 增加 inventory 景点工具查询接口，
+- [X] T018 [US1] 增加 inventory 景点工具查询接口，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/InventoryController.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`
 - [ ] T019 [US1] 扩展 ai-planning InventoryClient，
