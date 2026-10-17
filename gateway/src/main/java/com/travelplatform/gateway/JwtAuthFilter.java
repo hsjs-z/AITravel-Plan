@@ -1,5 +1,6 @@
 package com.travelplatform.gateway;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,8 @@ import java.util.Set;
 public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     private static final Set<String> PUBLIC_PATHS = Set.of("/auth/register", "/auth/login");
+    private static final String USER_ID_HEADER = "X-User-Id";
+    private static final String USER_ROLE_HEADER = "X-User-Role";
 
     private final SecretKey key;
 
@@ -47,14 +50,27 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         }
 
         try {
-            String subject = Jwts.parser()
+            Claims claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(authorization.substring(7))
-                    .getPayload()
-                    .getSubject();
+                    .getPayload();
+            String subject = claims.getSubject();
+            String role = claims.get("role", String.class);
+            if (role == null || role.isBlank()) {
+                role = "USER";
+            }
+            if (isAdminPath(path) && !"ADMIN".equals(role)) {
+                exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+                return exchange.getResponse().setComplete();
+            }
             ServerHttpRequest mutated = exchange.getRequest().mutate()
-                    .header("X-User-Id", subject)
+                    .headers(headers -> {
+                        headers.remove(USER_ID_HEADER);
+                        headers.remove(USER_ROLE_HEADER);
+                    })
+                    .header(USER_ID_HEADER, subject)
+                    .header(USER_ROLE_HEADER, role)
                     .build();
             return chain.filter(exchange.mutate().request(mutated).build());
         } catch (Exception e) {
@@ -66,5 +82,9 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return -100;
+    }
+
+    private boolean isAdminPath(String path) {
+        return path.equals("/admin") || path.startsWith("/admin/");
     }
 }

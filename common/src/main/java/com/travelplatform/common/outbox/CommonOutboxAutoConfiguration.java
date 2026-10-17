@@ -18,7 +18,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @AutoConfiguration
 @EnableScheduling
-@ConditionalOnClass(name = "org.springframework.data.jpa.repository.JpaRepository")
+@ConditionalOnClass(name = {
+        "org.springframework.data.jpa.repository.JpaRepository",
+        "org.springframework.kafka.core.KafkaTemplate"
+})
 public class CommonOutboxAutoConfiguration {
 
     @Bean

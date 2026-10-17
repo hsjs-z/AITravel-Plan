@@ -8,6 +8,7 @@ public final class User {
     private String email;
     private String passwordHash;
     private String phone;
+    private UserRole role = UserRole.USER;
     private Instant createdAt;
 
     public String getId() {
@@ -40,6 +41,14 @@ public final class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 
     public Instant getCreatedAt() {

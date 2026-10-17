@@ -7,6 +7,7 @@ import com.travelplatform.userauth.domain.JwtService;
 import com.travelplatform.userauth.domain.PasswordHasher;
 import com.travelplatform.userauth.domain.User;
 import com.travelplatform.userauth.domain.UserRepository;
+import com.travelplatform.userauth.domain.UserRole;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -40,9 +41,10 @@ public class AuthController {
         user.setEmail(request.email());
         user.setPhone(request.phone());
         user.setPasswordHash(passwordHasher.hash(request.password()));
+        user.setRole(UserRole.USER);
         user.setCreatedAt(Instant.now());
         User saved = userRepository.save(user);
-        return ApiResponse.success(new AuthResponse(jwtService.issue(saved), saved.getId()));
+        return ApiResponse.success(new AuthResponse(jwtService.issue(saved), saved.getId(), saved.getRole().name()));
     }
 
     @PostMapping("/auth/login")
@@ -52,7 +54,7 @@ public class AuthController {
         if (!passwordHasher.matches(request.password(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "invalid credentials");
         }
-        return ApiResponse.success(new AuthResponse(jwtService.issue(user), user.getId()));
+        return ApiResponse.success(new AuthResponse(jwtService.issue(user), user.getId(), user.getRole().name()));
     }
 
     @GetMapping("/users/me")
@@ -62,7 +64,7 @@ public class AuthController {
         String resolvedId = resolveUserId(userId, authorization);
         User user = userRepository.findById(resolvedId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "user not found"));
-        return ApiResponse.success(new UserResponse(user.getId(), user.getEmail(), user.getPhone()));
+        return ApiResponse.success(new UserResponse(user.getId(), user.getEmail(), user.getPhone(), user.getRole().name()));
     }
 
     private String resolveUserId(String headerUserId, String authorization) {
@@ -84,9 +86,9 @@ public class AuthController {
     public record LoginRequest(@NotBlank String email, @NotBlank String password) {
     }
 
-    public record AuthResponse(String token, String userId) {
+    public record AuthResponse(String token, String userId, String role) {
     }
 
-    public record UserResponse(String id, String email, String phone) {
+    public record UserResponse(String id, String email, String phone, String role) {
     }
 }

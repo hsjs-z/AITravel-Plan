@@ -1,6 +1,7 @@
 package com.travelplatform.userauth.domain;
 
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * repository in M1.
  */
 @Component
+@ConditionalOnProperty(name = "auth.user-store", havingValue = "memory")
 public class InMemoryUserRepository implements UserRepository {
 
     private final Map<String, User> byEmail = new ConcurrentHashMap<>();

@@ -20,6 +20,10 @@ spring:
               uri: lb://inventory
               predicates:
                 - Path=/resources/**,/inventory/**
+            - id: admin
+              uri: lb://inventory
+              predicates:
+                - Path=/admin/**
             - id: itinerary
               uri: lb://itinerary
               predicates:
