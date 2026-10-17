@@ -25,6 +25,14 @@ spring:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:local-placeholder-not-for-calls}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.2
   cloud:
     nacos:
       discovery:
@@ -49,3 +57,12 @@ management:
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+amap:
+  web-service-key: ${AMAP_WEB_SERVICE_KEY:}
+
+seed:
+  deepseek-api-key: ${DEEPSEEK_API_KEY:}
+  inventory-horizon-days: ${SEED_INVENTORY_HORIZON_DAYS:365}
+  daily-capacity: ${SEED_DAILY_CAPACITY:200}
+  amap-min-interval-ms: ${SEED_AMAP_MIN_INTERVAL_MS:250}
