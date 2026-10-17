@@ -53,18 +53,18 @@ contracts 与 quickstart。
 - [X] T007 执行 V2-02 硬门禁：`mvn clean install`、v1 主链路回归、
   Prometheus 指标、Tempo trace，记录证据到
   `specs/002-ai-travel-platform-v2/quickstart.md`
-- [ ] T008 将 user-auth 用户存储迁到 MySQL，
+- [X] T008 将 user-auth 用户存储迁到 MySQL，
   文件 `services/user-auth/src/main/resources/application.yml`、
   `services/user-auth/src/main/resources/db/migration/V1__init.sql`、
   `services/user-auth/src/main/java/com/travelplatform/userauth/infrastructure/`
-- [ ] T009 保留可测试的内存实现但默认关闭，
+- [X] T009 保留可测试的内存实现但默认关闭，
   文件 `services/user-auth/src/main/java/com/travelplatform/userauth/domain/InMemoryUserRepository.java`
-- [ ] T010 增加用户角色与管理员环境变量引导，
+- [X] T010 增加用户角色与管理员环境变量引导，
   文件 `services/user-auth/src/main/java/com/travelplatform/userauth/domain/User.java`、
   `services/user-auth/src/main/java/com/travelplatform/userauth/domain/JwtService.java`、
   `services/user-auth/src/main/java/com/travelplatform/userauth/api/AuthController.java`、
   `services/user-auth/src/main/java/com/travelplatform/userauth/AdminAccountBootstrap.java`
-- [ ] T011 网关解析 role、注入 `X-User-Role`、增加 `/admin/**` 路由，
+- [X] T011 网关解析 role、注入 `X-User-Role`、增加 `/admin/**` 路由，
   文件 `gateway/src/main/java/com/travelplatform/gateway/JwtAuthFilter.java`、
   `gateway/src/main/resources/application.yml`
 - [ ] T012 [P] 新增 inventory v2 schema：ATTRACTION、resource 字段、唯一键和索引，
