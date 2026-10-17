@@ -42,15 +42,15 @@ contracts 与 quickstart。
 **⚠️ CRITICAL**: V2-02 的 v1 全量回归 + Prometheus/Tempo 门禁未通过前，
 不得开始 V2-03 及后续任务。
 
-- [ ] T005 升级根依赖管理到 Boot 3.5.15、Cloud 2025.0.3、
+- [X] T005 升级根依赖管理到 Boot 3.5.15、Cloud 2025.0.3、
   SCA 2025.0.0.0、Spring AI 1.0.9，
   文件 `pom.xml`
-- [ ] T006 [P] 对齐各模块 pom，不引入业务行为，
+- [X] T006 [P] 对齐各模块 pom，不引入业务行为，
   文件 `services/ai-planning/pom.xml`、`services/inventory/pom.xml`、
   `services/user-auth/pom.xml`、`services/itinerary/pom.xml`、
   `services/booking-order/pom.xml`、`services/payment/pom.xml`、
   `services/notification/pom.xml`、`gateway/pom.xml`、`common/pom.xml`
-- [ ] T007 执行 V2-02 硬门禁：`mvn clean install`、v1 主链路回归、
+- [X] T007 执行 V2-02 硬门禁：`mvn clean install`、v1 主链路回归、
   Prometheus 指标、Tempo trace，记录证据到
   `specs/002-ai-travel-platform-v2/quickstart.md`
 - [ ] T008 将 user-auth 用户存储迁到 MySQL，
@@ -208,6 +208,11 @@ contracts 与 quickstart。
   文件 `services/booking-order/src/test/java/com/travelplatform/bookingorder/application/SagaOrchestratorTest.java`、
   `services/booking-order/src/test/java/com/travelplatform/bookingorder/application/OrderServiceIdempotencyTest.java`、
   `services/payment/src/test/java/com/travelplatform/payment/application/PaymentIdempotencyTest.java`
+- [ ] T074 [US4] 收口 `POST /orders` 入参校验：`items` 使用 `@NotEmpty`；
+  每个 item 的 `resourceId/specId/date` 使用 `@NotNull`，`quantity` 使用 `@Min(1)`，
+  `unitPrice` 使用 `@Positive`；补齐空 items、空 date 的 MockMvc 400 统一错误体测试，
+  文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/api/OrderController.java`、
+  `services/booking-order/src/test/java/com/travelplatform/bookingorder/api/OrderRequestValidationTest.java`
 
 **Checkpoint**: v2 交易只出现门票明细。
 

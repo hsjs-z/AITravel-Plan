@@ -139,3 +139,45 @@ New trace IDs were resolved through `http://127.0.0.1:3200/api/traces/{traceId}`
 V2-02 passes the required `mvn clean install`, v1 main-chain regression,
 Prometheus 8/8 targets, and Tempo cross-service trace checks. V2-03 may start only
 after user acceptance of this evidence.
+
+## 8. Post-acceptance fixes (2026-10-17)
+
+Two common-module regressions found by the acceptance pass were fixed:
+
+1. `NoResourceFoundException` now maps to HTTP 404 with the unified body
+   `{"code":40400,"message":"resource not found: ...","data":null}`.
+2. `handleGeneric` now logs `unhandled exception` with the full stack before
+   returning HTTP 500.
+
+Verification:
+
+- `mvn -pl common install`: 5 tests passed.
+- Inventory smoke: `GET /no-such-endpoint` returned 404 with the unified body.
+- Controlled Redis outage produced HTTP 500 and inventory log stack:
+  `RedisConnectionFailureException: Unable to connect to Redis`.
+- Redis was restored; `/resources/search?date=...` returned 200 again.
+
+## 9. Dirty data cleanup
+
+Removed the empty order created by the invalid order request:
+
+- `orders.id = dde6dec1-5866-4392-b941-d3e3f48d90e6`
+- `orders.user_id = 53ec4346-ec06-4c21-96b4-25286f2ac350`
+- status had already become `CANCELLED`; total was 0; item count was 0.
+
+SQL impact:
+
+| Table | Deleted rows |
+|---|---:|
+| `order_item` | 0 |
+| `booking_settlement_log` | 1 |
+| `orders` | 1 |
+
+The sibling FAILED order `3cfda67e-92b9-4f6f-bd2a-5e997bed0b6c` was retained.
+No payment/refund rows existed for the removed order.
+
+## 10. Deferred to V2-11
+
+`POST /orders` input validation is recorded as T074 in `tasks.md`:
+`@NotEmpty items`; `resourceId/specId/date` required; `quantity >= 1`;
+`unitPrice > 0`; MockMvc 400 tests for empty items and null date.
