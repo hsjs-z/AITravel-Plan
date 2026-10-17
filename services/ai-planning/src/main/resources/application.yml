@@ -21,6 +21,14 @@ spring:
       acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:local-placeholder-not-for-calls}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.2
   cloud:
     nacos:
       discovery:
@@ -48,3 +56,7 @@ logging:
 
 planning:
   planner: ${PLANNER_PLANNER:mock}
+  # Single DeepSeek HTTP request timeout, applied to the RestClient read timeout.
+  deepseek-timeout-ms: ${PLANNING_DEEPSEEK_TIMEOUT_MS:30000}
+  # Total budget for one generate call, including tool round-trips.
+  generate-timeout-ms: ${PLANNING_GENERATE_TIMEOUT_MS:120000}

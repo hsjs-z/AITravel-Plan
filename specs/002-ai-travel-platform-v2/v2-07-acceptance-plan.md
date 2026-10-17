@@ -1,6 +1,7 @@
 # V2-07 Acceptance Plan
 
-**Status**: Proposed. No V2-07 business code has been written.
+**Status**: Approved on 2026-10-18. Implementation is complete; acceptance evidence
+is awaiting review. T016/T017/T019/T020/T021/T022/T025 remain unchecked.
 
 ## 1. Scope and boundary
 
@@ -110,14 +111,19 @@ the results in the current run's whitelist context before returning them to the 
 
 ## 5. Whitelist iron rule
 
-`PlanningRunContext` is a `ThreadLocal` holder:
+`PlanningRunContext` is a per-run whitelist holder, and
+`PlanningRunContextHolder` exposes it on the thread executing the model call:
 
-- `recordAttractionRefs(List<AttractionRef>)` stores every resource returned by the tool
-  for the current planning run.
+- `merge(List<AttractionRef>)` stores every resource returned by the tool for the
+  current planning run.
 - `validSpecPair(resourceId, specId)` returns true only for a paid
   `(resourceId, specId)` pair that came from this run's tool result.
 - `validFreeResource(resourceId)` returns true only for a free resource whose
   `resourceId` came from this run and whose `specId` is null.
+
+Whitelist is cumulative: every `searchAttractions` call merges into the same run
+context and never replaces earlier results. A multi-tool-call unit test covers
+two separate calls producing a union whitelist.
 
 `PlanningService` wraps the async run in this context. Materialization applies:
 
@@ -160,10 +166,17 @@ replaced by this provider.
 Degradation rules:
 
 - DeepSeek call timeout is configurable as `planning.deepseek-timeout-ms` (default 30000).
+- That timeout is the single DeepSeek HTTP request timeout, applied to the RestClient
+  read timeout. A separate `planning.generate-timeout-ms` (default 120000) bounds the
+  whole generate call including tool round-trips. The two failure reasons are distinct:
+  `DeepSeek request timeout` versus `planning task total timeout after ...ms`.
 - A timeout, DeepSeek error, or `searchAttractions` Feign failure throws; the async
   planning thread catches it and calls `writer.fail(taskId, reason)`, so the task ends
   `FAILED` with a non-empty `failureReason` instead of hanging.
 - The failure reason is truncated to the `failureReason` column width.
+- When `searchAttractions` returns zero results, the actual destination argument is
+  logged so a fabricated/fallback scenario is diagnosable; the empty return behavior
+  is unchanged.
 
 ## 8. File plan
 

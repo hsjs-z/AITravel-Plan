@@ -1,33 +1,51 @@
 package com.travelplatform.aiplanning.application;
 
 import com.travelplatform.aiplanning.domain.PlanningTask;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Deterministic development planner. Produces a sample itinerary JSON so the
- * async lifecycle is testable without a DeepSeek API key.
+ * Deterministic development planner. It derives candidates from the real
+ * attraction tool for the requested destination; nothing is hardcoded.
  */
 @Component
-@ConditionalOnProperty(name = "planning.planner", havingValue = "mock", matchIfMissing = true)
-public class MockPlannerClient implements PlannerClient {
+public class MockPlannerClient {
 
-    @Override
-    public String generate(PlanningTask task, String candidateContext) {
-        return """
-                {
-                  "destination": "%s",
-                  "totalDays": %d,
-                  "partySize": %d,
-                  "estimatedBudget": %d,
-                  "days": [
-                    {"day": 1, "arrangements": ["抵达", "入住酒店"]},
-                    {"day": 2, "arrangements": ["游览玉龙雪山", "品尝美食"]}
-                  ],
-                  "hotels": [{"name": "丽江古城精品酒店", "resourceId": "r-hotel-1", "specId": "s-room-1", "dayIndex": 1}],
-                  "attractions": [{"name": "玉龙雪山", "resourceId": "r-attraction-1", "specId": "s-ticket-1", "dayIndex": 2}],
-                  "foods": [{"name": "过桥米线"}]
+    private final AttractionSearchTool tool;
+
+    public MockPlannerClient(AttractionSearchTool tool) {
+        this.tool = tool;
+    }
+
+    public PlanningOutput.Plan generate(PlanningTask task, PlanningRunContext context) {
+        PlanningRunContextHolder.set(context);
+        try {
+            List<AttractionRef> refs = tool.searchAttractions(task.getDestination());
+            List<PlanningOutput.Day> days = new ArrayList<>();
+            int cursor = 0;
+            for (int day = 1; day <= task.getDays(); day++) {
+                List<PlanningOutput.Attraction> attractions = new ArrayList<>();
+                for (int slot = 0; slot < 2 && cursor < refs.size(); slot++, cursor++) {
+                    AttractionRef ref = refs.get(cursor);
+                    attractions.add(new PlanningOutput.Attraction(
+                            ref.name(),
+                            ref.suggestedHours(),
+                            ref.summary(),
+                            ref.ticketPrice(),
+                            ref.resourceId(),
+                            ref.specId()));
                 }
-                """.formatted(task.getDestination(), task.getDays(), task.getPartySize(), task.getBudget());
+                days.add(new PlanningOutput.Day(day, "第" + day + "天", attractions));
+            }
+            return new PlanningOutput.Plan(
+                    task.getDestination(),
+                    task.getDays(),
+                    days,
+                    List.of("mock 模式：基于目的地真实景区生成"));
+        } finally {
+            PlanningRunContextHolder.clear();
+        }
     }
 }

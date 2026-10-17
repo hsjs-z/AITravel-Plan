@@ -159,12 +159,23 @@ Rules:
 
 - 工具名：`searchAttractions(destination)`。
 - 只返回 `ON_SHELF` 的 `ATTRACTION`。
-- 返回字段：名称、级别、称号、门票价、坐标、`resourceId`、`specId`。
+- 工具通过 Feign 调 `GET /inventory/attractions`；结果项字段：
+  `resourceId/name/province/city/level/honorTitle/summary/suggestedHours/`
+  `ticketPrice/free/latitude/longitude/coordinateStatus/specId/specName/price/available`。
 - 服务端只接受本次规划运行工具结果内的 `(resourceId, specId)`。
 - 非法对必须同时置空；不得只清一个。
+- 同一任务内多次工具调用的结果必须合并为累积白名单，后一次不得覆盖前一次。
 
 ## Mock mode
 
 - 配置：`planning.planner=${PLANNER_PLANNER:mock}`。
 - mock 输出同一 JSON 契约。
 - mock 必须按任务目的地选择候选，不得固定云南。
+- `DEEPSEEK_API_KEY` 为空时，即使配置了 `deepseek` 也自动回退 mock。
+
+## Degradation
+
+- `planning.deepseek-timeout-ms`（默认 30000）是单次 DeepSeek HTTP 请求超时。
+- `planning.generate-timeout-ms`（默认 120000）是包含工具往返的整次生成总超时。
+- 两种超时的 `failureReason` 必须可区分：请求超时与任务总超时。
+- 工具调用失败同样置任务 `FAILED` 并写 `failureReason`，不得挂死。

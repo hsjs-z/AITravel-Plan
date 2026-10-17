@@ -3,10 +3,10 @@ package com.travelplatform.aiplanning.application;
 import com.travelplatform.aiplanning.domain.PlanningTask;
 
 /**
- * Port for the LLM planner. The real DeepSeek implementation plugs in here;
- * a deterministic mock is used in development.
+ * Port for the LLM planner. The provider selects DeepSeek or the deterministic
+ * mock based on configuration and key availability.
  */
 public interface PlannerClient {
 
-    String generate(PlanningTask task, String candidateContext);
+    PlanningOutput.Plan generate(PlanningTask task, PlanningRunContext context);
 }
