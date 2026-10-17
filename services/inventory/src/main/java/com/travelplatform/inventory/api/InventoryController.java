@@ -42,6 +42,19 @@ public class InventoryController {
         return ApiResponse.success(inventoryService.candidates(destination, date));
     }
 
+    @GetMapping("/inventory/attractions")
+    public ApiResponse<AttractionToolResponse.AttractionPage> attractions(
+            @RequestParam(name = "destination", required = false) String destination,
+            @RequestParam(name = "province", required = false) String province,
+            @RequestParam(name = "city", required = false) String city,
+            @RequestParam(name = "date", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(name = "limit", required = false, defaultValue = "20") int limit,
+            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset) {
+        return ApiResponse.success(inventoryService.attractions(
+                destination, province, city, date, limit, offset));
+    }
+
     @PostMapping("/inventory/locks")
     public ApiResponse<LockResponse> lock(@Valid @RequestBody LockRequest request) {
         return ApiResponse.success(inventoryService.lock(request));

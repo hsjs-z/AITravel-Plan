@@ -2,6 +2,7 @@ package com.travelplatform.inventory.application;
 
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
+import com.travelplatform.inventory.api.AttractionToolResponse;
 import com.travelplatform.inventory.api.InventoryController;
 import com.travelplatform.inventory.domain.InventoryLock;
 import com.travelplatform.inventory.domain.InventoryLockRepository;
@@ -11,9 +12,11 @@ import com.travelplatform.inventory.domain.LockPurpose;
 import com.travelplatform.inventory.domain.LockStatus;
 import com.travelplatform.inventory.domain.Resource;
 import com.travelplatform.inventory.domain.ResourceRepository;
+import com.travelplatform.inventory.domain.ResourceStatus;
 import com.travelplatform.inventory.domain.ResourceType;
 import com.travelplatform.inventory.domain.Spec;
 import com.travelplatform.inventory.domain.SpecRepository;
+import com.travelplatform.inventory.domain.SpecType;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +26,12 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryService {
@@ -88,6 +95,43 @@ public class InventoryService {
         return result;
     }
 
+    /**
+     * Read-only attraction query for the planner tool. It has no lock or write
+     * path; ATTRACTION trading remains guarded by {@link #lock(InventoryController.LockRequest)}.
+     */
+    public AttractionToolResponse.AttractionPage attractions(String destination,
+                                                             String province,
+                                                             String city,
+                                                             LocalDate date,
+                                                             int limit,
+                                                             int offset) {
+        validateAttractionQuery(destination, province, city, limit, offset);
+        List<Resource> resources = resourceRepository
+                .findByStatusAndType(ResourceStatus.ON_SHELF, ResourceType.ATTRACTION)
+                .stream()
+                .filter(resource -> matchesDestination(destination, resource))
+                .filter(resource -> matchesField(province, resource.getProvince()))
+                .filter(resource -> matchesField(city, resource.getCity()))
+                .toList();
+
+        Map<String, List<Spec>> specsByResource = attractionSpecs(resources);
+        Map<String, InventoryUnit> unitsByResourceSpec = attractionUnits(resources, date);
+        List<AttractionToolResponse.AttractionItem> allItems = resources.stream()
+                .map(resource -> toAttractionItem(
+                        resource,
+                        specsByResource.getOrDefault(resource.getId(), List.of()),
+                        unitsByResourceSpec,
+                        date))
+                .sorted(attractionComparator())
+                .toList();
+
+        int total = allItems.size();
+        int from = Math.min(offset, total);
+        int to = Math.min(from + limit, total);
+        return new AttractionToolResponse.AttractionPage(
+                total, offset, limit, to < total, List.copyOf(allItems.subList(from, to)));
+    }
+
     public InventoryController.LockResponse lock(InventoryController.LockRequest request) {
         Resource resource = resourceRepository.findById(request.resourceId()).orElse(null);
         if (resource != null && resource.getType() == ResourceType.ATTRACTION) {
@@ -137,6 +181,149 @@ public class InventoryService {
     private InventoryUnit requireUnit(String resourceId, LocalDate date, String specId) {
         return unitRepository.findByResourceIdAndDateAndSpecId(resourceId, date, specId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "inventory unit not found"));
+    }
+
+    private void validateAttractionQuery(String destination,
+                                         String province,
+                                         String city,
+                                         int limit,
+                                         int offset) {
+        if (isBlank(destination) && isBlank(province) && isBlank(city)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "at least one of destination, province, city is required");
+        }
+        if (limit < 1 || limit > 50) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "limit must be between 1 and 50");
+        }
+        if (offset < 0) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "offset must not be negative");
+        }
+    }
+
+    private Map<String, List<Spec>> attractionSpecs(List<Resource> resources) {
+        if (resources.isEmpty()) {
+            return Map.of();
+        }
+        List<String> ids = resources.stream().map(Resource::getId).toList();
+        return specRepository.findByResourceIdIn(ids).stream()
+                .filter(spec -> spec.getResourceId() != null)
+                .collect(Collectors.groupingBy(Spec::getResourceId));
+    }
+
+    private Map<String, InventoryUnit> attractionUnits(List<Resource> resources, LocalDate date) {
+        if (date == null || resources.isEmpty()) {
+            return Map.of();
+        }
+        List<String> ids = resources.stream().map(Resource::getId).toList();
+        return unitRepository.findByResourceIdInAndDate(ids, date).stream()
+                .filter(unit -> unit.getResourceId() != null && unit.getSpecId() != null)
+                .collect(Collectors.toMap(
+                        unit -> unit.getResourceId() + "|" + unit.getSpecId(),
+                        unit -> unit,
+                        (first, second) -> first));
+    }
+
+    private AttractionToolResponse.AttractionItem toAttractionItem(
+            Resource resource,
+            List<Spec> specs,
+            Map<String, InventoryUnit> unitsByResourceSpec,
+            LocalDate date) {
+        boolean free = resource.getTicketPrice() != null && resource.getTicketPrice() == 0L;
+        Spec ticketSpec = free ? null : selectTicketSpec(specs);
+        Long price;
+        if (free) {
+            price = 0L;
+        } else if (ticketSpec == null) {
+            price = null;
+        } else {
+            price = ticketSpec.getPrice();
+        }
+        Integer available = null;
+        if (!free && ticketSpec != null && date != null) {
+            InventoryUnit unit = unitsByResourceSpec.get(resource.getId() + "|" + ticketSpec.getId());
+            available = unit == null ? 0 : available(unit);
+        }
+        return new AttractionToolResponse.AttractionItem(
+                resource.getId(),
+                resource.getName(),
+                resource.getProvince(),
+                resource.getCity(),
+                resource.getLevel(),
+                resource.getHonorTitle(),
+                resource.getSummary(),
+                resource.getSuggestedHours(),
+                resource.getTicketPrice(),
+                free,
+                resource.getLatitude(),
+                resource.getLongitude(),
+                resource.getCoordinateStatus() == null ? null : resource.getCoordinateStatus().name(),
+                ticketSpec == null ? null : ticketSpec.getId(),
+                ticketSpec == null ? null : ticketSpec.getName(),
+                price,
+                available);
+    }
+
+    private Spec selectTicketSpec(List<Spec> specs) {
+        return specs.stream()
+                .filter(spec -> spec.getSpecType() == SpecType.TICKET_TYPE)
+                .min(Comparator
+                        .comparing(Spec::getPrice, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Spec::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElse(null);
+    }
+
+    private Comparator<AttractionToolResponse.AttractionItem> attractionComparator() {
+        return Comparator
+                .comparingInt((AttractionToolResponse.AttractionItem item) -> levelRank(item.level()))
+                .reversed()
+                .thenComparing(AttractionToolResponse.AttractionItem::ticketPrice,
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(AttractionToolResponse.AttractionItem::name,
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(AttractionToolResponse.AttractionItem::resourceId,
+                        Comparator.nullsLast(Comparator.naturalOrder()));
+    }
+
+    private int levelRank(String level) {
+        if (level == null) {
+            return 0;
+        }
+        return switch (level.trim().toUpperCase(Locale.ROOT)) {
+            case "5A" -> 5;
+            case "4A" -> 4;
+            case "3A" -> 3;
+            case "2A" -> 2;
+            case "1A" -> 1;
+            default -> 0;
+        };
+    }
+
+    private boolean matchesDestination(String destination, Resource resource) {
+        if (isBlank(destination)) {
+            return true;
+        }
+        return contains(resource.getDestination(), destination)
+                || contains(resource.getProvince(), destination)
+                || contains(resource.getCity(), destination);
+    }
+
+    private boolean matchesField(String filter, String value) {
+        return isBlank(filter) || contains(value, filter);
+    }
+
+    private boolean contains(String value, String filter) {
+        return value != null && value.toLowerCase(Locale.ROOT)
+                .contains(filter.trim().toLowerCase(Locale.ROOT));
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private int available(InventoryUnit unit) {
+        redis.initialize(unit);
+        Integer redisAvailable = redis.available(unit.getId());
+        return redisAvailable != null ? redisAvailable : unit.getAvailable();
     }
 
     private void applyWithRetry(Runnable action) {

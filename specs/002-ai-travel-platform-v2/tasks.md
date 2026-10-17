@@ -215,6 +215,11 @@ contracts 与 quickstart。
   `unitPrice` 使用 `@Positive`；补齐空 items、空 date 的 MockMvc 400 统一错误体测试，
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/api/OrderController.java`、
   `services/booking-order/src/test/java/com/travelplatform/bookingorder/api/OrderRequestValidationTest.java`
+- [ ] T075 [US4] [V2-11] 偿还 V2-06 登记的技术债：`/inventory/candidates` 当前会把
+  `OFF_SHELF` 资源当作候选返回，交易收敛时必须只返回 `status=ON_SHELF` 的
+  `TRADABLE` 候选，同时保留 destination 精确匹配与 spec 结构；
+  文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`、
+  `services/inventory/src/test/java/com/travelplatform/inventory/application/InventoryServiceTest.java`
 
 **Checkpoint**: v2 交易只出现门票明细。
 

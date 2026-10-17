@@ -35,12 +35,15 @@
   "longitude": 109.278,
   "coordinateStatus": "READY",
   "tradable": true,
-  "orderEntryAllowed": true,
+  "orderEntryAllowed": false,
   "priceFrom": 120,
   "priceTo": 120,
   "contentCategory": "ATTRACTION"
 }
 ```
+
+上例的 `orderEntryAllowed=false` 是 V2-06 的实际状态；只有到 V2-11 打开门票交易后，
+付费且存在可售库存的 ATTRACTION 才可能变为 `true`。
 
 免费景区：
 
@@ -73,41 +76,77 @@
 
 ## GET /inventory/attractions
 
-内部工具查询，供 ai-planning 的 `searchAttractions` 使用。
+内部只读工具查询，供 ai-planning 的 `searchAttractions` 使用。该端点不打开下单入口，
+不改变 `POST /inventory/locks` 的 ATTRACTION `409` 守卫。
 
 Query:
 
 ```text
-destination=西安&date=2026-10-20
+destination=西安&province=陕西省&city=西安&date=2026-10-20&limit=20&offset=0
 ```
+
+参数：
+
+| 参数 | 必填 | 默认 | 语义 |
+|---|---|---|---|
+| `destination` | 位置过滤三选一 | - | 对 `destination/province/city` 做大小写不敏感包含匹配 |
+| `province` | 位置过滤三选一 | - | 只对 `province` 做大小写不敏感包含匹配 |
+| `city` | 位置过滤三选一 | - | 只对 `city` 做大小写不敏感包含匹配 |
+| `date` | 否 | - | ISO 日期；传入时返回日期维度的 `available`，不传时为 `null` |
+| `limit` | 否 | `20` | 每页数量，范围 `1..50` |
+| `offset` | 否 | `0` | 非负偏移 |
+
+**多参数语义（MUST）**：`destination`、`province`、`city` 同时提供时为 AND 组合，
+所有条件都必须满足才命中。三者至少提供一个，否则返回 `400`。
 
 Response:
 
 ```json
-[
-  {
-    "resourceId": "r-...",
-    "name": "秦始皇兵马俑",
-    "level": "5A",
-    "honorTitle": "世界第八大奇迹",
-    "ticketPrice": 120,
-    "latitude": 34.384,
-    "longitude": 109.278,
-    "specId": "s-...",
-    "specName": "成人票",
-    "price": 120,
-    "available": 200
-  }
-]
+{
+  "total": 1,
+  "offset": 0,
+  "limit": 20,
+  "hasMore": false,
+  "items": [
+    {
+      "resourceId": "r-...",
+      "name": "秦始皇兵马俑",
+      "province": "陕西省",
+      "city": "西安",
+      "level": "5A",
+      "honorTitle": "世界第八大奇迹",
+      "summary": "秦始皇陵陪葬坑，世界文化遗产。",
+      "suggestedHours": 4.0,
+      "ticketPrice": 120,
+      "free": false,
+      "latitude": 34.384,
+      "longitude": 109.278,
+      "coordinateStatus": "READY",
+      "specId": "s-...",
+      "specName": "成人票",
+      "price": 120,
+      "available": 200
+    }
+  ]
+}
 ```
 
 Rules:
 
 - 只返回 `status=ON_SHELF` 且 `type=ATTRACTION`。
-- 付费景区返回可交易门票规格。
-- 免费景区返回 `specId=null`、`price=0`。
+- 排序固定为：级别降序（`5A > 4A > 3A > 2A > 1A > null`），再按
+  `ticketPrice` 升序（免费在前、null 最后），再按 `name`、`resourceId` 升序。
+- 分页在排序后执行；`total` 是分页前命中数，`hasMore = offset + items.size() < total`。
+- 付费景区返回最低价的 `TICKET_TYPE` 规格；价格相同按 `specId` 升序取第一个。
+- 免费景区返回 `specId=null`、`specName=null`、`price=0`、`available=null`；
+  `ticketPrice=0`、`free=true`。
+- 付费但没有 `TICKET_TYPE` 规格时，`specId/specName/price/available` 均为 `null`，
+  该资源只能展示，不能绑定库存。
 - 坐标待补时 `latitude/longitude=null`。
+- `date` 缺省时 `available=null`；传入时按 `(resourceId, date, specId)` 读取库存，
+  无库存行时为 `0`。
 - 不支持未匹配资源。
+- 该端点只读：不得调用锁定/释放、不得写 `inventory_lock/inventory_unit/outbox`。
 
 ## Ticket-only lock guard
 
