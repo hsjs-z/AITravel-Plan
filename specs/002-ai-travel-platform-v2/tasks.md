@@ -67,14 +67,14 @@ contracts 与 quickstart。
 - [X] T011 网关解析 role、注入 `X-User-Role`、增加 `/admin/**` 路由，
   文件 `gateway/src/main/java/com/travelplatform/gateway/JwtAuthFilter.java`、
   `gateway/src/main/resources/application.yml`
-- [ ] T012 [P] 新增 inventory v2 schema：ATTRACTION、resource 字段、
+- [X] T012 [P] 新增 inventory v2 schema：ATTRACTION、resource 字段、
   `(name, city, type)` 三列唯一键和索引，
   文件 `services/inventory/src/main/resources/db/migration/V3__resource_attraction_v2.sql`
 - [ ] T013 [P] 新增 itinerary 行程项时段/排序 schema，
   文件 `services/itinerary/src/main/resources/db/migration/V3__itinerary_item_slots.sql`
 - [ ] T014 [P] 新增 ai-planning pace/budget/preferences schema，
   文件 `services/ai-planning/src/main/resources/db/migration/V3__planning_pace.sql`
-- [ ] T015 回填 v1 云南资源的 province/city，
+- [X] T015 回填 v1 云南资源的 province/city，
   保留 `load-test-resource` 的 province/city 为 NULL，
   文件 `services/inventory/src/main/resources/db/migration/V3__resource_attraction_v2.sql`
 
