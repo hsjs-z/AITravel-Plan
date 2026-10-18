@@ -336,7 +336,7 @@ async function confirmDraft() {
   if (!itinerary.value || itinerary.value.status !== 'DRAFT') return
   try {
     await ElMessageBox.confirm(
-      '确认后行程将进入只读状态，可发起门票预订。是否继续？',
+      '提交后将为你生成旅行建议，之后行程就不能再修改了。确定提交吗？',
       '确认行程',
       { type: 'info' },
     )
