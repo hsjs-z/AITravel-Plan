@@ -101,7 +101,13 @@
                 <label>出行人数</label>
                 <span>默认 1 人</span>
               </div>
-              <el-input-number v-model="partySize" :min="1" :max="20" size="large" />
+              <el-input-number
+                v-model="partySize"
+                class="party-size-input"
+                :min="1"
+                :max="20"
+                size="large"
+              />
             </div>
             <div class="field-block compact">
               <div class="field-head">
@@ -349,6 +355,38 @@ onUnmounted(stopPolling)
   display: flex;
   gap: 18px;
   margin-bottom: 26px;
+}
+
+.party-size-input {
+  width: 150px;
+}
+
+.party-size-input :deep(.el-input__wrapper) {
+  border-radius: 100px;
+  padding: 0 17px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--tp-stroke) inset;
+}
+
+.party-size-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--tp-brand) inset;
+}
+
+.party-size-input :deep(.el-input-number__decrease),
+.party-size-input :deep(.el-input-number__increase) {
+  top: 3px;
+  bottom: 3px;
+  width: 26px;
+  border-radius: 100px;
+  background: var(--tp-button-bg);
+  color: var(--tp-brand);
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+.party-size-input :deep(.el-input-number__decrease:hover),
+.party-size-input :deep(.el-input-number__increase:hover) {
+  background: var(--tp-button-hover);
+  color: var(--tp-brand-hover);
 }
 
 .pill-row,

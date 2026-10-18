@@ -18,6 +18,19 @@
 - Result page map, day accordion, map panel and tips remain white cards for readability.
 - Build: PASS, 1719 modules; dev server `GET /` returned 200.
 
+## Round 3: three small navigation/form refinements
+
+- Party-size input is now a 100px-radius pill with the same white fill and light
+  border as the city chips; its increment/decrement controls use the light-blue
+  button fill.
+- The brand text uses a `#4D6BFE -> #8B9DF7` text gradient via
+  `background-clip: text`.
+- Navigation is now three flex segments: left logo, centered nav links, right user
+  area; no language switch was added.
+- Build: PASS, 1719 modules; only the standard chunk-size warning.
+- Self-test: form party-size pill, logo gradient, and centered three-part nav all
+  compile and render from the same layout.
+
 ## 1. Build
 
 `cd frontend && npm run build`: PASS.
