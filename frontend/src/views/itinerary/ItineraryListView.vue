@@ -24,7 +24,10 @@
         </el-table-column>
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="statusType(row)" size="small">
+            <el-tag v-if="isTraveled(row)" size="small" class="travel-tag">
+              {{ statusLabel(row) }}
+            </el-tag>
+            <el-tag v-else :type="statusType(row)" size="small">
               {{ statusLabel(row) }}
             </el-tag>
           </template>
@@ -99,6 +102,13 @@ function statusType(itinerary: ItinerarySummary): 'info' | 'success' | 'warning'
   return 'info'
 }
 
+function isTraveled(itinerary: ItinerarySummary): boolean {
+  return (
+    (itinerary.activeOrderCount ?? 0) === 0 &&
+    ((itinerary.completedOrderCount ?? 0) > 0 || itinerary.status === 'COMPLETED')
+  )
+}
+
 function canDelete(itinerary: ItinerarySummary): boolean {
   return (
     (itinerary.status === 'DRAFT' || itinerary.status === 'CONFIRMED') &&
@@ -168,5 +178,12 @@ onMounted(load)
 
 .itinerary-table {
   cursor: pointer;
+}
+
+.travel-tag {
+  background: rgba(59, 165, 255, 0.12);
+  color: #1e88d0;
+  border: 1px solid rgba(59, 165, 255, 0.35);
+  border-radius: 999px;
 }
 </style>
