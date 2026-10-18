@@ -1,24 +1,38 @@
 <template>
   <main class="auth-shell">
     <section class="auth-brand" aria-hidden="true">
-      <span class="brand-shape shape-1" />
-      <span class="brand-shape shape-2" />
-      <span class="brand-shape shape-3" />
-      <span class="brand-shape shape-4" />
+      <div class="brand-mountains">
+        <svg class="mountain mountain-back" viewBox="0 0 900 260" preserveAspectRatio="none">
+          <path d="M0 220 L120 120 L210 190 L330 80 L450 200 L580 110 L700 190 L820 90 L900 170 V260 H0 Z" />
+        </svg>
+        <svg class="mountain mountain-middle" viewBox="0 0 900 260" preserveAspectRatio="none">
+          <path d="M0 240 L100 180 L220 220 L340 150 L460 230 L600 160 L720 225 L840 170 L900 210 V260 H0 Z" />
+        </svg>
+        <svg class="mountain mountain-front" viewBox="0 0 900 260" preserveAspectRatio="none">
+          <path d="M0 255 L150 210 L280 245 L420 195 L560 250 L700 205 L820 245 L900 225 V260 H0 Z" />
+        </svg>
+      </div>
+
+      <span class="brand-orb orb-a" />
+      <span class="brand-orb orb-b" />
 
       <div class="brand-content">
         <p class="brand-eyebrow">AI TRAVEL STUDIO</p>
         <h1 class="brand-title">
-          半程烟火，半程<span class="brand-gradient">山河</span>
+          <span class="brand-title-line">半程<span class="text-warm">烟火</span>，</span>
+          <span class="brand-title-line is-blue">半程<span class="text-cool">山河</span></span>
         </h1>
         <p class="brand-subtitle">本次山水的行程，AI 已备好</p>
         <p class="brand-english">Plan less, travel more.</p>
       </div>
+
       <p class="brand-poem">步履不停，山海皆有回音</p>
+      <p class="brand-footnote">AI 规划 · 真实景区库存 · 一键预订</p>
     </section>
 
     <section class="auth-form-area">
       <div class="auth-card">
+        <p class="auth-product">AI TRAVEL STUDIO</p>
         <slot />
       </div>
     </section>
@@ -27,13 +41,15 @@
 
 <style scoped>
 .auth-shell {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 55fr 45fr;
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.72), transparent 28%),
-    linear-gradient(180deg, #dcf0ff, #fafbff);
+    radial-gradient(circle at 84% 10%, rgba(255, 255, 255, 0.8), transparent 28%),
+    linear-gradient(180deg, #dcf0ff, #f7fbff 64%, #fff8f2);
 }
 
 .auth-brand {
@@ -41,18 +57,88 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding: 8vh 10% 8vh 9%;
+  padding: 8vh 11% 8vh 9%;
   background:
-    radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.92), transparent 27%),
-    radial-gradient(circle at 84% 22%, rgba(232, 243, 255, 0.85), transparent 30%),
-    radial-gradient(circle at 24% 82%, rgba(191, 217, 255, 0.32), transparent 34%),
-    linear-gradient(180deg, #dcf0ff, #f6f9ff 68%, #fafbff);
+    radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.94), transparent 27%),
+    radial-gradient(circle at 82% 18%, rgba(232, 243, 255, 0.9), transparent 30%),
+    linear-gradient(180deg, #dcf0ff 0%, #eff7ff 58%, #fff8f2 100%);
+}
+
+.auth-brand::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 38%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 90% at 18% 100%, rgba(255, 170, 110, 0.3), transparent 65%),
+    radial-gradient(ellipse 70% 80% at 78% 100%, rgba(255, 145, 145, 0.24), transparent 68%),
+    radial-gradient(ellipse 52% 70% at 50% 100%, rgba(255, 210, 150, 0.22), transparent 70%);
+}
+
+.brand-mountains {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  height: 34%;
+  pointer-events: none;
+}
+
+.mountain {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.mountain-back {
+  height: 100%;
+  fill: rgba(77, 107, 254, 0.08);
+}
+
+.mountain-middle {
+  height: 78%;
+  fill: rgba(77, 107, 254, 0.12);
+}
+
+.mountain-front {
+  height: 56%;
+  fill: rgba(77, 107, 254, 0.18);
+}
+
+.brand-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(8px);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.72), transparent 70%);
+  animation: brand-float 18s ease-in-out infinite;
+}
+
+.orb-a {
+  top: 10%;
+  left: 8%;
+  width: 220px;
+  height: 220px;
+}
+
+.orb-b {
+  top: 52%;
+  right: 16%;
+  width: 150px;
+  height: 150px;
+  animation-delay: -6s;
+  animation-duration: 14s;
 }
 
 .brand-content {
   position: relative;
-  z-index: 1;
-  max-width: 520px;
+  z-index: 3;
+  max-width: 560px;
+  padding-right: 48px;
 }
 
 .brand-eyebrow {
@@ -65,18 +151,35 @@
 .brand-title {
   margin: 0;
   color: var(--tp-text);
-  font-size: clamp(40px, 4.2vw, 64px);
+  font-size: clamp(38px, 4.4vw, 60px);
   font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.18;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
-.brand-gradient {
+.brand-title-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.brand-title-line.is-blue {
+  color: #4d6bfe;
+}
+
+.text-warm,
+.text-cool {
   color: transparent;
-  background: linear-gradient(90deg, #4d6bfe, #3a57e8);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.text-warm {
+  background: linear-gradient(90deg, #f59e0b, #fb7185);
+}
+
+.text-cool {
+  background: linear-gradient(90deg, #4d6bfe, #3a57e8);
 }
 
 .brand-subtitle {
@@ -95,64 +198,28 @@
 
 .brand-poem {
   position: absolute;
-  top: 18%;
-  right: 9%;
+  top: 50%;
+  right: 10px;
+  z-index: 4;
   margin: 0;
-  color: rgba(31, 39, 51, 0.3);
+  padding: 6px 0;
+  color: rgba(31, 39, 51, 0.28);
   font-size: 15px;
   letter-spacing: 0.28em;
   line-height: 1;
+  transform: translateY(-50%);
   writing-mode: vertical-rl;
 }
 
-.brand-shape {
+.brand-footnote {
   position: absolute;
-  pointer-events: none;
-  border: 1px solid rgba(77, 107, 254, 0.08);
-  background: rgba(191, 217, 255, 0.22);
-  animation: brand-float 16s ease-in-out infinite;
-}
-
-.shape-1 {
-  top: 16%;
-  left: 10%;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  animation-duration: 18s;
-}
-
-.shape-2 {
-  top: 62%;
-  left: 16%;
-  width: 76px;
-  height: 76px;
-  border-radius: 22px;
-  background: rgba(232, 243, 255, 0.58);
-  animation-delay: -4s;
-  animation-duration: 14s;
-}
-
-.shape-3 {
-  top: 26%;
-  right: 14%;
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  background: rgba(191, 217, 255, 0.28);
-  animation-delay: -7s;
-  animation-duration: 20s;
-}
-
-.shape-4 {
-  right: 22%;
-  bottom: 14%;
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.45);
-  animation-delay: -2s;
-  animation-duration: 12s;
+  bottom: 24px;
+  left: 9%;
+  z-index: 4;
+  margin: 0;
+  color: rgba(31, 39, 51, 0.36);
+  font-size: 11px;
+  letter-spacing: 0.12em;
 }
 
 @keyframes brand-float {
@@ -162,7 +229,7 @@
   }
 
   50% {
-    transform: translate3d(0, -14px, 0);
+    transform: translate3d(0, -12px, 0);
   }
 }
 
@@ -171,18 +238,30 @@
   place-items: center;
   min-width: 0;
   padding: 32px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(250, 251, 255, 0.5));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 250, 246, 0.42));
 }
 
 .auth-card {
-  width: min(420px, 100%);
-  padding: 32px;
+  position: relative;
+  width: min(400px, 100%);
+  padding: 40px;
   border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.65);
-  box-shadow: 0 10px 32px rgba(77, 107, 254, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 24px 64px rgba(77, 107, 254, 0.14),
+    0 6px 18px rgba(31, 39, 51, 0.04);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.auth-product {
+  margin: 0 0 22px;
+  color: var(--tp-brand);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-align: center;
 }
 
 :deep(.auth-title) {
@@ -207,7 +286,7 @@
   }
 
   .auth-card {
-    padding: 26px 22px;
+    padding: 32px 24px;
   }
 }
 </style>
