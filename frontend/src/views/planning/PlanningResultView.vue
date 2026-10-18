@@ -19,7 +19,7 @@
       </div>
     </header>
 
-    <div v-if="loading" class="result-state">正在加载行程…</div>
+    <PlanningWait v-if="loading" :has-preferences="hasPreferences" />
     <div v-else-if="error" class="result-state is-error">
       <p>{{ error }}</p>
       <el-button type="primary" plain @click="load">重新加载</el-button>
@@ -109,6 +109,7 @@ import DayAccordion from '../../components/planning/DayAccordion.vue'
 import AmapPanel from '../../components/planning/AmapPanel.vue'
 import TravelTips from '../../components/planning/TravelTips.vue'
 import AttractionPicker from '../../components/planning/AttractionPicker.vue'
+import PlanningWait from '../../components/planning/PlanningWait.vue'
 
 interface DayView {
   day: number
@@ -142,6 +143,21 @@ const taskResult = computed<PlanningResult | null>(() => {
   } catch {
     return null
   }
+})
+
+const hasPreferences = computed(() => {
+  const taskPreference = (
+    task.value as (PlanningTask & { preferences?: string | null }) | null
+  )?.preferences
+  const resultPreference = (taskResult.value as { preferences?: string | null } | null)?.preferences
+  const queryPreference = route.query.preferences
+  const stored = sessionStorage.getItem(`planning-preferences:${taskId}`)
+  const value =
+    taskPreference ??
+    resultPreference ??
+    (typeof queryPreference === 'string' ? queryPreference : undefined) ??
+    stored
+  return Boolean(value && value.trim())
 })
 
 const isDraft = computed(() => itinerary.value?.status === 'DRAFT')
@@ -265,7 +281,15 @@ async function load() {
   error.value = null
   try {
     task.value = await getPlanningTask(taskId)
-    if (!task.value.itineraryId) {
+    while (task.value && (task.value.status === 'PENDING' || task.value.status === 'RUNNING')) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      if (disposed) return
+      task.value = await getPlanningTask(taskId)
+    }
+    if (task.value?.status === 'FAILED') {
+      throw new Error(task.value.failureReason || '规划失败')
+    }
+    if (!task.value?.itineraryId) {
       throw new Error('规划任务尚未生成草稿行程')
     }
     itinerary.value = await getItinerary(task.value.itineraryId)
