@@ -136,3 +136,33 @@ single-request timeout from the whole-generate timeout.
 - Temporary acceptance users (`v207*@travel.local`) were deleted; 0 remain.
 - Acceptance planning tasks and itineraries are retained as audit evidence.
 - ai-planning is left running in mock mode (the default), inventory is healthy.
+
+## 9. Supplement: manual TRADABLE ticket v1 chain
+
+The reviewer asked for one manual TRADABLE ticket order to prove the V2-07
+ai-planning change did not disturb the Saga chain.
+
+Service recovery note: the shared Docker infrastructure had stopped, so MySQL was
+recovered on 3307 from its existing volume (204 ATTRACTION rows and 227 resources
+preserved). The gateway, user-auth, inventory, itinerary, booking-order, payment,
+and notification services were started one by one and passed actuator health.
+
+The order used the v1 seeded ticket resource `r-attraction-1` with adult spec
+`s-ticket-1` (price 260).
+
+| Step | Result |
+|---|---|
+| Register `v1chain@travel.local` | `USER`, userId `51f12b4b-...` |
+| Create itinerary | `200`, id `01e588f6-d5dc-46c5-97c4-e39406e70ce4` |
+| Confirm itinerary | `CONFIRMED` |
+| Create order (2 × 260) | `BOOKED`, total `520`, id `389c02ad-21f2-44ec-8d52-173e6c6b4803` |
+| Pay | `PAID` |
+| Auto-confirm scheduler | `CONFIRMED` (`confirmed_at` present) |
+
+Payment row: `4ac0f02c-...`, amount `520`, status `SUCCEEDED`, channel `MOCK`.
+
+Order item row: `r-attraction-1` / `s-ticket-1`, quantity `2`, status `BOOKED`,
+inventory lock `89a0a9f9-a127-4a2f-a2cd-3c02b6452cea`.
+
+The manual chain completed BOOKED → PAID → CONFIRMED without touching any V2-07
+planning code.

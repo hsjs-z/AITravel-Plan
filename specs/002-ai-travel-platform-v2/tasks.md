@@ -90,9 +90,9 @@ contracts 与 quickstart。
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] 白名单测试：工具外 `resourceId/specId` 必须同时置空，
+- [X] T016 [P] [US1] 白名单测试：工具外 `resourceId/specId` 必须同时置空，
   文件 `services/ai-planning/src/test/java/com/travelplatform/aiplanning/application/AttractionWhitelistTest.java`
-- [ ] T017 [P] [US1] mock 目的地适配与装箱边界测试：覆盖 4h 首个景点、
+- [X] T017 [P] [US1] mock 目的地适配与装箱边界测试：覆盖 4h 首个景点、
   时段剩余不足、慵懒档晚上 0、无法整体放入，文件
   `services/ai-planning/src/test/java/com/travelplatform/aiplanning/application/MockPlannerClientTest.java`、
   `services/ai-planning/src/test/java/com/travelplatform/aiplanning/application/TimeSlotAllocatorTest.java`
@@ -102,19 +102,19 @@ contracts 与 quickstart。
 - [X] T018 [US1] 增加 inventory 景点工具查询接口，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/api/InventoryController.java`、
   `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`
-- [ ] T019 [US1] 扩展 ai-planning InventoryClient，
+- [X] T019 [US1] 扩展 ai-planning InventoryClient，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/InventoryClient.java`
-- [ ] T020 [US1] 实现 `searchAttractions(destination)` 工具，
+- [X] T020 [US1] 实现 `searchAttractions(destination)` 工具，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/AttractionSearchTool.java`
-- [ ] T021 [US1] 用 Spring AI `ChatClient` 替换 RestTemplate 直连 DeepSeek，
+- [X] T021 [US1] 用 Spring AI `ChatClient` 替换 RestTemplate 直连 DeepSeek，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/DeepSeekPlannerClient.java`
-- [ ] T022 [US1] 增加新输出解析与归一化，
+- [X] T022 [US1] 增加新输出解析与归一化，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningOutputParser.java`
 - [ ] T023 [US1] 实现时段装箱器，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/TimeSlotAllocator.java`
 - [ ] T024 [US1] 接入工具结果、白名单、节奏与草稿落库，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningService.java`
-- [ ] T025 [US1] 适配 mock 新结构与目的地候选，
+- [X] T025 [US1] 适配 mock 新结构与目的地候选，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/MockPlannerClient.java`
 - [ ] T026 [US1] 扩展 planning task pace 与 Controller 契约，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/domain/PlanningTask.java`、
