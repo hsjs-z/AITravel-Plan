@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -41,6 +43,25 @@ public class OrderController {
     public ApiResponse<List<OrderResponse>> list(@RequestHeader("X-User-Id") String userId) {
         List<OrderResponse> orders = orderService.list(userId).stream().map(this::toResponse).toList();
         return ApiResponse.success(orders);
+    }
+
+    @GetMapping("/orders/summaries")
+    public ApiResponse<List<OrderSummaryResponse>> summaries(
+            @RequestHeader("X-User-Id") String userId,
+            @RequestParam(value = "itineraryIds", required = false) String itineraryIds) {
+        List<String> ids = itineraryIds == null
+                ? List.of()
+                : Arrays.stream(itineraryIds.split(","))
+                        .map(String::trim)
+                        .filter(id -> !id.isBlank())
+                        .toList();
+        List<OrderSummaryResponse> summaries = orderService.summaries(userId, ids).stream()
+                .map(summary -> new OrderSummaryResponse(
+                        summary.itineraryId(),
+                        summary.activeOrderCount(),
+                        summary.completedOrderCount()))
+                .toList();
+        return ApiResponse.success(summaries);
     }
 
     @GetMapping("/orders/{orderId}")
@@ -111,5 +132,11 @@ public class OrderController {
             Long unitPrice,
             String status,
             String lockId) {
+    }
+
+    public record OrderSummaryResponse(
+            String itineraryId,
+            long activeOrderCount,
+            long completedOrderCount) {
     }
 }

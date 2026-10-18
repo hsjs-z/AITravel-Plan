@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -38,6 +39,8 @@ class ItineraryControllerTest {
         itinerary.setHasOrder(true);
         itinerary.setCreatedAt(Instant.parse("2026-10-18T10:00:00Z"));
         when(service.list("u-1")).thenReturn(List.of(itinerary));
+        when(service.orderSummaries("u-1", List.of("it-1")))
+                .thenReturn(Map.of("it-1", new ItineraryService.OrderCounts(1, 0)));
 
         mockMvc.perform(get("/itineraries").header("X-User-Id", "u-1"))
                 .andExpect(status().isOk())
@@ -46,7 +49,9 @@ class ItineraryControllerTest {
                 .andExpect(jsonPath("$.data[0].id").value("it-1"))
                 .andExpect(jsonPath("$.data[0].destination").value("丽江"))
                 .andExpect(jsonPath("$.data[0].status").value("CONFIRMED"))
-                .andExpect(jsonPath("$.data[0].hasOrder").value(true));
+                .andExpect(jsonPath("$.data[0].hasOrder").value(true))
+                .andExpect(jsonPath("$.data[0].activeOrderCount").value(1))
+                .andExpect(jsonPath("$.data[0].completedOrderCount").value(0));
 
         verify(service).list("u-1");
     }

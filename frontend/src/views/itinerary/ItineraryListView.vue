@@ -4,7 +4,7 @@
       <div class="head-row">
         <div>
           <h2>我的行程</h2>
-          <p>查看草稿、已确认和已完成的旅行计划。</p>
+          <p>查看草稿、已确认、预订中和已出行的旅行计划。</p>
         </div>
         <el-button :loading="loading" @click="load">刷新</el-button>
       </div>
@@ -24,17 +24,26 @@
         </el-table-column>
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="statusType(row.status)" size="small">
-              {{ statusLabel(row.status) }}
+            <el-tag :type="statusType(row)" size="small">
+              {{ statusLabel(row) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" min-width="180">
           <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="170">
           <template #default="{ row }">
             <el-button size="small" @click.stop="open(row)">查看</el-button>
+            <el-button
+              v-if="canDelete(row)"
+              size="small"
+              type="danger"
+              plain
+              @click.stop="remove(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -46,8 +55,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { listItineraries } from '../../api/itinerary'
-import type { ItineraryStatus, ItinerarySummary } from '../../api/types'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { deleteItinerary, listItineraries } from '../../api/itinerary'
+import type { ItinerarySummary } from '../../api/types'
 
 const router = useRouter()
 const itineraries = ref<ItinerarySummary[]>([])
@@ -68,22 +78,32 @@ function daysOf(itinerary: ItinerarySummary): number {
   return Math.max(1, Math.round((end - start) / 86400000) + 1)
 }
 
-function statusLabel(status: ItineraryStatus): string {
+function statusLabel(itinerary: ItinerarySummary): string {
+  const active = itinerary.activeOrderCount ?? 0
+  const completed = itinerary.completedOrderCount ?? 0
+  if (active > 0) return '预订中'
+  if (completed > 0) return '已出行'
   return {
     DRAFT: '草稿',
-    CONFIRMED: '已确认',
+    CONFIRMED: '已确认 · 未预订',
     LOCKED: '已锁定',
-    COMPLETED: '已完成',
-  }[status]
+    COMPLETED: '已出行',
+  }[itinerary.status]
 }
 
-function statusType(status: ItineraryStatus): 'info' | 'success' | 'warning' {
-  return {
-    DRAFT: 'info',
-    CONFIRMED: 'success',
-    LOCKED: 'warning',
-    COMPLETED: 'info',
-  }[status] as 'info' | 'success' | 'warning'
+function statusType(itinerary: ItinerarySummary): 'info' | 'success' | 'warning' {
+  if ((itinerary.activeOrderCount ?? 0) > 0) return 'warning'
+  if ((itinerary.completedOrderCount ?? 0) > 0 || itinerary.status === 'COMPLETED') return 'info'
+  if (itinerary.status === 'CONFIRMED') return 'success'
+  if (itinerary.status === 'LOCKED') return 'warning'
+  return 'info'
+}
+
+function canDelete(itinerary: ItinerarySummary): boolean {
+  return (
+    (itinerary.status === 'DRAFT' || itinerary.status === 'CONFIRMED') &&
+    (itinerary.activeOrderCount ?? 0) === 0
+  )
 }
 
 function formatTime(value: string): string {
@@ -92,6 +112,25 @@ function formatTime(value: string): string {
 
 function open(itinerary: ItinerarySummary) {
   router.push(`/itineraries/${itinerary.id}`)
+}
+
+async function remove(itinerary: ItinerarySummary) {
+  try {
+    await ElMessageBox.confirm(
+      `删除「${itinerary.destination}」行程后不可恢复，是否继续？`,
+      '删除行程',
+      { type: 'warning' },
+    )
+  } catch {
+    return
+  }
+  try {
+    await deleteItinerary(itinerary.id)
+    itineraries.value = itineraries.value.filter((row) => row.id !== itinerary.id)
+    ElMessage.success('行程已删除')
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : '删除失败')
+  }
 }
 
 onMounted(load)

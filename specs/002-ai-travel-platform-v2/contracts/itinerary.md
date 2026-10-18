@@ -14,6 +14,8 @@
     "partySize": 2,
     "status": "CONFIRMED",
     "hasOrder": true,
+    "activeOrderCount": 1,
+    "completedOrderCount": 0,
     "createdAt": "2026-10-18T10:00:00Z"
   }
 ]
@@ -22,6 +24,23 @@
 - 只返回当前用户的数据；不得通过查询参数指定其他用户。
 - `GET /itineraries/{id}` 的 owner 校验不变：他人行程返回 `404`，不暴露存在性。
 - 该列表用于前端“我的行程”导航页，点击进入既有行程详情页。
+- `activeOrderCount` / `completedOrderCount` 来自 booking-order 的只读订单摘要：
+  - 活动订单：`CREATED/BOOKED/PAID`。
+  - 已完成订单：`CONFIRMED`。
+  - `CANCELLED/FAILED` 不计入任一计数。
+- `GET /itineraries/{id}` 同样返回这两个字段；创建/更新等写响应也返回当前快照。
+
+### 列表状态展示
+
+前端按下述优先级展示，不得只根据行程状态猜测订单：
+
+1. `activeOrderCount > 0` -> “预订中”。
+2. `completedOrderCount > 0` -> “已出行”。
+3. `status=CONFIRMED` 且两个计数均为 0 -> “已确认 · 未预订”。
+4. `status=DRAFT` -> “草稿”；`LOCKED` -> “已锁定”；`COMPLETED` -> “已出行”。
+
+取消/退款完成后行程保持 `CONFIRMED`（不进入“已拒绝”终态），订单计数归零后
+列表显示“已确认 · 未预订”，允许改期后重新预订。
 
 ## Item fields
 
@@ -129,3 +148,12 @@ Rules:
 
 - `DRAFT`：结果页可添加/删除；文案编辑仍在 itinerary 编辑页。
 - `CONFIRMED/LOCKED/COMPLETED`：结果页隐藏添加/删除，接口拒绝修改。
+
+## DELETE /itineraries/{itineraryId}
+
+- owner 不匹配返回 `404`。
+- `DRAFT` 可直接删除。
+- `CONFIRMED` 且 `activeOrderCount=0` 可删除；已有 `CONFIRMED` 订单不阻止删除。
+- `LOCKED`、`COMPLETED` 或存在活动订单（`CREATED/BOOKED/PAID`）返回 `409`。
+- 删除成功后同时删除该行程的行程项；列表页和详情页均提供二次确认入口。
+- 删除是物理删除，不可恢复。

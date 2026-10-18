@@ -20,7 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,6 +39,8 @@ public class OrderService {
     private final InventoryClient inventoryClient;
     private final OrderEventPublisher events;
     private final OrderStateMachine stateMachine = new OrderStateMachine();
+    private static final Set<OrderStatus> ACTIVE_ORDER_STATUSES =
+            EnumSet.of(OrderStatus.CREATED, OrderStatus.BOOKED, OrderStatus.PAID);
 
     public OrderService(OrderRepository orderRepository,
                         OrderItemRepository itemRepository,
@@ -155,8 +160,44 @@ public class OrderService {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
+    /**
+     * Read-only order activity summary used by the itinerary list/detail views.
+     * Active orders keep an itinerary locked; confirmed orders are the completed
+     * purchase records. Cancelled and failed orders deliberately count as neither.
+     */
+    public List<OrderSummary> summaries(String userId, List<String> itineraryIds) {
+        List<String> ids = itineraryIds == null ? List.of() : itineraryIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .map(String::trim)
+                .distinct()
+                .toList();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<String, List<Order>> byItinerary = orderRepository
+                .findByUserIdAndItineraryIdIn(userId, ids)
+                .stream()
+                .filter(order -> order.getItineraryId() != null)
+                .collect(Collectors.groupingBy(Order::getItineraryId));
+        return ids.stream()
+                .map(id -> {
+                    List<Order> orders = byItinerary.getOrDefault(id, List.of());
+                    long active = orders.stream()
+                            .filter(order -> ACTIVE_ORDER_STATUSES.contains(order.getStatus()))
+                            .count();
+                    long completed = orders.stream()
+                            .filter(order -> order.getStatus() == OrderStatus.CONFIRMED)
+                            .count();
+                    return new OrderSummary(id, active, completed);
+                })
+                .toList();
+    }
+
     public List<OrderItem> items(String orderId) {
         return itemRepository.findByOrderId(orderId);
+    }
+
+    public record OrderSummary(String itineraryId, long activeOrderCount, long completedOrderCount) {
     }
 
     @Transactional

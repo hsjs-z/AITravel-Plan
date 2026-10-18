@@ -13,13 +13,16 @@ import com.travelplatform.itinerary.domain.ItineraryStateMachine;
 import com.travelplatform.itinerary.domain.ItineraryStatus;
 import com.travelplatform.itinerary.domain.ItineraryTimeSlot;
 import com.travelplatform.itinerary.infrastructure.InventoryClient;
+import com.travelplatform.itinerary.infrastructure.OrderClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ItineraryService {
@@ -29,18 +32,21 @@ public class ItineraryService {
     private final ItineraryEventPublisher events;
     private final ObjectMapper objectMapper;
     private final InventoryClient inventoryClient;
+    private final OrderClient orderClient;
     private final ItineraryStateMachine stateMachine = new ItineraryStateMachine();
 
     public ItineraryService(ItineraryRepository repository,
                             ItineraryItemRepository itemRepository,
                             ItineraryEventPublisher events,
                             ObjectMapper objectMapper,
-                            InventoryClient inventoryClient) {
+                            InventoryClient inventoryClient,
+                            OrderClient orderClient) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.events = events;
         this.objectMapper = objectMapper;
         this.inventoryClient = inventoryClient;
+        this.orderClient = orderClient;
     }
 
     @Transactional
@@ -75,6 +81,41 @@ public class ItineraryService {
 
     public List<Itinerary> list(String userId) {
         return repository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    /**
+     * Bulk order activity lookup for the itinerary list/detail views.
+     * Active orders are CREATED/BOOKED/PAID; CONFIRMED orders are completed
+     * purchases. Cancelled/failed orders count as neither.
+     */
+    public Map<String, OrderCounts> orderSummaries(String userId, List<String> itineraryIds) {
+        if (itineraryIds == null || itineraryIds.isEmpty()) {
+            return Map.of();
+        }
+        String joined = itineraryIds.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .map(String::trim)
+                .distinct()
+                .collect(Collectors.joining(","));
+        if (joined.isBlank()) {
+            return Map.of();
+        }
+        OrderClient.OrderSummaryApiResponse response = orderClient.summaries(userId, joined);
+        if (response == null || response.data() == null) {
+            return Map.of();
+        }
+        return response.data().stream()
+                .filter(summary -> summary.itineraryId() != null)
+                .collect(Collectors.toMap(
+                        OrderClient.OrderSummaryData::itineraryId,
+                        summary -> new OrderCounts(
+                                summary.activeOrderCount(), summary.completedOrderCount()),
+                        (first, second) -> first));
+    }
+
+    public OrderCounts orderCounts(String userId, String itineraryId) {
+        return orderSummaries(userId, List.of(itineraryId))
+                .getOrDefault(itineraryId, OrderCounts.EMPTY);
     }
 
     public List<ItineraryItem> items(String itineraryId) {
@@ -132,9 +173,14 @@ public class ItineraryService {
     @Transactional
     public void delete(String userId, String itineraryId) {
         Itinerary itinerary = get(userId, itineraryId);
-        stateMachine.ensureDeletable(itinerary);
+        OrderCounts counts = orderCounts(userId, itineraryId);
+        stateMachine.ensureDeletable(itinerary, counts.activeOrderCount());
         itemRepository.deleteByItineraryId(itineraryId);
         repository.delete(itinerary);
+    }
+
+    public record OrderCounts(long activeOrderCount, long completedOrderCount) {
+        public static final OrderCounts EMPTY = new OrderCounts(0, 0);
     }
 
     @Transactional

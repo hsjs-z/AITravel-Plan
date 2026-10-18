@@ -154,6 +154,8 @@ export interface Itinerary {
   budget: number | null
   status: ItineraryStatus
   hasOrder: boolean
+  activeOrderCount: number
+  completedOrderCount: number
   items: ItineraryItem[]
   warnings: string[]
 }
@@ -166,6 +168,8 @@ export interface ItinerarySummary {
   partySize: number
   status: ItineraryStatus
   hasOrder: boolean
+  activeOrderCount: number
+  completedOrderCount: number
   createdAt: string
 }
 

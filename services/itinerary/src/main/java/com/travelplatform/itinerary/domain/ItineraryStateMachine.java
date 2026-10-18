@@ -41,9 +41,15 @@ public final class ItineraryStateMachine {
         itinerary.setStatus(ItineraryStatus.DRAFT);
     }
 
-    public void ensureDeletable(Itinerary itinerary) {
-        if (Boolean.TRUE.equals(itinerary.getHasOrder())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "itinerary with orders cannot be deleted");
+    public void ensureDeletable(Itinerary itinerary, long activeOrderCount) {
+        if (activeOrderCount > 0) {
+            throw new BusinessException(ErrorCode.CONFLICT,
+                    "itinerary with active orders cannot be deleted");
+        }
+        if (itinerary.getStatus() != ItineraryStatus.DRAFT
+                && itinerary.getStatus() != ItineraryStatus.CONFIRMED) {
+            throw new BusinessException(ErrorCode.CONFLICT,
+                    "only draft or confirmed itineraries can be deleted");
         }
     }
 

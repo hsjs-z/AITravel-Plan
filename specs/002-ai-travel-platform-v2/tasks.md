@@ -200,41 +200,57 @@ contracts 与 quickstart。
 
 **Independent Test**: 门票订单成功；酒店/车票订单被拒绝；v1 交易回归通过。
 
-- [ ] T047 [US4] 在 inventory 锁定边界增加门票类型守卫，
+- [X] T047 [US4] 在 inventory 锁定边界增加门票类型守卫，
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`
-- [ ] T048 [US4] 前端预订页只列门票并默认数量=出行人数，
+- [X] T048 [US4] 前端预订页只列门票并默认数量=出行人数，
   文件 `frontend/src/views/order/OrderCreateView.vue`
-- [ ] T049 [US4] 测试酒店/车票无法锁定，
+- [X] T049 [US4] 测试酒店/车票无法锁定，
   文件 `services/inventory/src/test/java/com/travelplatform/inventory/application/InventoryServiceTest.java`
-- [ ] T050 [US4] 回归 Saga、幂等、支付终态，
+- [X] T050 [US4] 回归 Saga、幂等、支付终态，
   文件 `services/booking-order/src/test/java/com/travelplatform/bookingorder/application/SagaOrchestratorTest.java`、
   `services/booking-order/src/test/java/com/travelplatform/bookingorder/application/OrderServiceIdempotencyTest.java`、
   `services/payment/src/test/java/com/travelplatform/payment/application/PaymentIdempotencyTest.java`
-- [ ] T074 [US4] 收口 `POST /orders` 入参校验：`items` 使用 `@NotEmpty`；
+- [X] T074 [US4] 收口 `POST /orders` 入参校验：`items` 使用 `@NotEmpty`；
   每个 item 的 `resourceId/specId/date` 使用 `@NotNull`，`quantity` 使用 `@Min(1)`，
   `unitPrice` 使用 `@Positive`；补齐空 items、空 date 的 MockMvc 400 统一错误体测试，
   文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/api/OrderController.java`、
   `services/booking-order/src/test/java/com/travelplatform/bookingorder/api/OrderRequestValidationTest.java`
-- [ ] T075 [US4] [V2-11] 偿还 V2-06 登记的技术债：`/inventory/candidates` 当前会把
+- [X] T075 [US4] [V2-11] 偿还 V2-06 登记的技术债：`/inventory/candidates` 当前会把
   `OFF_SHELF` 资源当作候选返回，交易收敛时必须只返回 `status=ON_SHELF` 的
   `TRADABLE` 候选，同时保留 destination 精确匹配与 spec 结构；
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`、
   `services/inventory/src/test/java/com/travelplatform/inventory/application/InventoryServiceTest.java`
-- [ ] T076 [US4] 结果页草稿态增加“确认行程”主按钮：二次确认后复用
+- [X] T076 [US4] 结果页草稿态增加“确认行程”主按钮：二次确认后复用
   `confirmItinerary`，成功后刷新为只读态；确认/锁定/完成态隐藏；
   文件 `frontend/src/views/planning/PlanningResultView.vue`
-- [ ] T077 [US4] 新增“我的行程”导航、列表页与 `GET /itineraries` 当前用户摘要接口，
+- [X] T077 [US4] 新增“我的行程”导航、列表页与 `GET /itineraries` 当前用户摘要接口，
   owner 越权仍返回 404；
   文件 `frontend/src/views/itinerary/ItineraryListView.vue`、`frontend/src/router/index.ts`、
   `frontend/src/App.vue`、`services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`、
   `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`
-- [ ] T078 [US4] 预订页只展示 `ATTRACTION` 且 `TICKET_TYPE` 的门票项，数量默认出行人数、
+- [X] T078 [US4] 预订页只展示 `ATTRACTION` 且 `TICKET_TYPE` 的门票项，数量默认出行人数、
   可调整；后端准入校验数量不超过当日可用库存；
   文件 `frontend/src/views/order/OrderCreateView.vue`、
   `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderService.java`
-- [ ] T079 [US4] V2-11 交付自测：8 服务以最新 jar 重启并逐个 health=UP，
+- [X] T079 [US4] V2-11 交付自测：8 服务以最新 jar 重启并逐个 health=UP，
   Prometheus targets 8/8 up，Tempo 实查一条门票下单跨服务 trace；
   证据写入 `specs/002-ai-travel-platform-v2/v2-11-acceptance.md`
+- [ ] T080 [US4] 行程列表/详情关联订单摘要：新增 `GET /orders/summaries`，
+  返回 `activeOrderCount/completedOrderCount`；列表显示“预订中/已出行/
+  已确认 · 未预订”，取消退款后保持 CONFIRMED 且不进入“已拒绝”终态；
+  文件 `services/booking-order/src/main/java/com/travelplatform/bookingorder/api/OrderController.java`、
+  `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderService.java`、
+  `services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`、
+  `frontend/src/views/itinerary/ItineraryListView.vue`
+- [ ] T081 [US4] 行程删除守卫与入口：DRAFT、或 CONFIRMED 且无活动订单允许删除；
+  LOCKED/COMPLETED/有活动订单返回 409，owner 越权 404；列表和详情页二次确认；
+  文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/domain/ItineraryStateMachine.java`、
+  `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`、
+  `frontend/src/views/itinerary/ItineraryListView.vue`、
+  `frontend/src/views/itinerary/ItineraryView.vue`
+- [ ] T082 [US4] V2-12 全量回归：162+ 后端测试、前端 build、8 服务最新 fat jar
+  健康门禁、Prometheus/Tempo，并覆盖 T080/T081 的订单摘要与删除边界；
+  证据写入 `specs/002-ai-travel-platform-v2/v2-12-acceptance.md`
 
 **Checkpoint**: v2 交易只出现门票明细。
 

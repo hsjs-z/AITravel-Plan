@@ -12,7 +12,7 @@
       <template v-else-if="itinerary">
         <el-card class="page-card">
           <div class="head-row">
-            <h2>{{ editing ? '编辑行程' : `${itinerary.destination} · ${itinerary.status === 'COMPLETED' ? '已完成' : statusLabel}` }}</h2>
+            <h2>{{ editing ? '编辑行程' : `${itinerary.destination} · ${statusLabel}` }}</h2>
             <div class="head-actions">
               <template v-if="!editing">
                 <el-button
@@ -33,7 +33,7 @@
                 >
                   去预订
                 </el-button>
-                <el-button v-if="!itinerary.hasOrder" type="danger" plain @click="remove">
+                <el-button v-if="canDelete" type="danger" plain @click="remove">
                   删除
                 </el-button>
               </template>
@@ -54,7 +54,7 @@
             </el-descriptions-item>
             <el-descriptions-item label="人数">{{ itinerary.partySize }} 人</el-descriptions-item>
             <el-descriptions-item label="预算">{{ itinerary.budget ?? '—' }} 元</el-descriptions-item>
-            <el-descriptions-item label="已有订单">{{ itinerary.hasOrder ? '是（不可删除）' : '否' }}</el-descriptions-item>
+            <el-descriptions-item label="订单">{{ orderLabel }}</el-descriptions-item>
           </el-descriptions>
 
           <el-form v-else :model="form" label-position="top" class="meta-block">
@@ -203,31 +203,58 @@ const form = reactive({
 })
 
 const statusLabel = computed(() => {
-  switch (itinerary.value?.status) {
+  const current = itinerary.value
+  if (!current) return ''
+  if ((current.activeOrderCount ?? 0) > 0) return '预订中'
+  if ((current.completedOrderCount ?? 0) > 0) return '已出行'
+  switch (current.status) {
     case 'DRAFT':
       return '草稿'
     case 'CONFIRMED':
-      return '已确认'
+      return '已确认 · 未预订'
     case 'LOCKED':
       return '已锁定'
     case 'COMPLETED':
-      return '已完成'
+      return '已出行'
     default:
       return ''
   }
 })
 
 const statusTagType = computed(() => {
-  switch (itinerary.value?.status) {
+  const current = itinerary.value
+  if (!current) return 'primary'
+  if ((current.activeOrderCount ?? 0) > 0) return 'warning'
+  if ((current.completedOrderCount ?? 0) > 0 || current.status === 'COMPLETED') return 'info'
+  switch (current.status) {
     case 'CONFIRMED':
       return 'success'
     case 'LOCKED':
       return 'warning'
-    case 'COMPLETED':
-      return 'info'
     default:
       return 'primary'
   }
+})
+
+const orderLabel = computed(() => {
+  const current = itinerary.value
+  if (!current) return '—'
+  if ((current.activeOrderCount ?? 0) > 0) {
+    return `预订中（${current.activeOrderCount} 笔活动订单）`
+  }
+  if ((current.completedOrderCount ?? 0) > 0) {
+    return `已出行（${current.completedOrderCount} 笔已完成订单）`
+  }
+  return '未预订'
+})
+
+const canDelete = computed(() => {
+  const current = itinerary.value
+  if (!current) return false
+  return (
+    (current.status === 'DRAFT' || current.status === 'CONFIRMED') &&
+    (current.activeOrderCount ?? 0) === 0
+  )
 })
 
 function slotLabel(slot: string | null): string {
@@ -380,7 +407,7 @@ async function remove() {
   try {
     await deleteItinerary(itineraryId)
     ElMessage.success('行程已删除')
-    router.replace('/planning')
+    router.replace('/itineraries')
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : '删除失败')
   }

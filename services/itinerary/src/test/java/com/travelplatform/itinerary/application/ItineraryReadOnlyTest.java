@@ -10,6 +10,7 @@ import com.travelplatform.itinerary.domain.ItineraryRepository;
 import com.travelplatform.itinerary.domain.ItineraryStatus;
 import com.travelplatform.itinerary.domain.ItineraryTimeSlot;
 import com.travelplatform.itinerary.infrastructure.InventoryClient;
+import com.travelplatform.itinerary.infrastructure.OrderClient;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -26,7 +27,7 @@ class ItineraryReadOnlyTest {
     private final ItineraryItemRepository itemRepository = mock(ItineraryItemRepository.class);
     private final ItineraryService service = new ItineraryService(
             repository, itemRepository, mock(ItineraryEventPublisher.class),
-            new ObjectMapper(), mock(InventoryClient.class));
+            new ObjectMapper(), mock(InventoryClient.class), mock(OrderClient.class));
 
     @Test
     void addAndDeleteReturn409ForConfirmedLockedAndCompleted() {

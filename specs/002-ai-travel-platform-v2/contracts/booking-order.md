@@ -1,5 +1,32 @@
 # booking-order v2
 
+## GET /orders/summaries
+
+供 itinerary 列表/详情聚合行程状态，按当前 `X-User-Id` 只读查询：
+
+```text
+GET /orders/summaries?itineraryIds=it-1,it-2
+```
+
+响应：
+
+```json
+[
+  {
+    "itineraryId": "it-1",
+    "activeOrderCount": 1,
+    "completedOrderCount": 0
+  }
+]
+```
+
+- 活动订单：`CREATED/BOOKED/PAID`。
+- 已完成订单：`CONFIRMED`。
+- `CANCELLED/FAILED` 不计入任一计数。
+- 只返回当前用户的订单；支持批量行程 ID。
+- 无订单的请求行程返回 `0/0`。
+- 该端点只读，不改变订单状态或库存。
+
 ## POST /orders
 
 请求结构保持 v1：

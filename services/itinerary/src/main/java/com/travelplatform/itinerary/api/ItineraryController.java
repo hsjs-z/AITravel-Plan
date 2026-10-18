@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class ItineraryController {
@@ -37,7 +38,7 @@ public class ItineraryController {
             @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody CreateItineraryRequest request) {
         Itinerary itinerary = itineraryService.create(userId, request);
-        return ApiResponse.success(toResponse(itinerary));
+        return ApiResponse.success(toResponse(userId, itinerary));
     }
 
     @GetMapping("/itineraries/{itineraryId}")
@@ -45,13 +46,16 @@ public class ItineraryController {
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId) {
         Itinerary itinerary = itineraryService.get(userId, itineraryId);
-        return ApiResponse.success(toResponse(itinerary));
+        return ApiResponse.success(toResponse(userId, itinerary));
     }
 
     @GetMapping("/itineraries")
     public ApiResponse<List<ItinerarySummaryResponse>> list(
             @RequestHeader("X-User-Id") String userId) {
-        List<ItinerarySummaryResponse> items = itineraryService.list(userId).stream()
+        List<Itinerary> itineraries = itineraryService.list(userId);
+        Map<String, ItineraryService.OrderCounts> summaries = itineraryService.orderSummaries(
+                userId, itineraries.stream().map(Itinerary::getId).toList());
+        List<ItinerarySummaryResponse> items = itineraries.stream()
                 .map(itinerary -> new ItinerarySummaryResponse(
                         itinerary.getId(),
                         itinerary.getDestination(),
@@ -60,6 +64,10 @@ public class ItineraryController {
                         itinerary.getPartySize(),
                         itinerary.getStatus().name(),
                         itinerary.getHasOrder(),
+                        summaries.getOrDefault(itinerary.getId(), ItineraryService.OrderCounts.EMPTY)
+                                .activeOrderCount(),
+                        summaries.getOrDefault(itinerary.getId(), ItineraryService.OrderCounts.EMPTY)
+                                .completedOrderCount(),
                         itinerary.getCreatedAt()))
                 .toList();
         return ApiResponse.success(items);
@@ -71,7 +79,7 @@ public class ItineraryController {
             @PathVariable("itineraryId") String itineraryId,
             @Valid @RequestBody UpdateItineraryRequest request) {
         Itinerary itinerary = itineraryService.update(userId, itineraryId, request);
-        return ApiResponse.success(toResponse(itinerary));
+        return ApiResponse.success(toResponse(userId, itinerary));
     }
 
     @PostMapping("/itineraries/{itineraryId}/items")
@@ -79,7 +87,7 @@ public class ItineraryController {
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId,
             @Valid @RequestBody AddItemRequest request) {
-        return ApiResponse.success(toResponse(itineraryService.addItem(userId, itineraryId, request)));
+        return ApiResponse.success(toResponse(userId, itineraryService.addItem(userId, itineraryId, request)));
     }
 
     @DeleteMapping("/itineraries/{itineraryId}/items/{itemId}")
@@ -87,14 +95,14 @@ public class ItineraryController {
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId,
             @PathVariable("itemId") String itemId) {
-        return ApiResponse.success(toResponse(itineraryService.deleteItem(userId, itineraryId, itemId)));
+        return ApiResponse.success(toResponse(userId, itineraryService.deleteItem(userId, itineraryId, itemId)));
     }
 
     @PostMapping("/itineraries/{itineraryId}/confirm")
     public ApiResponse<ItineraryResponse> confirm(
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId) {
-        return ApiResponse.success(toResponse(itineraryService.confirm(userId, itineraryId)));
+        return ApiResponse.success(toResponse(userId, itineraryService.confirm(userId, itineraryId)));
     }
 
     @DeleteMapping("/itineraries/{itineraryId}")
@@ -109,25 +117,26 @@ public class ItineraryController {
     public ApiResponse<ItineraryResponse> lock(
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId) {
-        return ApiResponse.success(toResponse(itineraryService.lock(userId, itineraryId)));
+        return ApiResponse.success(toResponse(userId, itineraryService.lock(userId, itineraryId)));
     }
 
     @PostMapping("/itineraries/{itineraryId}/release")
     public ApiResponse<ItineraryResponse> release(
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId) {
-        return ApiResponse.success(toResponse(itineraryService.release(userId, itineraryId)));
+        return ApiResponse.success(toResponse(userId, itineraryService.release(userId, itineraryId)));
     }
 
     @PostMapping("/itineraries/{itineraryId}/complete")
     public ApiResponse<ItineraryResponse> complete(
             @RequestHeader("X-User-Id") String userId,
             @PathVariable("itineraryId") String itineraryId) {
-        return ApiResponse.success(toResponse(itineraryService.complete(userId, itineraryId)));
+        return ApiResponse.success(toResponse(userId, itineraryService.complete(userId, itineraryId)));
     }
 
-    private ItineraryResponse toResponse(Itinerary itinerary) {
+    private ItineraryResponse toResponse(String userId, Itinerary itinerary) {
         List<ItineraryItem> items = itineraryService.items(itinerary.getId());
+        ItineraryService.OrderCounts counts = itineraryService.orderCounts(userId, itinerary.getId());
         return new ItineraryResponse(
                 itinerary.getId(),
                 itinerary.getUserId(),
@@ -138,6 +147,8 @@ public class ItineraryController {
                 itinerary.getBudget(),
                 itinerary.getStatus().name(),
                 itinerary.getHasOrder(),
+                counts.activeOrderCount(),
+                counts.completedOrderCount(),
                 items.stream().map(this::toItemResponse).toList(),
                 itineraryService.warnings(itinerary));
     }
@@ -216,6 +227,8 @@ public class ItineraryController {
             Long budget,
             String status,
             Boolean hasOrder,
+            long activeOrderCount,
+            long completedOrderCount,
             List<ItemResponse> items,
             List<String> warnings) {
     }
@@ -228,6 +241,8 @@ public class ItineraryController {
             Integer partySize,
             String status,
             Boolean hasOrder,
+            long activeOrderCount,
+            long completedOrderCount,
             java.time.Instant createdAt) {
     }
 
