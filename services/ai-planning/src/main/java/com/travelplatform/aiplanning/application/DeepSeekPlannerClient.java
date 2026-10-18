@@ -26,6 +26,10 @@ public class DeepSeekPlannerClient {
     private static final String SYSTEM_PROMPT = """
             你是一个专业的中文旅行规划助手。规划前必须先调用 searchAttractions(destination)
             获取目的地真实景区数据；可以多次调用，结果以工具返回为准。
+            用户提示词中的"偏好"是选点的重要依据：挑选景区、安排先后顺序与当日主题时必须结合偏好取舍
+            （例如偏好亲子则优先亲子友好景区，偏好摄影则优先地标出片地，偏好越贵越好则在候选中优先
+            票价更高、体验更完整的景区）。若库存候选与偏好明显冲突，仍从候选中选择最接近的方案，
+            并在 tips 中说明取舍；禁止为满足偏好编造库存外景区。
             只输出一个合法 JSON 对象，不要 Markdown，不要解释。
             结构必须为：
             {
