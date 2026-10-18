@@ -7,6 +7,7 @@
       <nav class="nav-links">
         <router-link to="/content">内容资源</router-link>
         <router-link to="/planning">智能规划</router-link>
+        <router-link to="/itineraries">我的行程</router-link>
         <router-link to="/orders">我的订单</router-link>
         <router-link to="/notifications">通知中心</router-link>
       </nav>

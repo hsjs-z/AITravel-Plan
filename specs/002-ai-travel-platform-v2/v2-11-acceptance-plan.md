@@ -1,6 +1,7 @@
 # V2-11 Acceptance Plan
 
-**Status**: Proposed. No V2-11 business code has been written.
+**Status**: Implemented. Self-test evidence is in `v2-11-acceptance.md`; awaiting
+product/browser acceptance.
 
 ## 1. Scope
 

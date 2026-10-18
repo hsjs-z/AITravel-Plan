@@ -4,6 +4,13 @@ import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.inventory.api.InventoryController;
 import com.travelplatform.inventory.domain.InventoryUnit;
 import com.travelplatform.inventory.domain.InventoryUnitRepository;
+import com.travelplatform.inventory.domain.Resource;
+import com.travelplatform.inventory.domain.ResourceRepository;
+import com.travelplatform.inventory.domain.ResourceStatus;
+import com.travelplatform.inventory.domain.ResourceType;
+import com.travelplatform.inventory.domain.Spec;
+import com.travelplatform.inventory.domain.SpecRepository;
+import com.travelplatform.inventory.domain.SpecType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +38,12 @@ class InventoryConcurrencyIntegrationTest {
 
     @Autowired
     private InventoryUnitRepository unitRepository;
+
+    @Autowired
+    private ResourceRepository resourceRepository;
+
+    @Autowired
+    private SpecRepository specRepository;
 
     @Test
     void twoHundredConcurrentLocksNeverOversell() throws Exception {
@@ -118,11 +131,31 @@ class InventoryConcurrencyIntegrationTest {
     }
 
     private InventoryUnit newUnit(int total) {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String resourceId = "test-r-" + suffix;
+        Resource resource = new Resource();
+        resource.setId(resourceId);
+        resource.setType(ResourceType.ATTRACTION);
+        resource.setName("test-attraction-" + suffix);
+        resource.setDestination("测试");
+        resource.setStatus(ResourceStatus.ON_SHELF);
+        resource.setTicketPrice(100L);
+        resourceRepository.save(resource);
+
+        String specId = "test-s-" + suffix;
+        Spec spec = new Spec();
+        spec.setId(specId);
+        spec.setResourceId(resourceId);
+        spec.setSpecType(SpecType.TICKET_TYPE);
+        spec.setName("测试门票");
+        spec.setPrice(100L);
+        specRepository.save(spec);
+
         InventoryUnit unit = new InventoryUnit();
         unit.setId(UUID.randomUUID().toString());
-        unit.setResourceId("test-r-" + UUID.randomUUID());
+        unit.setResourceId(resourceId);
         unit.setDate(LocalDate.of(2026, 11, 1));
-        unit.setSpecId("test-s-" + UUID.randomUUID());
+        unit.setSpecId(specId);
         unit.setTotal(total);
         unit.setAvailable(total);
         unit.setLocked(0);

@@ -73,6 +73,10 @@ public class ItineraryService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "itinerary not found"));
     }
 
+    public List<Itinerary> list(String userId) {
+        return repository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
     public List<ItineraryItem> items(String itineraryId) {
         return itemRepository.findByItineraryIdOrderByDayDateAscTimeSlotAscSortOrderAsc(itineraryId);
     }

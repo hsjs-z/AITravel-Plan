@@ -79,8 +79,16 @@ class InventoryServiceTest {
                 .thenReturn(Optional.of(unit));
         Resource resource = new Resource();
         resource.setId("r-1");
-        resource.setType(ResourceType.TRADABLE);
+        resource.setType(ResourceType.ATTRACTION);
         when(resourceRepository.findById("r-1")).thenReturn(Optional.of(resource));
+        when(specRepository.findById("s-1")).thenReturn(Optional.of(
+                new Spec() {{
+                    setId("s-1");
+                    setResourceId("r-1");
+                    setName("成人票");
+                    setSpecType(SpecType.TICKET_TYPE);
+                    setPrice(100L);
+                }}));
         when(redis.tryLock("unit-1", 2)).thenReturn(0L);
 
         InventoryController.LockRequest request = new InventoryController.LockRequest(
@@ -91,10 +99,10 @@ class InventoryServiceTest {
     }
 
     @Test
-    void attractionCannotEnterTradingLockInV204() {
+    void hotelOrTrainCannotEnterTicketLock() {
         Resource attraction = new Resource();
         attraction.setId("r-attraction-v2");
-        attraction.setType(ResourceType.ATTRACTION);
+        attraction.setType(ResourceType.TRADABLE);
         when(resourceRepository.findById("r-attraction-v2")).thenReturn(Optional.of(attraction));
 
         InventoryController.LockRequest request = new InventoryController.LockRequest(
@@ -109,7 +117,51 @@ class InventoryServiceTest {
     }
 
     @Test
-    void candidatesPreserveV1TradableExactDestinationBehaviorIncludingOffShelf() {
+    void freeAttractionWithoutTicketSpecCannotLock() {
+        Resource attraction = new Resource();
+        attraction.setId("r-free");
+        attraction.setType(ResourceType.ATTRACTION);
+        when(resourceRepository.findById("r-free")).thenReturn(Optional.of(attraction));
+        when(specRepository.findById("s-missing")).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.lock(
+                new InventoryController.LockRequest("r-free", LocalDate.of(2026, 11, 1),
+                        "s-missing", 1, "BOOKING", 900, "ORDER", "o-1")));
+
+        assertEquals(com.travelplatform.common.api.ErrorCode.CONFLICT, ex.getErrorCode());
+        verify(redis, never()).tryLock(any(), anyInt());
+    }
+
+    @Test
+    void validTicketAttractionCanLock() {
+        Resource attraction = new Resource();
+        attraction.setId("r-ticket");
+        attraction.setType(ResourceType.ATTRACTION);
+        when(resourceRepository.findById("r-ticket")).thenReturn(Optional.of(attraction));
+        Spec ticket = new Spec();
+        ticket.setId("s-ticket");
+        ticket.setResourceId("r-ticket");
+        ticket.setName("成人票");
+        ticket.setSpecType(SpecType.TICKET_TYPE);
+        ticket.setPrice(100L);
+        when(specRepository.findById("s-ticket")).thenReturn(Optional.of(ticket));
+        InventoryUnit unit = unit("u-ticket", "r-ticket", "s-ticket",
+                LocalDate.of(2026, 11, 1), 10);
+        when(unitRepository.findByResourceIdAndDateAndSpecId(
+                "r-ticket", LocalDate.of(2026, 11, 1), "s-ticket")).thenReturn(Optional.of(unit));
+        when(unitRepository.findById("u-ticket")).thenReturn(Optional.of(unit));
+        when(redis.tryLock("u-ticket", 2)).thenReturn(1L);
+
+        InventoryController.LockResponse response = service.lock(
+                new InventoryController.LockRequest("r-ticket", LocalDate.of(2026, 11, 1),
+                        "s-ticket", 2, "BOOKING", 900, "ORDER", "o-1"));
+
+        assertTrue(response.lockId() != null && !response.lockId().isBlank());
+        verify(lockRepository).save(any());
+    }
+
+    @Test
+    void candidatesFilterOffShelfResources() {
         LocalDate date = LocalDate.of(2026, 10, 18);
         Resource onShelf = resource("r-on", "在售酒店", ResourceStatus.ON_SHELF);
         Resource offShelf = resource("r-off", "下架酒店", ResourceStatus.OFF_SHELF);
@@ -117,22 +169,15 @@ class InventoryServiceTest {
                 .thenReturn(List.of(onShelf, offShelf));
         when(specRepository.findByResourceId("r-on"))
                 .thenReturn(List.of(spec("s-on", "r-on", "标准间", 500L)));
-        when(specRepository.findByResourceId("r-off"))
-                .thenReturn(List.of(spec("s-off", "r-off", "标准间", 420L)));
         when(unitRepository.findByResourceIdAndDateAndSpecId("r-on", date, "s-on"))
                 .thenReturn(Optional.of(unit("u-on", "r-on", "s-on", date, 8)));
-        when(unitRepository.findByResourceIdAndDateAndSpecId("r-off", date, "s-off"))
-                .thenReturn(Optional.of(unit("u-off", "r-off", "s-off", date, 0)));
         when(redis.available("u-on")).thenReturn(8);
-        when(redis.available("u-off")).thenReturn(0);
 
         List<InventoryController.Candidate> candidates = service.candidates("云南", date);
 
-        assertEquals(List.of("r-on", "r-off"),
+        assertEquals(List.of("r-on"),
                 candidates.stream().map(InventoryController.Candidate::resourceId).toList());
-        assertEquals(2, candidates.get(0).specs().size() + candidates.get(1).specs().size());
         assertEquals(8, candidates.get(0).specs().get(0).available());
-        assertEquals(0, candidates.get(1).specs().get(0).available());
         verify(resourceRepository).findByDestinationAndType("云南", ResourceType.TRADABLE);
     }
 

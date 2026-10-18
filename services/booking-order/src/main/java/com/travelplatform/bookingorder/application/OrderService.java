@@ -9,6 +9,7 @@ import com.travelplatform.bookingorder.domain.OrderRepository;
 import com.travelplatform.bookingorder.domain.OrderStateMachine;
 import com.travelplatform.bookingorder.domain.OrderStatus;
 import com.travelplatform.bookingorder.infrastructure.PaymentClient;
+import com.travelplatform.bookingorder.infrastructure.InventoryClient;
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
 import com.travelplatform.common.idempotency.IdempotencyKeys;
@@ -32,6 +33,7 @@ public class OrderService {
     private final OrderItemRepository itemRepository;
     private final SagaOrchestrator orchestrator;
     private final PaymentClient paymentClient;
+    private final InventoryClient inventoryClient;
     private final OrderEventPublisher events;
     private final OrderStateMachine stateMachine = new OrderStateMachine();
 
@@ -39,12 +41,14 @@ public class OrderService {
                         OrderItemRepository itemRepository,
                         SagaOrchestrator orchestrator,
                         PaymentClient paymentClient,
-                        OrderEventPublisher events) {
+                        OrderEventPublisher events,
+                        InventoryClient inventoryClient) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.orchestrator = orchestrator;
         this.paymentClient = paymentClient;
         this.events = events;
+        this.inventoryClient = inventoryClient;
     }
 
     @Transactional
@@ -57,6 +61,8 @@ public class OrderService {
         if (existing != null) {
             return existing;
         }
+
+        validateTicketItems(request.items());
 
         Order order = new Order();
         order.setId(UUID.randomUUID().toString());
@@ -91,6 +97,53 @@ public class OrderService {
             events.orderFailed(order, failedItems(items));
         }
         return order;
+    }
+
+    private void validateTicketItems(List<OrderController.OrderItemRequest> items) {
+        for (OrderController.OrderItemRequest item : items) {
+            InventoryClient.ResourceApiResponse resourceResponse;
+            try {
+                resourceResponse = inventoryClient.resource(item.resourceId());
+            } catch (Exception e) {
+                log.warn("ticket resource admission failed for resource {}: {}",
+                        item.resourceId(), e.toString());
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "invalid ticket resource: " + item.resourceId());
+            }
+            if (resourceResponse == null || resourceResponse.data() == null) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "invalid ticket resource: " + item.resourceId());
+            }
+            InventoryClient.ResourceDetail resource = resourceResponse.data();
+            if (!"ATTRACTION".equals(resource.type())) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "only ticket attractions can be ordered");
+            }
+            boolean validSpec = resource.specs() != null && resource.specs().stream()
+                    .anyMatch(spec -> item.specId().equals(spec.specId())
+                            && "TICKET_TYPE".equals(spec.specType()));
+            if (!validSpec) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "specId is not a TICKET_TYPE spec of this attraction");
+            }
+            InventoryClient.AvailabilityApiResponse availability;
+            try {
+                availability = inventoryClient.availability(
+                        item.resourceId(), item.date().toString(), item.specId());
+            } catch (Exception e) {
+                log.warn("ticket availability admission failed for {} / {} / {}: {}",
+                        item.resourceId(), item.date(), item.specId(), e.toString());
+                throw new BusinessException(ErrorCode.CONFLICT,
+                        "inventory is unavailable for the requested ticket");
+            }
+            Integer available = availability == null || availability.data() == null
+                    ? null
+                    : availability.data().available();
+            if (available == null || item.quantity() > available) {
+                throw new BusinessException(ErrorCode.CONFLICT,
+                        "quantity exceeds available ticket inventory");
+            }
+        }
     }
 
     public Order get(String userId, String orderId) {

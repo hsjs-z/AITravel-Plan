@@ -35,15 +35,15 @@
   "longitude": 109.278,
   "coordinateStatus": "READY",
   "tradable": true,
-  "orderEntryAllowed": false,
+  "orderEntryAllowed": true,
   "priceFrom": 120,
   "priceTo": 120,
   "contentCategory": "ATTRACTION"
 }
 ```
 
-上例的 `orderEntryAllowed=false` 是 V2-06 的实际状态；只有到 V2-11 打开门票交易后，
-付费且存在可售库存的 ATTRACTION 才可能变为 `true`。
+上例按 V2-11 状态展示：付费且存在可售库存的 ATTRACTION 为 `true`；V2-06
+阶段该字段固定为 `false`。
 
 免费景区：
 
@@ -153,7 +153,16 @@ Rules:
 `POST /inventory/locks` 增加服务端校验：
 
 - resource 必须是 `ATTRACTION`。
-- spec 必须是 `TICKET_TYPE`。
-- 否则返回业务错误，不执行 Redis Lua 扣减。
+- spec 必须存在、属于该 resource，且必须是 `TICKET_TYPE`。
+- 必须存在 `(resourceId, date, specId)` 对应的库存单元。
+- 非 `ATTRACTION`、spec 不存在/不属于该资源/非 `TICKET_TYPE`、免费景区无票种，
+  一律返回 `409`（资源存在但业务状态不允许），不执行 Redis Lua 扣减，也不写
+  `inventory_lock` / `inventory_unit`。
+- resource 或库存单元不存在返回 `404`；请求体字段缺失或格式不合法（如
+  `quantity<1`、`date` 非 ISO 日期）由 Bean Validation 返回 `400`。
 
 该守卫不改变资源+日期+规格三维锁定契约，也不改变释放幂等。
+
+`GET /inventory/candidates` 为兼容 v1 保留原响应结构，但只返回
+`status=ON_SHELF` 的 `TRADABLE` 资源及其规格；下架资源不得出现在候选中。
+门票交易不经过该端点。

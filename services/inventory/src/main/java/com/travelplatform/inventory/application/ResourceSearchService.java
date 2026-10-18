@@ -11,6 +11,7 @@ import com.travelplatform.inventory.domain.ResourceStatus;
 import com.travelplatform.inventory.domain.ResourceType;
 import com.travelplatform.inventory.domain.Spec;
 import com.travelplatform.inventory.domain.SpecRepository;
+import com.travelplatform.inventory.domain.SpecType;
 import com.travelplatform.inventory.infrastructure.InventoryLockRedis;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -106,7 +107,9 @@ public class ResourceSearchService {
                     resource.getDestination(),
                     resource.getStatus().name(),
                     isTradable(resource),
-                    orderEntryAllowed(resource, criteria.date(), availability),
+                    orderEntryAllowed(resource, specs,
+                            unitsByResource.getOrDefault(resource.getId(), List.of()),
+                            criteria.date(), availability),
                     priceFrom,
                     priceTo,
                     availability.availableTotal(),
@@ -156,7 +159,7 @@ public class ResourceSearchService {
                 resource.getStatus().name(),
                 isTradable(resource),
                 availability.soldOut(),
-                orderEntryAllowed(resource, date, availability),
+                orderEntryAllowed(resource, specs, List.copyOf(units.values()), date, availability),
                 date,
                 date != null && isTradable(resource),
                 minPrice(specs),
@@ -285,12 +288,27 @@ public class ResourceSearchService {
     }
 
     /**
-     * Order entry requires: a tradable resource, still on shelf, and sellable
-     * inventory for the requested date. Content resources never expose an entry
-     * point (FR-039), off-shelf and sold-out resources must not expose one either
-     * (FR-038).
+     * Order entry for legacy TRADABLE resources requires sellable inventory for the
+     * requested date. ATTRACTION resources only expose an entry point when a
+     * TICKET_TYPE spec of that resource still has stock on the date; free
+     * attractions have no ticket spec and therefore stay non-orderable. Content
+     * resources never expose an entry point (FR-039), and off-shelf or sold-out
+     * resources must not expose one either (FR-038).
      */
-    private boolean orderEntryAllowed(Resource resource, LocalDate date, Availability availability) {
+    private boolean orderEntryAllowed(Resource resource, List<Spec> specs,
+                                      List<InventoryUnit> units, LocalDate date,
+                                      Availability availability) {
+        if (resource.getType() == ResourceType.ATTRACTION) {
+            if (resource.getStatus() != ResourceStatus.ON_SHELF || date == null) {
+                return false;
+            }
+            Set<String> ticketSpecIds = specs.stream()
+                    .filter(spec -> spec.getSpecType() == SpecType.TICKET_TYPE)
+                    .map(Spec::getId)
+                    .collect(Collectors.toSet());
+            return units.stream().anyMatch(unit -> ticketSpecIds.contains(unit.getSpecId())
+                    && available(unit) > 0);
+        }
         return resource.getType() == ResourceType.TRADABLE
                 && resource.getStatus() == ResourceStatus.ON_SHELF
                 && date != null

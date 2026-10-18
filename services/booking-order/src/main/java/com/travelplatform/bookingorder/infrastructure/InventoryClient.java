@@ -1,14 +1,26 @@
 package com.travelplatform.bookingorder.infrastructure;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @FeignClient(name = "inventory")
 public interface InventoryClient {
+
+    @GetMapping("/resources/{resourceId}")
+    ResourceApiResponse resource(@PathVariable("resourceId") String resourceId);
+
+    @GetMapping("/inventory/query")
+    AvailabilityApiResponse availability(
+            @RequestParam("resourceId") String resourceId,
+            @RequestParam("date") String date,
+            @RequestParam("specId") String specId);
 
     @PostMapping("/inventory/locks")
     InventoryLockApiResponse lock(@RequestBody InventoryLockRequest request);
@@ -37,5 +49,24 @@ public interface InventoryClient {
     }
 
     record InventoryReleaseData(String lockId, boolean released) {
+    }
+
+    record ResourceApiResponse(int code, String message, ResourceDetail data) {
+    }
+
+    record ResourceDetail(
+            String id,
+            String type,
+            String status,
+            List<SpecView> specs) {
+    }
+
+    record SpecView(String specId, String specType, Long price) {
+    }
+
+    record AvailabilityApiResponse(int code, String message, AvailabilityData data) {
+    }
+
+    record AvailabilityData(Integer available) {
     }
 }

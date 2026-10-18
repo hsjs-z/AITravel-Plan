@@ -17,7 +17,7 @@
 
         <template v-if="itinerary && itinerary.status === 'CONFIRMED'">
           <p class="hint">
-            默认全选行程内所有可预订资源，可取消勾选子集；数量可在下单前调整（下限 1）。
+            只展示行程内可预订门票，默认数量为出行人数；可调整数量，免费景点不在预订范围。
           </p>
           <el-table :data="rows" class="items-table">
             <el-table-column width="50">
@@ -55,6 +55,12 @@
               </template>
             </el-table-column>
           </el-table>
+
+          <el-empty
+            v-if="!rows.length"
+            description="当前行程没有可预订门票"
+            class="empty-tickets"
+          />
 
           <div class="summary">
             <span>已选 {{ selectedCount }} 项</span>
@@ -134,31 +140,27 @@ async function loadRows(itineraryValue: Itinerary) {
   for (const item of bookableItems) {
     try {
       const detail = await getResource(item.resourceId as string, item.dayDate)
-      const spec = (detail.specs ?? []).find((s) => s.specId === item.specId)
-      const isHotel = item.resourceType === 'HOTEL'
+      if (detail.type !== 'ATTRACTION') continue
+      const spec = (detail.specs ?? []).find(
+        (s) => s.specId === item.specId && s.specType === 'TICKET_TYPE',
+      )
+      if (!spec) continue
       loaded.push({
         item,
         resourceName: detail.name,
-        specName: spec?.specName ?? item.specId ?? '',
+        specName: spec.specName ?? item.specId ?? '',
         date: item.dayDate,
-        unitPrice: spec?.price ?? null,
-        available: spec?.available ?? null,
-        bookable: spec?.bookable ?? false,
-        quantity: isHotel ? 1 : itineraryValue.partySize,
-        selected: spec?.bookable ?? false,
+        unitPrice: spec.price ?? null,
+        available: spec.available ?? null,
+        bookable: spec.bookable ?? false,
+        quantity: Math.min(
+          Math.max(itineraryValue.partySize, 1),
+          Math.max(spec.available ?? 1, 1),
+        ),
+        selected: spec.bookable ?? false,
       })
     } catch {
-      loaded.push({
-        item,
-        resourceName: item.resourceId as string,
-        specName: item.specId ?? '',
-        date: item.dayDate,
-        unitPrice: null,
-        available: null,
-        bookable: false,
-        quantity: 1,
-        selected: false,
-      })
+      continue
     }
   }
   rows.value = loaded

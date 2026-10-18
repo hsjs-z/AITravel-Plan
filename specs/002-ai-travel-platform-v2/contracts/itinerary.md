@@ -1,5 +1,28 @@
 # itinerary v2
 
+## GET /itineraries
+
+按 `X-User-Id` 返回当前用户的行程摘要，按 `createdAt` 倒序：
+
+```json
+[
+  {
+    "id": "it-...",
+    "destination": "丽江",
+    "startDate": "2026-10-20",
+    "endDate": "2026-10-22",
+    "partySize": 2,
+    "status": "CONFIRMED",
+    "hasOrder": true,
+    "createdAt": "2026-10-18T10:00:00Z"
+  }
+]
+```
+
+- 只返回当前用户的数据；不得通过查询参数指定其他用户。
+- `GET /itineraries/{id}` 的 owner 校验不变：他人行程返回 `404`，不暴露存在性。
+- 该列表用于前端“我的行程”导航页，点击进入既有行程详情页。
+
 ## Item fields
 
 `GET /itineraries/{itineraryId}` 的每个 item 增加：

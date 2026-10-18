@@ -28,8 +28,20 @@ v2 约束：
 - 订单明细不新增酒店类目字段。
 - 价格快照仍来自下单时 `unitPrice`。
 
+入参校验（Bean Validation，失败返回 `400` 统一错误体）：
+
+- `items` 必须非空（`@NotEmpty`）。
+- 每个 item 的 `resourceId`、`specId`、`date` 必须非空。
+- `quantity >= 1`，`unitPrice > 0`。
+- 列表元素必须级联校验；空 items 不得创建 `totalAmount=0` 的订单。
+
 服务端兜底：
 
+- 落单前只读调用 inventory 准入检查：resource 必须为 `ATTRACTION`，spec 必须
+  属于该资源且为 `TICKET_TYPE`，请求数量不得超过该日期该规格的当前可用库存。
+  非门票项返回 `400`；库存不足或库存不可用返回 `409`。
+- 只读准入检查不替代库存锁：`POST /inventory/locks` 仍是最终事实源，两步都通过
+  才允许 Saga 继续。
 - inventory 锁定时校验 `resource.type=ATTRACTION` 与 `spec.specType=TICKET_TYPE`。
 - 任一非门票项导致该次联合预订失败，已锁定项按既有 Saga 补偿释放。
 

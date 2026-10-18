@@ -48,6 +48,23 @@ public class ItineraryController {
         return ApiResponse.success(toResponse(itinerary));
     }
 
+    @GetMapping("/itineraries")
+    public ApiResponse<List<ItinerarySummaryResponse>> list(
+            @RequestHeader("X-User-Id") String userId) {
+        List<ItinerarySummaryResponse> items = itineraryService.list(userId).stream()
+                .map(itinerary -> new ItinerarySummaryResponse(
+                        itinerary.getId(),
+                        itinerary.getDestination(),
+                        itinerary.getStartDate(),
+                        itinerary.getEndDate(),
+                        itinerary.getPartySize(),
+                        itinerary.getStatus().name(),
+                        itinerary.getHasOrder(),
+                        itinerary.getCreatedAt()))
+                .toList();
+        return ApiResponse.success(items);
+    }
+
     @PutMapping("/itineraries/{itineraryId}")
     public ApiResponse<ItineraryResponse> update(
             @RequestHeader("X-User-Id") String userId,
@@ -201,6 +218,17 @@ public class ItineraryController {
             Boolean hasOrder,
             List<ItemResponse> items,
             List<String> warnings) {
+    }
+
+    public record ItinerarySummaryResponse(
+            String id,
+            String destination,
+            LocalDate startDate,
+            LocalDate endDate,
+            Integer partySize,
+            String status,
+            Boolean hasOrder,
+            java.time.Instant createdAt) {
     }
 
     public record ItemResponse(

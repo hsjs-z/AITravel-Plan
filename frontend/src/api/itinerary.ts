@@ -1,5 +1,14 @@
 import http from './http'
-import type { AddItineraryItemPayload, Itinerary, UpdateItineraryPayload } from './types'
+import type {
+  AddItineraryItemPayload,
+  Itinerary,
+  ItinerarySummary,
+  UpdateItineraryPayload,
+} from './types'
+
+export function listItineraries(): Promise<ItinerarySummary[]> {
+  return http.get('/itineraries')
+}
 
 export function getItinerary(itineraryId: string): Promise<Itinerary> {
   return http.get(`/itineraries/${itineraryId}`)

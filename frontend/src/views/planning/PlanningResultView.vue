@@ -6,7 +6,17 @@
         <h1>{{ itinerary?.destination || taskResult?.destination || '旅行计划结果' }}</h1>
         <p class="hero-sub">你的专属旅行计划 · {{ taskResult?.totalDays || dayViews.length || '—' }} 天</p>
       </div>
-      <span v-if="itinerary" class="status-chip">{{ statusLabel }}</span>
+      <div v-if="itinerary" class="hero-actions">
+        <span class="status-chip">{{ statusLabel }}</span>
+        <el-button
+          v-if="itinerary.status === 'DRAFT'"
+          type="primary"
+          :loading="confirming"
+          @click="confirmDraft"
+        >
+          确认行程
+        </el-button>
+      </div>
     </header>
 
     <div v-if="loading" class="result-state">正在加载行程…</div>
@@ -79,6 +89,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPlanningTask } from '../../api/planning'
 import {
   addItineraryItem,
+  confirmItinerary,
   deleteItineraryItem,
   getItinerary,
 } from '../../api/itinerary'
@@ -115,6 +126,7 @@ const pickerDate = ref('')
 const pickerSlot = ref<TimeSlot>('MORNING')
 const selectedItemId = ref<string | null>(null)
 const mapUnavailable = ref(false)
+const confirming = ref(false)
 
 const taskResult = computed<PlanningResult | null>(() => {
   if (!task.value?.result) return null
@@ -272,6 +284,26 @@ async function removeItem(item: ItineraryItem) {
   }
 }
 
+async function confirmDraft() {
+  if (!itinerary.value || itinerary.value.status !== 'DRAFT') return
+  try {
+    await ElMessageBox.confirm(
+      '确认后行程将进入只读状态，可发起门票预订。是否继续？',
+      '确认行程',
+      { type: 'info' },
+    )
+    confirming.value = true
+    itinerary.value = await confirmItinerary(itinerary.value.id)
+    ElMessage.success('行程已确认')
+  } catch (err) {
+    if (err !== 'cancel' && err !== 'close') {
+      ElMessage.error(err instanceof Error ? err.message : '确认失败')
+    }
+  } finally {
+    confirming.value = false
+  }
+}
+
 function locate(item: ItineraryItem) {
   if (item.latitude == null || item.longitude == null) {
     ElMessage.info('坐标待补，暂时无法定位')
@@ -334,6 +366,13 @@ onMounted(load)
   background: var(--tp-button-bg);
   color: var(--tp-brand);
   font-size: 12px;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
 }
 
 .result-state {

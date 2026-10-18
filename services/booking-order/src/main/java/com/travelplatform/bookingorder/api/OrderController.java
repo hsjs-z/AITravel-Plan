@@ -7,6 +7,7 @@ import com.travelplatform.common.api.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -81,7 +82,7 @@ public class OrderController {
     public record CreateOrderRequest(
             @NotBlank String itineraryId,
             String idempotencyKey,
-            @NotNull List<OrderItemRequest> items) {
+            @NotEmpty List<@Valid OrderItemRequest> items) {
     }
 
     public record OrderItemRequest(

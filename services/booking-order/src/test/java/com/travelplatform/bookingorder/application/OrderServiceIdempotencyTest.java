@@ -6,6 +6,7 @@ import com.travelplatform.bookingorder.domain.OrderItemRepository;
 import com.travelplatform.bookingorder.domain.OrderRepository;
 import com.travelplatform.bookingorder.domain.OrderStatus;
 import com.travelplatform.bookingorder.infrastructure.PaymentClient;
+import com.travelplatform.bookingorder.infrastructure.InventoryClient;
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
 import com.travelplatform.common.outbox.OutboxRecorder;
@@ -38,6 +39,7 @@ class OrderServiceIdempotencyTest {
     private final OrderItemRepository itemRepository = mock(OrderItemRepository.class);
     private final SagaOrchestrator orchestrator = mock(SagaOrchestrator.class);
     private final PaymentClient paymentClient = mock(PaymentClient.class);
+    private final InventoryClient inventoryClient = mock(InventoryClient.class);
 
     private final OrderEventPublisher events =
             new OrderEventPublisher(new OutboxRecorder(
@@ -45,7 +47,7 @@ class OrderServiceIdempotencyTest {
 
     // 待测试的OrderService实例
     private final OrderService service =
-            new OrderService(orderRepository, itemRepository, orchestrator, paymentClient, events);
+            new OrderService(orderRepository, itemRepository, orchestrator, paymentClient, events, inventoryClient);
 
     /**
      * 测试重复提交时返回已存在的订单且不重新运行Saga
@@ -77,6 +79,7 @@ class OrderServiceIdempotencyTest {
      */
     @Test
     void concurrentDuplicateFallsBackToExistingOnUniqueConstraintViolation() {
+        primeTicketAdmission();
         // 创建已存在的订单
         Order existing = new Order();
         existing.setId("order-1");
@@ -101,6 +104,7 @@ class OrderServiceIdempotencyTest {
      */
     @Test
     void newOrderRunsSagaExactlyOnce() {
+        primeTicketAdmission();
         // 模拟仓库返回空（表示是新订单）
         when(orderRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
         // 模拟保存订单并返回相同的订单对象
@@ -129,6 +133,16 @@ class OrderServiceIdempotencyTest {
                 idempotencyKey,
                 List.of(new OrderController.OrderItemRequest(
                         "r-1", "s-1", LocalDate.of(2026, 11, 1), 1, 100L)));
+    }
+
+    private void primeTicketAdmission() {
+        when(inventoryClient.resource("r-1")).thenReturn(new InventoryClient.ResourceApiResponse(
+                0, "OK", new InventoryClient.ResourceDetail(
+                        "r-1", "ATTRACTION", "ON_SHELF",
+                        List.of(new InventoryClient.SpecView("s-1", "TICKET_TYPE", 100L)))));
+        when(inventoryClient.availability("r-1", "2026-11-01", "s-1"))
+                .thenReturn(new InventoryClient.AvailabilityApiResponse(
+                        0, "OK", new InventoryClient.AvailabilityData(10)));
     }
 
     /**

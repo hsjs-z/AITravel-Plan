@@ -234,7 +234,7 @@ class ResourceSearchServiceTest {
     }
 
     @Test
-    void searchReturnsAttractionMetadataWithTradingDisabled() {
+    void searchReturnsAttractionMetadataWithoutTicketInventory() {
         Resource attraction = new Resource();
         attraction.setId("r-attraction-v2");
         attraction.setType(ResourceType.ATTRACTION);
@@ -262,7 +262,7 @@ class ResourceSearchServiceTest {
         ResourceResponse.Summary item = result.items().get(0);
         assertEquals("ATTRACTION", item.type());
         assertTrue(item.tradable(), "ATTRACTION has a ticket model");
-        assertFalse(item.orderEntryAllowed(), "V2-04 must not open attraction trading");
+        assertFalse(item.orderEntryAllowed(), "an attraction without ticket inventory is not orderable");
         assertEquals("云南", item.province());
         assertEquals("丽江", item.city());
         assertEquals("5A", item.level());
@@ -271,6 +271,55 @@ class ResourceSearchServiceTest {
         assertEquals(100L, item.ticketPrice());
         assertEquals("READY", item.coordinateStatus());
         assertEquals("ATTRACTION", item.contentCategory());
+    }
+
+    @Test
+    void paidAttractionWithTicketInventoryAllowsOrderEntry() {
+        Resource attraction = new Resource();
+        attraction.setId("r-attraction-paid");
+        attraction.setType(ResourceType.ATTRACTION);
+        attraction.setName("玉龙雪山");
+        attraction.setDestination("云南");
+        attraction.setProvince("云南");
+        attraction.setCity("丽江");
+        attraction.setTicketPrice(100L);
+        attraction.setStatus(ResourceStatus.ON_SHELF);
+        when(resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, ResourceType.ATTRACTION))
+                .thenReturn(List.of(attraction));
+        when(specRepository.findByResourceIdIn(any())).thenReturn(List.of(
+                spec("s-ticket-paid", "r-attraction-paid", "门票", 100, SpecType.TICKET_TYPE)));
+        when(unitRepository.findByResourceIdInAndDate(any(), eq(DATE))).thenReturn(List.of(
+                unit("u-ticket-paid", "r-attraction-paid", "s-ticket-paid", 12)));
+        when(redis.available("u-ticket-paid")).thenReturn(12);
+
+        ResourceResponse.SearchResult result = service.search(
+                new ResourceSearchService.Criteria("ATTRACTION", "丽江", DATE, null, null, null, null, null));
+
+        assertTrue(result.items().get(0).orderEntryAllowed(),
+                "a paid attraction with sellable TICKET_TYPE inventory must be orderable");
+    }
+
+    @Test
+    void freeAttractionWithoutTicketSpecNeverAllowsOrderEntry() {
+        Resource attraction = new Resource();
+        attraction.setId("r-attraction-free");
+        attraction.setType(ResourceType.ATTRACTION);
+        attraction.setName("丽江古城");
+        attraction.setDestination("云南");
+        attraction.setProvince("云南");
+        attraction.setCity("丽江");
+        attraction.setTicketPrice(0L);
+        attraction.setStatus(ResourceStatus.ON_SHELF);
+        when(resourceRepository.findByStatusAndType(ResourceStatus.ON_SHELF, ResourceType.ATTRACTION))
+                .thenReturn(List.of(attraction));
+        when(specRepository.findByResourceIdIn(any())).thenReturn(List.of());
+        when(unitRepository.findByResourceIdInAndDate(any(), eq(DATE))).thenReturn(List.of());
+
+        ResourceResponse.SearchResult result = service.search(
+                new ResourceSearchService.Criteria("ATTRACTION", "丽江", DATE, null, null, null, null, null));
+
+        assertFalse(result.items().get(0).orderEntryAllowed(),
+                "free attractions stay outside the payment path");
     }
 
     @Test

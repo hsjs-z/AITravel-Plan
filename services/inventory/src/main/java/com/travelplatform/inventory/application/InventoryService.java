@@ -71,7 +71,10 @@ public class InventoryService {
     }
 
     public List<InventoryController.Candidate> candidates(String destination, LocalDate date) {
-        List<Resource> resources = resourceRepository.findByDestinationAndType(destination, ResourceType.TRADABLE);
+        List<Resource> resources = resourceRepository.findByDestinationAndType(destination, ResourceType.TRADABLE)
+                .stream()
+                .filter(resource -> resource.getStatus() == ResourceStatus.ON_SHELF)
+                .toList();
         List<InventoryController.Candidate> result = new ArrayList<>();
         for (Resource resource : resources) {
             List<InventoryController.Spec> specs = new ArrayList<>();
@@ -133,10 +136,18 @@ public class InventoryService {
     }
 
     public InventoryController.LockResponse lock(InventoryController.LockRequest request) {
-        Resource resource = resourceRepository.findById(request.resourceId()).orElse(null);
-        if (resource != null && resource.getType() == ResourceType.ATTRACTION) {
+        Resource resource = resourceRepository.findById(request.resourceId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "resource not found"));
+        if (resource.getType() != ResourceType.ATTRACTION) {
             throw new BusinessException(ErrorCode.CONFLICT,
-                    "attraction trading is not enabled until V2-11");
+                    "only ticket attractions can be locked");
+        }
+        Spec spec = specRepository.findById(request.specId()).orElse(null);
+        if (spec == null
+                || !request.resourceId().equals(spec.getResourceId())
+                || spec.getSpecType() != SpecType.TICKET_TYPE) {
+            throw new BusinessException(ErrorCode.CONFLICT,
+                    "only a TICKET_TYPE spec of this attraction can be locked");
         }
         InventoryUnit unit = requireUnit(request.resourceId(), request.date(), request.specId());
         redis.initialize(unit);

@@ -158,6 +158,17 @@ export interface Itinerary {
   warnings: string[]
 }
 
+export interface ItinerarySummary {
+  id: string
+  destination: string
+  startDate: string
+  endDate: string
+  partySize: number
+  status: ItineraryStatus
+  hasOrder: boolean
+  createdAt: string
+}
+
 export interface ItineraryItemPayload {
   dayDate: string
   name?: string

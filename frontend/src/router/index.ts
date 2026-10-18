@@ -5,6 +5,7 @@ import RegisterView from '../views/auth/RegisterView.vue'
 import PlanningView from '../views/planning/PlanningView.vue'
 import PlanningResultView from '../views/planning/PlanningResultView.vue'
 import ItineraryView from '../views/itinerary/ItineraryView.vue'
+import ItineraryListView from '../views/itinerary/ItineraryListView.vue'
 import OrderListView from '../views/order/OrderListView.vue'
 import OrderCreateView from '../views/order/OrderCreateView.vue'
 import OrderDetailView from '../views/order/OrderDetailView.vue'
@@ -23,6 +24,7 @@ const router = createRouter({
       name: 'planning-result',
       component: PlanningResultView,
     },
+    { path: '/itineraries', name: 'itineraries', component: ItineraryListView },
     { path: '/itineraries/:itineraryId', name: 'itinerary', component: ItineraryView },
     { path: '/orders', name: 'orders', component: OrderListView },
     { path: '/orders/new', name: 'order-create', component: OrderCreateView },

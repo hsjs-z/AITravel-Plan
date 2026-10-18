@@ -220,6 +220,21 @@ contracts 与 quickstart。
   `TRADABLE` 候选，同时保留 destination 精确匹配与 spec 结构；
   文件 `services/inventory/src/main/java/com/travelplatform/inventory/application/InventoryService.java`、
   `services/inventory/src/test/java/com/travelplatform/inventory/application/InventoryServiceTest.java`
+- [ ] T076 [US4] 结果页草稿态增加“确认行程”主按钮：二次确认后复用
+  `confirmItinerary`，成功后刷新为只读态；确认/锁定/完成态隐藏；
+  文件 `frontend/src/views/planning/PlanningResultView.vue`
+- [ ] T077 [US4] 新增“我的行程”导航、列表页与 `GET /itineraries` 当前用户摘要接口，
+  owner 越权仍返回 404；
+  文件 `frontend/src/views/itinerary/ItineraryListView.vue`、`frontend/src/router/index.ts`、
+  `frontend/src/App.vue`、`services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`、
+  `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`
+- [ ] T078 [US4] 预订页只展示 `ATTRACTION` 且 `TICKET_TYPE` 的门票项，数量默认出行人数、
+  可调整；后端准入校验数量不超过当日可用库存；
+  文件 `frontend/src/views/order/OrderCreateView.vue`、
+  `services/booking-order/src/main/java/com/travelplatform/bookingorder/application/OrderService.java`
+- [ ] T079 [US4] V2-11 交付自测：8 服务以最新 jar 重启并逐个 health=UP，
+  Prometheus targets 8/8 up，Tempo 实查一条门票下单跨服务 trace；
+  证据写入 `specs/002-ai-travel-platform-v2/v2-11-acceptance.md`
 
 **Checkpoint**: v2 交易只出现门票明细。
 
