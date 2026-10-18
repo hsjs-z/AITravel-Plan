@@ -22,7 +22,7 @@ defineProps<{
   margin-top: 16px;
   padding: 20px 22px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--tp-glass);
 }
 
 .tips-head {
@@ -33,7 +33,7 @@ defineProps<{
 }
 
 .tips-mark {
-  color: #ffc78a;
+  color: #b26a00;
   font-size: 16px;
 }
 

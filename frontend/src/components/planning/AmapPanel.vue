@@ -99,7 +99,7 @@ onMounted(async () => {
     map = new AMap.Map(mapEl.value, {
       zoom: 11,
       center: [108.9398, 34.3416],
-      mapStyle: 'amap://styles/dark',
+      mapStyle: 'amap://styles/whitesmoke',
     })
     mapReady.value = true
     renderMarkers()
@@ -154,7 +154,7 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid var(--tp-stroke-soft);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.025);
+  background: #eaf2ff;
 }
 
 .map-state {

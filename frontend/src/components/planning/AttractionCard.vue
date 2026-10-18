@@ -71,15 +71,15 @@ const priceClass = computed(() => ({
   justify-content: space-between;
   gap: 14px;
   padding: 15px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--tp-stroke-soft);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.035);
+  background: #ffffff;
   transition: border-color 150ms ease-out, background-color 150ms ease-out;
 }
 
 .attraction-card:hover {
-  border-color: rgba(106, 132, 255, 0.35);
-  background: rgba(77, 107, 254, 0.06);
+  border-color: var(--tp-button-border);
+  background: #f8faff;
 }
 
 .card-main {
@@ -125,16 +125,16 @@ const priceClass = computed(() => ({
 }
 
 .price-label {
-  color: #c8d2ff;
+  color: var(--tp-brand);
   font-size: 12px;
 }
 
 .price-label.is-free {
-  color: #9fe6c1;
+  color: #1b8a5a;
 }
 
 .price-label.is-unavailable {
-  color: #ffc78a;
+  color: #b26a00;
 }
 
 .price-note {
@@ -143,29 +143,35 @@ const priceClass = computed(() => ({
 }
 
 .locate-link {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--tp-brand-hover);
+  border: 1px solid var(--tp-button-border);
+  border-radius: 100px;
+  padding: 3px 9px;
+  background: var(--tp-button-bg);
+  color: var(--tp-brand);
   font: inherit;
   font-size: 11px;
   cursor: pointer;
 }
 
+.locate-link:hover {
+  border-color: var(--tp-brand);
+  background: var(--tp-button-hover);
+}
+
 .delete-button {
   align-self: flex-start;
-  border: 1px solid rgba(255, 128, 128, 0.2);
+  border: 1px solid var(--tp-button-border);
   border-radius: 8px;
   padding: 4px 7px;
-  background: transparent;
-  color: #ffb4b4;
+  background: var(--tp-button-bg);
+  color: var(--tp-text);
   font-size: 11px;
   cursor: pointer;
   transition: background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 .delete-button:hover {
-  border-color: rgba(255, 128, 128, 0.5);
-  background: rgba(255, 100, 100, 0.08);
+  border-color: var(--tp-brand);
+  background: var(--tp-button-hover);
 }
 </style>

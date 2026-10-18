@@ -211,7 +211,7 @@ onMounted(load)
 }
 
 .hint {
-  color: #606266;
+  color: var(--tp-text-secondary);
 }
 
 .block-hint {
@@ -231,7 +231,7 @@ onMounted(load)
 
 .total {
   font-weight: 600;
-  color: #f56c6c;
+  color: var(--tp-brand);
 }
 
 .actions {

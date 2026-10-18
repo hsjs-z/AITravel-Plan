@@ -41,10 +41,8 @@ function logout() {
   gap: 24px;
   height: 64px;
   padding: 0 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(19, 22, 29, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--tp-stroke);
+  background: #ffffff;
 }
 
 .brand {
@@ -67,11 +65,11 @@ function logout() {
 }
 
 .nav-links a.router-link-active {
-  color: var(--tp-brand-hover);
+  color: var(--tp-brand);
   font-weight: 600;
 }
 
 .nav-links a:hover {
-  color: var(--tp-text);
+  color: var(--tp-brand-hover);
 }
 </style>

@@ -89,7 +89,7 @@ function slotHours(slot: TimeSlot): string {
   overflow: hidden;
   border: 1px solid var(--tp-stroke);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--tp-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: border-color 150ms ease-out;
@@ -100,7 +100,7 @@ function slotHours(slot: TimeSlot): string {
 }
 
 .day-section.is-open {
-  border-color: rgba(106, 132, 255, 0.45);
+  border-color: var(--tp-brand);
 }
 
 .day-header {
@@ -110,7 +110,8 @@ function slotHours(slot: TimeSlot): string {
   width: 100%;
   padding: 16px 18px;
   border: 0;
-  background: transparent;
+  border-bottom: 1px solid var(--tp-stroke-soft);
+  background: var(--tp-button-bg);
   color: var(--tp-text);
   text-align: left;
   cursor: pointer;
@@ -138,7 +139,7 @@ function slotHours(slot: TimeSlot): string {
 
 .warning-count {
   flex: none;
-  color: #ffc78a;
+  color: #b26a00;
   font-size: 11px;
 }
 
@@ -150,14 +151,14 @@ function slotHours(slot: TimeSlot): string {
 .day-warnings {
   margin: 0 18px 12px;
   padding: 9px 12px;
-  border-left: 2px solid #ffc78a;
+  border-left: 2px solid #e7a94e;
   border-radius: 0 8px 8px 0;
-  background: rgba(255, 199, 138, 0.08);
+  background: #fff8ec;
 }
 
 .day-warnings p {
   margin: 0;
-  color: #ffd5a5;
+  color: #8a5a00;
   font-size: 11px;
   line-height: 1.6;
 }
@@ -170,7 +171,7 @@ function slotHours(slot: TimeSlot): string {
   padding: 12px;
   border: 1px solid var(--tp-stroke-soft);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.025);
+  background: #f8faff;
 }
 
 .slot-block + .slot-block {
@@ -204,19 +205,19 @@ function slotHours(slot: TimeSlot): string {
 }
 
 .add-button {
-  border: 1px solid rgba(106, 132, 255, 0.45);
+  border: 1px solid var(--tp-button-border);
   border-radius: 100px;
   padding: 5px 11px;
-  background: rgba(77, 107, 254, 0.12);
-  color: var(--tp-brand-hover);
+  background: var(--tp-button-bg);
+  color: var(--tp-brand);
   font-size: 11px;
   cursor: pointer;
   transition: background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 .add-button:hover:not(:disabled) {
-  border-color: var(--tp-brand-hover);
-  background: rgba(106, 132, 255, 0.16);
+  border-color: var(--tp-brand);
+  background: var(--tp-button-hover);
 }
 
 .add-button:disabled {

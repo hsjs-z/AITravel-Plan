@@ -120,7 +120,7 @@ function select(item: AttractionItem) {
 }
 
 .picker-state.is-error {
-  color: #ffb4b4;
+  color: #b42318;
 }
 
 .picker-list {
@@ -137,9 +137,9 @@ function select(item: AttractionItem) {
   display: block;
   width: 100%;
   padding: 13px 14px;
-  border: 1px solid var(--tp-stroke);
+  border: 1px solid var(--tp-button-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--tp-button-bg);
   color: var(--tp-text);
   text-align: left;
   cursor: pointer;
@@ -148,7 +148,7 @@ function select(item: AttractionItem) {
 
 .picker-item:hover:not(:disabled) {
   border-color: var(--tp-brand);
-  background: rgba(77, 107, 254, 0.09);
+  background: var(--tp-button-hover);
 }
 
 .picker-item:disabled {
@@ -167,7 +167,7 @@ function select(item: AttractionItem) {
 }
 
 .picker-price {
-  color: #c8d2ff;
+  color: var(--tp-brand);
   font-size: 12px;
 }
 
@@ -190,7 +190,7 @@ function select(item: AttractionItem) {
 .picker-disabled {
   display: inline-block;
   margin-top: 6px;
-  color: #ffc78a;
+  color: #b26a00;
   font-size: 10px;
 }
 </style>

@@ -303,7 +303,7 @@ onUnmounted(stopPolling)
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 650;
   letter-spacing: -0.03em;
-  color: #f7f8fc;
+  color: var(--tp-text);
 }
 
 .hero-sub {
@@ -381,15 +381,15 @@ onUnmounted(stopPolling)
   margin-bottom: 12px;
   border: 1px solid var(--tp-stroke-soft);
   border-radius: 100px;
-  background: rgba(255, 255, 255, 0.03);
+  background: #f3f7ff;
 }
 
 .mode-button {
-  border: 0;
+  border: 1px solid var(--tp-button-border);
   border-radius: 100px;
   padding: 8px 14px;
-  background: transparent;
-  color: var(--tp-text-secondary);
+  background: var(--tp-button-bg);
+  color: var(--tp-text);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
@@ -397,8 +397,9 @@ onUnmounted(stopPolling)
 }
 
 .mode-button.is-active {
-  background: rgba(77, 107, 254, 0.16);
-  color: var(--tp-text);
+  border-color: var(--tp-brand);
+  background: var(--tp-brand);
+  color: #ffffff;
 }
 
 .free-input-block .el-input {
@@ -423,9 +424,9 @@ onUnmounted(stopPolling)
   align-items: flex-start;
   gap: 6px;
   padding: 14px;
-  border: 1px solid var(--tp-stroke);
+  border: 1px solid var(--tp-button-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--tp-button-bg);
   color: var(--tp-text-secondary);
   text-align: left;
   cursor: pointer;
@@ -433,13 +434,13 @@ onUnmounted(stopPolling)
 }
 
 .pace-card:hover {
-  border-color: rgba(106, 132, 255, 0.65);
-  background: rgba(106, 132, 255, 0.08);
+  border-color: var(--tp-brand);
+  background: var(--tp-button-hover);
 }
 
 .pace-card.is-active {
   border-color: var(--tp-brand);
-  background: rgba(77, 107, 254, 0.13);
+  background: var(--tp-button-hover);
 }
 
 .pace-name {
@@ -463,18 +464,18 @@ onUnmounted(stopPolling)
   border: 1px solid rgba(255, 128, 128, 0.25);
   border-radius: 12px;
   background: rgba(255, 100, 100, 0.08);
-  color: #ffb4b4;
+  color: #b42318;
   font-size: 13px;
 }
 
 .task-line {
-  border-color: rgba(106, 132, 255, 0.24);
-  background: rgba(77, 107, 254, 0.08);
+  border-color: var(--tp-button-border);
+  background: var(--tp-button-bg);
   color: var(--tp-text-secondary);
 }
 
 .task-failure {
-  color: #ffb4b4;
+  color: #b42318;
 }
 
 .submit-button {

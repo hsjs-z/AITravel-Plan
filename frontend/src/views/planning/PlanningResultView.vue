@@ -315,7 +315,7 @@ onMounted(load)
 
 .result-hero h1 {
   margin: 0;
-  color: #f7f8fc;
+  color: var(--tp-text);
   font-size: clamp(28px, 4vw, 40px);
   font-weight: 650;
   letter-spacing: -0.03em;
@@ -329,10 +329,10 @@ onMounted(load)
 
 .status-chip {
   padding: 7px 14px;
-  border: 1px solid rgba(106, 132, 255, 0.4);
+  border: 1px solid var(--tp-button-border);
   border-radius: 100px;
-  background: rgba(77, 107, 254, 0.1);
-  color: var(--tp-brand-hover);
+  background: var(--tp-button-bg);
+  color: var(--tp-brand);
   font-size: 12px;
 }
 
@@ -343,7 +343,7 @@ onMounted(load)
 }
 
 .result-state.is-error {
-  color: #ffb4b4;
+  color: #b42318;
 }
 
 .global-warning {

@@ -86,18 +86,40 @@ async function submit() {
 
 <style scoped>
 .auth-page {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
-  background: #f5f7fa;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.9), transparent 26%),
+    radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.68), transparent 24%),
+    linear-gradient(180deg, #dcf0ff, #f6f9ff);
+}
+
+.auth-page::after {
+  content: "";
+  position: absolute;
+  right: -15%;
+  bottom: -120px;
+  left: -15%;
+  height: 240px;
+  border-radius: 50% 50% 0 0;
+  background: rgba(191, 217, 255, 0.35);
+  pointer-events: none;
 }
 
 .auth-main {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .auth-card {
   width: 380px;
+  background: #ffffff;
+  border: 1px solid #e3eaf6;
+  box-shadow: 0 8px 24px rgba(77, 107, 254, 0.08);
 }
 
 .form-error {
@@ -111,7 +133,7 @@ async function submit() {
 .switch-link {
   margin: 16px 0 0;
   text-align: center;
-  color: #909399;
+  color: var(--tp-text-secondary);
   font-size: 14px;
 }
 </style>

@@ -450,7 +450,7 @@ onMounted(load)
 }
 
 .day-count {
-  color: #909399;
+  color: var(--tp-text-secondary);
   font-size: 12px;
   font-weight: 400;
 }
