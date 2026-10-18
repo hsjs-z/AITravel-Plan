@@ -209,7 +209,10 @@ public class PlanningService {
                                     : day.slots().getOrDefault(slot, List.of())) {
                         items.add(new ItineraryClient.Item(
                                 startDate.plusDays(Math.max(0, day.day() - 1)),
+                                item.name(),
                                 descriptionOf(item),
+                                item.suggestedHours(),
+                                item.ticketPrice(),
                                 "ATTRACTION",
                                 item.resourceId(),
                                 item.specId(),

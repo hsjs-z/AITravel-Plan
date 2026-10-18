@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -54,6 +55,22 @@ public class ItineraryController {
             @Valid @RequestBody UpdateItineraryRequest request) {
         Itinerary itinerary = itineraryService.update(userId, itineraryId, request);
         return ApiResponse.success(toResponse(itinerary));
+    }
+
+    @PostMapping("/itineraries/{itineraryId}/items")
+    public ApiResponse<ItineraryResponse> addItem(
+            @RequestHeader("X-User-Id") String userId,
+            @PathVariable("itineraryId") String itineraryId,
+            @Valid @RequestBody AddItemRequest request) {
+        return ApiResponse.success(toResponse(itineraryService.addItem(userId, itineraryId, request)));
+    }
+
+    @DeleteMapping("/itineraries/{itineraryId}/items/{itemId}")
+    public ApiResponse<ItineraryResponse> deleteItem(
+            @RequestHeader("X-User-Id") String userId,
+            @PathVariable("itineraryId") String itineraryId,
+            @PathVariable("itemId") String itemId) {
+        return ApiResponse.success(toResponse(itineraryService.deleteItem(userId, itineraryId, itemId)));
     }
 
     @PostMapping("/itineraries/{itineraryId}/confirm")
@@ -112,7 +129,10 @@ public class ItineraryController {
         return new ItemResponse(
                 item.getId(),
                 item.getDayDate(),
+                item.getName(),
                 item.getDescription(),
+                item.getSuggestedHours(),
+                item.getTicketPrice(),
                 item.getResourceType(),
                 item.getResourceId(),
                 item.getSpecId(),
@@ -144,12 +164,25 @@ public class ItineraryController {
     public record ItemRequest(
             @NotNull LocalDate dayDate,
             @NotBlank String description,
+            String name,
+            BigDecimal suggestedHours,
+            Long ticketPrice,
             String resourceType,
             String resourceId,
             String specId,
             ItineraryItemSource source,
             ItineraryTimeSlot timeSlot,
             Integer sortOrder) {
+    }
+
+    public record AddItemRequest(
+            @NotNull LocalDate dayDate,
+            String name,
+            String description,
+            BigDecimal suggestedHours,
+            @NotNull ItineraryTimeSlot timeSlot,
+            @NotBlank String resourceId,
+            String specId) {
     }
 
     public record ItineraryResponse(
@@ -169,7 +202,10 @@ public class ItineraryController {
     public record ItemResponse(
             String id,
             LocalDate dayDate,
+            String name,
             String description,
+            BigDecimal suggestedHours,
+            Long ticketPrice,
             String resourceType,
             String resourceId,
             String specId,

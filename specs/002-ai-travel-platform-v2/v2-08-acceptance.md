@@ -2,8 +2,7 @@
 
 **Date**: 2026-10-18
 
-**Status**: PASS, awaiting user acceptance. T013/T014/T023/T024/T026/T027 remain
-unchecked.
+**Status**: PASS, accepted. T013/T014/T023/T024/T026/T027 completed.
 
 ## 1. Scope
 

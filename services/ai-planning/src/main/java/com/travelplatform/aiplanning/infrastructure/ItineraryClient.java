@@ -28,7 +28,10 @@ public interface ItineraryClient {
 
     record Item(
             LocalDate dayDate,
+            String name,
             String description,
+            java.math.BigDecimal suggestedHours,
+            Long ticketPrice,
             String resourceType,
             String resourceId,
             String specId,

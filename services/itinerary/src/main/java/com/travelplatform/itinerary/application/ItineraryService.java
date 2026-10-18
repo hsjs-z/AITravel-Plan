@@ -11,10 +11,13 @@ import com.travelplatform.itinerary.domain.ItineraryItemSource;
 import com.travelplatform.itinerary.domain.ItineraryRepository;
 import com.travelplatform.itinerary.domain.ItineraryStateMachine;
 import com.travelplatform.itinerary.domain.ItineraryStatus;
+import com.travelplatform.itinerary.domain.ItineraryTimeSlot;
+import com.travelplatform.itinerary.infrastructure.InventoryClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,16 +28,19 @@ public class ItineraryService {
     private final ItineraryItemRepository itemRepository;
     private final ItineraryEventPublisher events;
     private final ObjectMapper objectMapper;
+    private final InventoryClient inventoryClient;
     private final ItineraryStateMachine stateMachine = new ItineraryStateMachine();
 
     public ItineraryService(ItineraryRepository repository,
                             ItineraryItemRepository itemRepository,
                             ItineraryEventPublisher events,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            InventoryClient inventoryClient) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.events = events;
         this.objectMapper = objectMapper;
+        this.inventoryClient = inventoryClient;
     }
 
     @Transactional
@@ -68,7 +74,7 @@ public class ItineraryService {
     }
 
     public List<ItineraryItem> items(String itineraryId) {
-        return itemRepository.findByItineraryId(itineraryId);
+        return itemRepository.findByItineraryIdOrderByDayDateAscTimeSlotAscSortOrderAsc(itineraryId);
     }
 
     public List<String> warnings(Itinerary itinerary) {
@@ -151,12 +157,132 @@ public class ItineraryService {
         return repository.save(itinerary);
     }
 
+    @Transactional
+    public Itinerary addItem(String userId, String itineraryId, ItineraryController.AddItemRequest request) {
+        Itinerary itinerary = get(userId, itineraryId);
+        requireDraft(itinerary);
+        if (request.timeSlot() == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "timeSlot is required");
+        }
+        List<ItineraryItem> slotItems = itemRepository
+                .findByItineraryIdAndTimeSlotOrderBySortOrderAsc(itineraryId, request.timeSlot());
+        if (slotItems.size() >= 3) {
+            throw new BusinessException(ErrorCode.CONFLICT, "time slot already has 3 items");
+        }
+
+        InventoryClient.ResourceDetail resource = requireAttraction(request.resourceId());
+        long ticketPrice = resource.ticketPrice() == null ? 0L : resource.ticketPrice();
+        String specId = request.specId();
+        String requestedSpecId = request.specId();
+        if (requestedSpecId != null && !requestedSpecId.isBlank()) {
+            boolean validSpec = resource.specs() != null && resource.specs().stream()
+                    .anyMatch(spec -> requestedSpecId.equals(spec.specId())
+                            && "TICKET_TYPE".equals(spec.specType()));
+            if (!validSpec) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        "specId does not belong to a TICKET_TYPE spec of this resource");
+            }
+        }
+        if (ticketPrice > 0 && (specId == null || specId.isBlank())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "a paid attraction requires a TICKET_TYPE specId");
+        }
+        if (ticketPrice == 0) {
+            specId = null;
+        }
+
+        ItineraryItem item = new ItineraryItem();
+        item.setId(UUID.randomUUID().toString());
+        item.setItineraryId(itineraryId);
+        item.setDayDate(request.dayDate());
+        item.setName(blank(request.name()) ? resource.name() : request.name().trim());
+        item.setDescription(blank(request.description())
+                ? defaultDescription(resource)
+                : request.description().trim());
+        item.setSuggestedHours(request.suggestedHours() != null
+                ? request.suggestedHours()
+                : resource.suggestedHours());
+        item.setTicketPrice(ticketPrice);
+        item.setTimeSlot(request.timeSlot());
+        item.setSortOrder(slotItems.stream()
+                .map(ItineraryItem::getSortOrder)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0) + 1);
+        item.setResourceType("ATTRACTION");
+        item.setResourceId(resource.id());
+        item.setSpecId(specId);
+        item.setSource(ItineraryItemSource.MANUAL);
+        itemRepository.save(item);
+        itinerary.setUpdatedAt(Instant.now());
+        return repository.save(itinerary);
+    }
+
+    @Transactional
+    public Itinerary deleteItem(String userId, String itineraryId, String itemId) {
+        Itinerary itinerary = get(userId, itineraryId);
+        requireDraft(itinerary);
+        ItineraryItem item = itemRepository.findById(itemId)
+                .filter(candidate -> itineraryId.equals(candidate.getItineraryId()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "itinerary item not found"));
+        ItineraryTimeSlot slot = item.getTimeSlot();
+        itemRepository.delete(item);
+        if (slot != null) {
+            List<ItineraryItem> remaining = itemRepository
+                    .findByItineraryIdAndTimeSlotOrderBySortOrderAsc(itineraryId, slot);
+            int order = 1;
+            for (ItineraryItem remainingItem : remaining) {
+                remainingItem.setSortOrder(order++);
+            }
+            itemRepository.saveAll(remaining);
+        }
+        itinerary.setUpdatedAt(Instant.now());
+        return repository.save(itinerary);
+    }
+
+    private void requireDraft(Itinerary itinerary) {
+        if (itinerary.getStatus() != ItineraryStatus.DRAFT) {
+            throw new BusinessException(ErrorCode.CONFLICT,
+                    "only draft itineraries can add or delete items");
+        }
+    }
+
+    private InventoryClient.ResourceDetail requireAttraction(String resourceId) {
+        InventoryClient.ResourceApiResponse response;
+        try {
+            response = inventoryClient.detail(resourceId);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "resource not found: " + resourceId);
+        }
+        if (response == null || response.data() == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "resource not found: " + resourceId);
+        }
+        InventoryClient.ResourceDetail resource = response.data();
+        if (!"ATTRACTION".equals(resource.type())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "resource is not an ATTRACTION: " + resourceId);
+        }
+        return resource;
+    }
+
+    private String defaultDescription(InventoryClient.ResourceDetail resource) {
+        return blank(resource.summary()) ? "景点" : resource.summary();
+    }
+
+    private boolean blank(String value) {
+        return value == null || value.isBlank();
+    }
+
     private ItineraryItem toItem(String itineraryId, ItineraryController.ItemRequest request) {
         ItineraryItem item = new ItineraryItem();
         item.setId(UUID.randomUUID().toString());
         item.setItineraryId(itineraryId);
         item.setDayDate(request.dayDate());
+        item.setName(request.name());
         item.setDescription(request.description());
+        item.setSuggestedHours(request.suggestedHours());
+        item.setTicketPrice(request.ticketPrice());
         item.setResourceType(request.resourceType());
         item.setResourceId(request.resourceId());
         item.setSpecId(request.specId());

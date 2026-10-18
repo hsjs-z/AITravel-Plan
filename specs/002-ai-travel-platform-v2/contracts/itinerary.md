@@ -39,6 +39,9 @@
 - `timeSlot=null`
 - `sortOrder=0`
 
+`name`、`suggestedHours`、`ticketPrice` 是写入时的展示快照。手动添加时由
+inventory 资源详情回填，不随后续票价变化回写。
+
 ## Warnings
 
 `POST /itineraries`、`PUT /itineraries/{itineraryId}` 接受可选
@@ -78,14 +81,21 @@ Rules:
 - owner 不匹配返回 404。
 - 时段已满 3 个返回 409。
 - `sortOrder` 由服务端追加到该时段末尾。
-- `resourceId/specId` 必须来自 inventory 的有效景点/门票规格。
+- `resourceId` 必须存在于 inventory 且 `type=ATTRACTION`；否则 400。
+- `specId` 若提供，必须属于该资源且 `specType=TICKET_TYPE`；付费景区必须提供，
+  免费景区可为空。校验失败返回 400。
+- 该路径是用户显式选择库存资源，**不做 AI 白名单校验**；AI 白名单只约束
+  AI 输出。
+- `name/suggestedHours/ticketPrice` 由服务端按 inventory 详情写入快照。
+- `CONFIRMED/LOCKED/COMPLETED` 增删返回 `409` 统一错误体，不能用 404 表示
+  状态不允许。
 
 ## DELETE /itineraries/{itineraryId}/items/{itemId}
 
 - 仅 `DRAFT` 可删除。
 - owner 不匹配返回 404。
 - 删除后同一时段后续排序重新编号。
-- 已确认/锁定返回 409。
+- 已确认/锁定/已完成返回 409。
 
 ## 既有 PUT
 

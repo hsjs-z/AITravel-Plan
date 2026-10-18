@@ -8,6 +8,7 @@ import com.travelplatform.itinerary.domain.ItineraryItemRepository;
 import com.travelplatform.itinerary.domain.ItineraryItemSource;
 import com.travelplatform.itinerary.domain.ItineraryRepository;
 import com.travelplatform.itinerary.domain.ItineraryTimeSlot;
+import com.travelplatform.itinerary.infrastructure.InventoryClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -25,8 +26,9 @@ class ItinerarySlotsTest {
     private final ItineraryRepository repository = mock(ItineraryRepository.class);
     private final ItineraryItemRepository itemRepository = mock(ItineraryItemRepository.class);
     private final ItineraryEventPublisher events = mock(ItineraryEventPublisher.class);
+    private final InventoryClient inventoryClient = mock(InventoryClient.class);
     private final ItineraryService service =
-            new ItineraryService(repository, itemRepository, events, new ObjectMapper());
+            new ItineraryService(repository, itemRepository, events, new ObjectMapper(), inventoryClient);
 
     @Test
     void persistsSlotOrderAndWarnings() {
@@ -43,6 +45,9 @@ class ItinerarySlotsTest {
                         List.of(new ItineraryController.ItemRequest(
                                 LocalDate.of(2026, 10, 20),
                                 "兵马俑",
+                                "兵马俑",
+                                new java.math.BigDecimal("4"),
+                                120L,
                                 "ATTRACTION",
                                 "r-xian",
                                 "s-xian",

@@ -8,5 +8,12 @@ public interface ItineraryItemRepository extends JpaRepository<ItineraryItem, St
 
     List<ItineraryItem> findByItineraryId(String itineraryId);
 
+    List<ItineraryItem> findByItineraryIdOrderByDayDateAscTimeSlotAscSortOrderAsc(String itineraryId);
+
+    List<ItineraryItem> findByItineraryIdAndTimeSlotOrderBySortOrderAsc(
+            String itineraryId, ItineraryTimeSlot timeSlot);
+
+    long countByItineraryIdAndTimeSlot(String itineraryId, ItineraryTimeSlot timeSlot);
+
     void deleteByItineraryId(String itineraryId);
 }
