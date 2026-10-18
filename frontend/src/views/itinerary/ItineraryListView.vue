@@ -51,6 +51,7 @@
         </el-table-column>
       </el-table>
       <el-empty v-else-if="!loading" description="还没有行程，先去生成一份计划吧" />
+      <HotelPromoCard />
     </el-card>
   </main>
 </template>
@@ -61,6 +62,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { deleteItinerary, listItineraries } from '../../api/itinerary'
 import type { ItinerarySummary } from '../../api/types'
+import HotelPromoCard from '../../components/planning/HotelPromoCard.vue'
 
 const router = useRouter()
 const itineraries = ref<ItinerarySummary[]>([])

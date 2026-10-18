@@ -11,16 +11,6 @@
       <p>行程规划完成后，可以继续查看适合本次旅行的酒店。</p>
     </div>
     <div class="hotel-action">
-      <svg
-        class="external-arrow"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        aria-hidden="true"
-      >
-        <path d="M7 17 17 7M9 7h8v8" />
-      </svg>
       <el-button type="primary" class="hotel-button" @click="openHotels">看看酒店</el-button>
     </div>
   </section>
@@ -83,20 +73,9 @@ function openHotels() {
 }
 
 .hotel-action {
-  position: relative;
   display: flex;
   flex: none;
   align-items: center;
-  padding-top: 12px;
-}
-
-.external-arrow {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 14px;
-  height: 14px;
-  color: var(--tp-text-secondary);
 }
 
 .hotel-button {
@@ -107,6 +86,7 @@ function openHotels() {
   --el-button-active-bg-color: #3a57e8;
   --el-button-active-border-color: #3a57e8;
   color: #fff;
+  text-align: center;
 }
 
 @media (max-width: 640px) {
