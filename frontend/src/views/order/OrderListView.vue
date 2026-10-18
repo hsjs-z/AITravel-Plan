@@ -12,18 +12,18 @@
               <span :title="row.id">{{ shortOrderId(row.id) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="行程" min-width="230">
+          <el-table-column label="行程" min-width="280">
             <template #default="{ row }">{{ tripLabel(row) }}</template>
           </el-table-column>
-          <el-table-column label="状态" width="120">
+          <el-table-column label="状态" width="100">
             <template #default="{ row }">
               <el-tag :type="statusTagType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="金额" width="120">
+          <el-table-column label="金额" width="90">
             <template #default="{ row }">{{ row.totalAmount }} 元</template>
           </el-table-column>
-          <el-table-column label="操作" width="120">
+          <el-table-column label="操作" width="90">
             <template #default="{ row }">
               <el-button size="small" @click="$router.push(`/orders/${row.id}`)">详情</el-button>
             </template>
