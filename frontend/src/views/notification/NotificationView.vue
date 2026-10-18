@@ -17,17 +17,17 @@
           :row-class-name="notificationRowClass"
           @row-click="openNotification"
         >
-          <el-table-column label="标题" min-width="160">
+          <el-table-column label="标题" width="120">
             <template #default="{ row }">
               <span :class="{ unread: row.readStatus === 'UNREAD' }">{{ row.title }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="类型" width="130">
+          <el-table-column label="类型" width="110">
             <template #default="{ row }">
               <el-tag size="small" type="info">{{ typeLabel(row.type) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="内容" min-width="240">
+          <el-table-column label="内容" min-width="320">
             <template #default="{ row }">{{ row.body }}</template>
           </el-table-column>
           <el-table-column label="状态" width="90">
