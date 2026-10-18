@@ -1,8 +1,6 @@
 <template>
-  <el-container class="auth-page">
-    <el-main class="auth-main">
-      <el-card class="auth-card">
-        <h2>登录</h2>
+  <AuthLayout>
+        <h2 class="auth-title">登录</h2>
         <el-form
           ref="formRef"
           :model="form"
@@ -36,9 +34,7 @@
             还没有账号？<router-link to="/register">去注册</router-link>
           </p>
         </el-form>
-      </el-card>
-    </el-main>
-  </el-container>
+  </AuthLayout>
 </template>
 
 <script setup lang="ts">
@@ -47,6 +43,7 @@ import { useRoute, useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { login } from '../../api/auth'
 import { saveSession } from '../../api/session'
+import AuthLayout from '../../components/auth/AuthLayout.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -85,45 +82,6 @@ async function submit() {
 </script>
 
 <style scoped>
-.auth-page {
-  position: relative;
-  overflow: hidden;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.9), transparent 26%),
-    radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.68), transparent 24%),
-    linear-gradient(180deg, #dcf0ff, #fafbff);
-}
-
-.auth-page::after {
-  content: "";
-  position: absolute;
-  right: -15%;
-  bottom: -120px;
-  left: -15%;
-  height: 240px;
-  border-radius: 50% 50% 0 0;
-  background: rgba(191, 217, 255, 0.35);
-  pointer-events: none;
-}
-
-.auth-main {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 1;
-}
-
-.auth-card {
-  width: 380px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 32px rgba(77, 107, 254, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
 .form-error {
   margin-bottom: 16px;
 }
