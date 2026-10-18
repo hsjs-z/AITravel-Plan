@@ -7,8 +7,13 @@
           <el-button @click="load">刷新</el-button>
         </div>
         <el-table v-if="orders.length" :data="orders">
-          <el-table-column label="订单号" min-width="180">
-            <template #default="{ row }">{{ row.id }}</template>
+          <el-table-column label="订单号" width="130">
+            <template #default="{ row }">
+              <span :title="row.id">{{ shortOrderId(row.id) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="行程" min-width="230">
+            <template #default="{ row }">{{ tripLabel(row) }}</template>
           </el-table-column>
           <el-table-column label="状态" width="120">
             <template #default="{ row }">
@@ -33,9 +38,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { listOrders } from '../../api/orders'
-import type { Order, OrderStatus } from '../../api/types'
+import { listItineraries } from '../../api/itinerary'
+import type { ItinerarySummary, Order, OrderStatus } from '../../api/types'
 
 const orders = ref<Order[]>([])
+const itineraryMap = ref<Record<string, ItinerarySummary>>({})
 const loading = ref(false)
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -66,10 +73,30 @@ function statusTagType(status: OrderStatus): 'success' | 'warning' | 'danger' | 
   }
 }
 
+function shortOrderId(id: string): string {
+  return `${id.slice(0, 8)}…`
+}
+
+function tripLabel(order: Order): string {
+  const itinerary = itineraryMap.value[order.itineraryId]
+  if (!itinerary) return '—'
+  if (itinerary.startDate === itinerary.endDate) {
+    return `${itinerary.destination} · ${itinerary.startDate}`
+  }
+  return `${itinerary.destination} · ${itinerary.startDate} ~ ${itinerary.endDate.slice(5)}`
+}
+
 async function load() {
   loading.value = true
   try {
-    orders.value = await listOrders()
+    const [orderList, itineraries] = await Promise.all([
+      listOrders(),
+      listItineraries().catch(() => []),
+    ])
+    orders.value = orderList
+    itineraryMap.value = Object.fromEntries(
+      itineraries.map((itinerary) => [itinerary.id, itinerary]),
+    )
   } finally {
     loading.value = false
   }

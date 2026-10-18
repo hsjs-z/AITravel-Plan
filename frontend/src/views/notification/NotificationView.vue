@@ -11,7 +11,12 @@
           </div>
         </div>
 
-        <el-table :data="notifications" class="list-table">
+        <el-table
+          :data="notifications"
+          class="list-table"
+          :row-class-name="notificationRowClass"
+          @row-click="openNotification"
+        >
           <el-table-column label="标题" min-width="160">
             <template #default="{ row }">
               <span :class="{ unread: row.readStatus === 'UNREAD' }">{{ row.title }}</span>
@@ -37,7 +42,7 @@
               <el-button
                 v-if="row.readStatus === 'UNREAD'"
                 size="small"
-                @click="markRead(row.id)"
+                @click.stop="markRead(row.id)"
               >
                 标为已读
               </el-button>
@@ -52,6 +57,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { listNotifications, markNotificationRead, unreadCount } from '../../api/notifications'
 import type { NotificationItem } from '../../api/types'
@@ -74,6 +80,29 @@ function typeLabel(type: string): string {
 const notifications = ref<NotificationItem[]>([])
 const unread = ref(0)
 const loading = ref(false)
+const router = useRouter()
+
+const ORDER_NOTIFICATION_TYPES = new Set([
+  'BOOKING_SUCCEEDED',
+  'BOOKING_FAILED',
+  'PAYMENT_SUCCEEDED',
+  'REFUND_SUCCEEDED',
+  'ORDER_CONFIRMED',
+  'ORDER_CANCELLED',
+])
+
+function isOrderNotification(row: NotificationItem): boolean {
+  return ORDER_NOTIFICATION_TYPES.has(row.type) && Boolean(row.businessRef)
+}
+
+function notificationRowClass({ row }: { row: NotificationItem }): string {
+  return isOrderNotification(row) ? 'clickable-row' : ''
+}
+
+function openNotification(row: NotificationItem) {
+  if (!isOrderNotification(row)) return
+  router.push(`/orders/${row.businessRef}`)
+}
 
 async function load() {
   loading.value = true
@@ -136,5 +165,9 @@ onMounted(load)
 
 .unread {
   font-weight: 600;
+}
+
+:deep(.clickable-row) {
+  cursor: pointer;
 }
 </style>
