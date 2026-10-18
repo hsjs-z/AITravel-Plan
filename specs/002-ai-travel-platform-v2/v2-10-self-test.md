@@ -2,7 +2,8 @@
 
 **Date**: 2026-10-18
 
-**Status**: Implementation complete, awaiting reviewer browser acceptance.
+**Status**: Browser acceptance passed. Three UX follow-ups were deferred to V2-11:
+result-page confirm, my-itineraries navigation/list, and the 8-service health gate.
 
 ## 1. Build
 

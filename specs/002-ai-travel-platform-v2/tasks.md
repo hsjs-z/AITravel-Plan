@@ -170,24 +170,24 @@ contracts 与 quickstart。
   `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`
 - [X] T037 [US3] 扩展 ItineraryClient Item 字段，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/ItineraryClient.java`
-- [ ] T038 [US3] 新增结果页主视图，
+- [X] T038 [US3] 新增结果页主视图，
   文件 `frontend/src/views/planning/PlanningResultView.vue`
-- [ ] T039 [P] [US3] 新增按天折叠与时段组件，
+- [X] T039 [P] [US3] 新增按天折叠与时段组件，
   文件 `frontend/src/components/planning/DayAccordion.vue`
-- [ ] T040 [P] [US3] 新增景点卡片与免费/未匹配文案，
+- [X] T040 [P] [US3] 新增景点卡片与免费/未匹配文案，
   文件 `frontend/src/components/planning/AttractionCard.vue`
-- [ ] T041 [P] [US3] 新增库存景点选择弹窗，
+- [X] T041 [P] [US3] 新增库存景点选择弹窗，
   文件 `frontend/src/components/planning/AttractionPicker.vue`
-- [ ] T042 [P] [US3] 新增高德地图面板，
+- [X] T042 [P] [US3] 新增高德地图面板，
   文件 `frontend/src/components/planning/AmapPanel.vue`
-- [ ] T043 [P] [US3] 新增 AI 旅行建议组件，
+- [X] T043 [P] [US3] 新增 AI 旅行建议组件，
   文件 `frontend/src/components/planning/TravelTips.vue`
-- [ ] T044 [US3] 更新路由与前端 API，
+- [X] T044 [US3] 更新路由与前端 API，
   文件 `frontend/src/router/index.ts`、`frontend/src/api/itinerary.ts`、
   `frontend/src/api/resources.ts`、`frontend/src/api/types.ts`
-- [ ] T045 [US3] 增加前端环境声明与 Vite envDir，
+- [X] T045 [US3] 增加前端环境声明与 Vite envDir，
   文件 `frontend/src/env.d.ts`、`frontend/vite.config.ts`
-- [ ] T046 [US3] 更新行程编辑页以显示时段/排序，
+- [X] T046 [US3] 更新行程编辑页以显示时段/排序，
   文件 `frontend/src/views/itinerary/ItineraryView.vue`
 
 **Checkpoint**: 草稿增删、只读、地图、建议、文案状态全部可独立验收。
