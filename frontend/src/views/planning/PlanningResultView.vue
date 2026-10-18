@@ -72,6 +72,7 @@
         :tips="tips"
         :loading="tipsState === 'generating'"
         :error="tipsState === 'failed' ? '生成失败，请刷新重试' : ''"
+        :pending="itinerary?.status !== 'CONFIRMED'"
       />
       <p v-if="mapUnavailable" class="map-fallback">地图暂不可用，已切换为纯行程列表。</p>
 

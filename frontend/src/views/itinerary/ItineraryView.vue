@@ -140,12 +140,6 @@
                       {{ row.ticketPrice == null ? '—' : row.ticketPrice === 0 ? '免费' : `¥${row.ticketPrice}` }}
                     </template>
                   </el-table-column>
-                  <el-table-column label="类型" width="120">
-                    <template #default="{ row }">
-                      <el-tag v-if="row.resourceType" size="small" type="warning">{{ row.resourceType }}</el-tag>
-                      <el-tag v-else size="small" type="info">文本</el-tag>
-                    </template>
-                  </el-table-column>
                   <el-table-column label="来源" width="100">
                     <template #default="{ row }">
                       {{ row.source === 'AI' ? 'AI' : '手动' }}

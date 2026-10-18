@@ -13,7 +13,9 @@
     <ul v-else-if="tips.length">
       <li v-for="tip in tips" :key="tip">{{ tip }}</li>
     </ul>
-    <p v-else class="tips-empty">AI 暂无额外建议。</p>
+    <p v-else class="tips-empty">
+      {{ pending ? '确认行程后 AI将给出旅行建议' : 'AI 暂无额外建议。' }}
+    </p>
   </section>
 </template>
 
@@ -24,6 +26,7 @@ const props = defineProps<{
   tips: string[]
   loading?: boolean
   error?: string
+  pending?: boolean
 }>()
 
 const justFinished = ref(false)
