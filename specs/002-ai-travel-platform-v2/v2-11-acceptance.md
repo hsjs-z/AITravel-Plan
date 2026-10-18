@@ -1,6 +1,7 @@
 # V2-11 Acceptance Report
 
-**Status**: Implemented and self-tested; awaiting product/browser acceptance.
+**Status**: Accepted (browser acceptance passed; T047–T050 and T074–T079
+marked `[X]`).
 
 ## Delivered
 
