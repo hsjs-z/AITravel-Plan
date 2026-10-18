@@ -70,9 +70,9 @@ contracts 与 quickstart。
 - [X] T012 [P] 新增 inventory v2 schema：ATTRACTION、resource 字段、
   `(name, city, type)` 三列唯一键和索引，
   文件 `services/inventory/src/main/resources/db/migration/V3__resource_attraction_v2.sql`
-- [ ] T013 [P] 新增 itinerary 行程项时段/排序 schema，
+- [X] T013 [P] 新增 itinerary 行程项时段/排序 schema，
   文件 `services/itinerary/src/main/resources/db/migration/V3__itinerary_item_slots.sql`
-- [ ] T014 [P] 新增 ai-planning pace/budget/preferences schema，
+- [X] T014 [P] 新增 ai-planning pace/budget/preferences schema，
   文件 `services/ai-planning/src/main/resources/db/migration/V3__planning_pace.sql`
 - [X] T015 回填 v1 云南资源的 province/city，
   保留 `load-test-resource` 的 province/city 为 NULL，
@@ -110,16 +110,16 @@ contracts 与 quickstart。
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/DeepSeekPlannerClient.java`
 - [X] T022 [US1] 增加新输出解析与归一化，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningOutputParser.java`
-- [ ] T023 [US1] 实现时段装箱器，
+- [X] T023 [US1] 实现时段装箱器，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/TimeSlotAllocator.java`
-- [ ] T024 [US1] 接入工具结果、白名单、节奏与草稿落库，
+- [X] T024 [US1] 接入工具结果、白名单、节奏与草稿落库，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/PlanningService.java`
 - [X] T025 [US1] 适配 mock 新结构与目的地候选，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/application/MockPlannerClient.java`
-- [ ] T026 [US1] 扩展 planning task pace 与 Controller 契约，
+- [X] T026 [US1] 扩展 planning task pace 与 Controller 契约，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/domain/PlanningTask.java`、
   `services/ai-planning/src/main/java/com/travelplatform/aiplanning/api/PlanningController.java`
-- [ ] T027 [US1] 更新规划落库测试，
+- [X] T027 [US1] 更新规划落库测试，
   文件 `services/ai-planning/src/test/java/com/travelplatform/aiplanning/application/PlanningServiceMaterializeTest.java`
 
 **Checkpoint**: US1 可独立验证；mock 与 deepseek 都输出新契约。
