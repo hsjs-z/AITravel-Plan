@@ -32,6 +32,8 @@ public interface ItineraryClient {
             String description,
             java.math.BigDecimal suggestedHours,
             Long ticketPrice,
+            java.math.BigDecimal latitude,
+            java.math.BigDecimal longitude,
             String resourceType,
             String resourceId,
             String specId,

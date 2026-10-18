@@ -213,6 +213,8 @@ public class PlanningService {
                                 descriptionOf(item),
                                 item.suggestedHours(),
                                 item.ticketPrice(),
+                                item.latitude(),
+                                item.longitude(),
                                 "ATTRACTION",
                                 item.resourceId(),
                                 item.specId(),

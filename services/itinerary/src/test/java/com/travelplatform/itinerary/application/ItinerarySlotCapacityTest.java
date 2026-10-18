@@ -125,7 +125,7 @@ class ItinerarySlotCapacityTest {
         when(inventoryClient.detail("r-train")).thenReturn(
                 new InventoryClient.ResourceApiResponse(0, "OK",
                         new InventoryClient.ResourceDetail("r-train", "TRADABLE", "动车", "ON_SHELF",
-                                100L, new BigDecimal("2"), "交通", List.of())));
+                                100L, new BigDecimal("2"), "交通", null, null, List.of())));
         assertThrows(BusinessException.class, () -> service.addItem(
                 "u-1", "it-1", new ItineraryController.AddItemRequest(
                         LocalDate.of(2026, 10, 20), null, null, null,
@@ -185,6 +185,7 @@ class ItinerarySlotCapacityTest {
         return new InventoryClient.ResourceApiResponse(0, "OK",
                 new InventoryClient.ResourceDetail("r-1", "ATTRACTION", "测试景区", "ON_SHELF",
                         100L, new BigDecimal("4.0"), "测试简介",
+                        new BigDecimal("34.384"), new BigDecimal("109.278"),
                         List.of(new InventoryClient.SpecView("s-1", "成人票", "TICKET_TYPE", 100L),
                                 new InventoryClient.SpecView("s-room", "房型", "ROOM_TYPE", 80L))));
     }
@@ -192,6 +193,6 @@ class ItinerarySlotCapacityTest {
     private InventoryClient.ResourceApiResponse freeResource() {
         return new InventoryClient.ResourceApiResponse(0, "OK",
                 new InventoryClient.ResourceDetail("r-free", "ATTRACTION", "免费景区", "ON_SHELF",
-                        0L, new BigDecimal("3.0"), "免费简介", List.of()));
+                        0L, new BigDecimal("3.0"), "免费简介", null, null, List.of()));
     }
 }

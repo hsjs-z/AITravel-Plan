@@ -3,6 +3,7 @@ import ContentView from '../views/content/ContentView.vue'
 import LoginView from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 import PlanningView from '../views/planning/PlanningView.vue'
+import PlanningResultView from '../views/planning/PlanningResultView.vue'
 import ItineraryView from '../views/itinerary/ItineraryView.vue'
 import OrderListView from '../views/order/OrderListView.vue'
 import OrderCreateView from '../views/order/OrderCreateView.vue'
@@ -17,6 +18,11 @@ const router = createRouter({
     { path: '/', redirect: '/content' },
     { path: '/content', name: 'content', component: ContentView },
     { path: '/planning', name: 'planning', component: PlanningView },
+    {
+      path: '/planning/tasks/:taskId/result',
+      name: 'planning-result',
+      component: PlanningResultView,
+    },
     { path: '/itineraries/:itineraryId', name: 'itinerary', component: ItineraryView },
     { path: '/orders', name: 'orders', component: OrderListView },
     { path: '/orders/new', name: 'order-create', component: OrderCreateView },

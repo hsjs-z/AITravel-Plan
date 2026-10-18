@@ -24,6 +24,8 @@ public interface InventoryClient {
             Long ticketPrice,
             BigDecimal suggestedHours,
             String summary,
+            BigDecimal latitude,
+            BigDecimal longitude,
             List<SpecView> specs) {
     }
 

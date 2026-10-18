@@ -48,6 +48,8 @@ class ItinerarySlotsTest {
                                 "兵马俑",
                                 new java.math.BigDecimal("4"),
                                 120L,
+                                new java.math.BigDecimal("34.384"),
+                                new java.math.BigDecimal("109.278"),
                                 "ATTRACTION",
                                 "r-xian",
                                 "s-xian",

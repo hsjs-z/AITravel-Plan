@@ -53,7 +53,7 @@
               {{ itinerary.startDate }} ~ {{ itinerary.endDate }}
             </el-descriptions-item>
             <el-descriptions-item label="人数">{{ itinerary.partySize }} 人</el-descriptions-item>
-            <el-descriptions-item label="预算">{{ itinerary.budget }} 元</el-descriptions-item>
+            <el-descriptions-item label="预算">{{ itinerary.budget ?? '—' }} 元</el-descriptions-item>
             <el-descriptions-item label="已有订单">{{ itinerary.hasOrder ? '是（不可删除）' : '否' }}</el-descriptions-item>
           </el-descriptions>
 
@@ -108,6 +108,14 @@
             </div>
           </el-form>
 
+          <el-alert
+            v-if="itinerary.warnings?.length"
+            type="warning"
+            :closable="false"
+            class="warning-block"
+            :title="itinerary.warnings.join('；')"
+          />
+
           <div v-if="!editing" class="items-view">
             <h3>每日安排</h3>
             <template v-if="groupedDays.length">
@@ -117,7 +125,19 @@
                   <span class="day-count">{{ day.items.length }} 项</span>
                 </div>
                 <el-table :data="day.items" size="small">
+                  <el-table-column label="景点" min-width="180">
+                    <template #default="{ row }">{{ row.name || row.description }}</template>
+                  </el-table-column>
                   <el-table-column prop="description" label="安排" min-width="240" />
+                  <el-table-column label="时段" width="90">
+                    <template #default="{ row }">{{ slotLabel(row.timeSlot) }}</template>
+                  </el-table-column>
+                  <el-table-column prop="sortOrder" label="顺序" width="70" />
+                  <el-table-column label="票价" width="100">
+                    <template #default="{ row }">
+                      {{ row.ticketPrice == null ? '—' : row.ticketPrice === 0 ? '免费' : `¥${row.ticketPrice}` }}
+                    </template>
+                  </el-table-column>
                   <el-table-column label="类型" width="120">
                     <template #default="{ row }">
                       <el-tag v-if="row.resourceType" size="small" type="warning">{{ row.resourceType }}</el-tag>
@@ -158,7 +178,14 @@ const saving = ref(false)
 
 interface EditableItem {
   dayDate: string
+  name: string | null
   description: string
+  suggestedHours: number | null
+  ticketPrice: number | null
+  timeSlot: 'MORNING' | 'AFTERNOON' | 'EVENING' | null
+  sortOrder: number | null
+  latitude: number | null
+  longitude: number | null
   resourceType: string | null
   resourceId: string | null
   specId: string | null
@@ -172,7 +199,7 @@ const form = reactive({
   startDate: '',
   endDate: '',
   partySize: 2,
-  budget: 0,
+  budget: undefined as number | undefined,
 })
 
 const statusLabel = computed(() => {
@@ -203,6 +230,10 @@ const statusTagType = computed(() => {
   }
 })
 
+function slotLabel(slot: string | null): string {
+  return { MORNING: '上午', AFTERNOON: '下午', EVENING: '晚上' }[slot ?? ''] ?? '—'
+}
+
 const groupedDays = computed(() => {
   const items = itinerary.value?.items ?? []
   const byDate = new Map<string, ItineraryItem[]>()
@@ -231,10 +262,17 @@ function startEdit() {
   form.startDate = itinerary.value.startDate
   form.endDate = itinerary.value.endDate
   form.partySize = itinerary.value.partySize
-  form.budget = itinerary.value.budget
+    form.budget = itinerary.value.budget ?? undefined
   editableItems.value = itinerary.value.items.map((item) => ({
     dayDate: item.dayDate,
+      name: item.name,
     description: item.description,
+      suggestedHours: item.suggestedHours,
+      ticketPrice: item.ticketPrice,
+      timeSlot: item.timeSlot,
+      sortOrder: item.sortOrder,
+      latitude: item.latitude,
+      longitude: item.longitude,
     resourceType: item.resourceType,
     resourceId: item.resourceId,
     specId: item.specId,
@@ -250,7 +288,14 @@ function cancelEdit() {
 function addItem() {
   editableItems.value.push({
     dayDate: form.startDate,
+    name: null,
     description: '',
+    suggestedHours: null,
+    ticketPrice: null,
+    timeSlot: null,
+    sortOrder: null,
+    latitude: null,
+    longitude: null,
     resourceType: null,
     resourceId: null,
     specId: null,
@@ -286,12 +331,20 @@ async function save() {
       budget: form.budget,
       items: editableItems.value.map((item) => ({
         dayDate: item.dayDate,
+        name: item.name ?? undefined,
         description: item.description.trim(),
+        suggestedHours: item.suggestedHours,
+        ticketPrice: item.ticketPrice,
+        timeSlot: item.timeSlot,
+        sortOrder: item.sortOrder,
+        latitude: item.latitude,
+        longitude: item.longitude,
         ...(item.resourceType ? { resourceType: item.resourceType } : {}),
         ...(item.resourceId ? { resourceId: item.resourceId } : {}),
         ...(item.specId ? { specId: item.specId } : {}),
         source: item.source,
       })),
+      warnings: itinerary.value?.warnings ?? [],
     })
     editing.value = false
     ElMessage.success('已保存（编辑使行程回到草稿）')

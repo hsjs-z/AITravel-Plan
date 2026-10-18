@@ -64,7 +64,7 @@ public class PlanningController {
             @NotBlank String destination,
             @NotNull @Min(1) @Max(30) Integer days,
             @NotNull @Min(1) @Max(20) Integer partySize,
-            @NotNull @Positive Long budget,
+            Long budget,
             Pace pace,
             String preferences) {
 

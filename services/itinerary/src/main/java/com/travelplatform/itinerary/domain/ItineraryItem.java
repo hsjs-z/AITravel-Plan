@@ -34,6 +34,10 @@ public class ItineraryItem {
     @Column(name = "ticket_price")
     private Long ticketPrice;
 
+    private BigDecimal latitude;
+
+    private BigDecimal longitude;
+
     private String resourceType;
 
     private String resourceId;
@@ -105,6 +109,22 @@ public class ItineraryItem {
 
     public void setTicketPrice(Long ticketPrice) {
         this.ticketPrice = ticketPrice;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
     }
 
     public String getResourceType() {

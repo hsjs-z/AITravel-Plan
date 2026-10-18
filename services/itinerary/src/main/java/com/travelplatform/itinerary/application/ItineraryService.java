@@ -203,6 +203,8 @@ public class ItineraryService {
                 ? request.suggestedHours()
                 : resource.suggestedHours());
         item.setTicketPrice(ticketPrice);
+        item.setLatitude(resource.latitude());
+        item.setLongitude(resource.longitude());
         item.setTimeSlot(request.timeSlot());
         item.setSortOrder(slotItems.stream()
                 .map(ItineraryItem::getSortOrder)
@@ -283,6 +285,8 @@ public class ItineraryService {
         item.setDescription(request.description());
         item.setSuggestedHours(request.suggestedHours());
         item.setTicketPrice(request.ticketPrice());
+        item.setLatitude(request.latitude());
+        item.setLongitude(request.longitude());
         item.setResourceType(request.resourceType());
         item.setResourceId(request.resourceId());
         item.setSpecId(request.specId());

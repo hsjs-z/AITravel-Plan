@@ -32,7 +32,7 @@ public class Itinerary {
     @Column(nullable = false)
     private Integer partySize;
 
-    @Column(nullable = false)
+    @Column
     private Long budget;
 
     @Enumerated(EnumType.STRING)

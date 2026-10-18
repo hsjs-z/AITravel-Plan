@@ -133,6 +133,8 @@ public class ItineraryController {
                 item.getDescription(),
                 item.getSuggestedHours(),
                 item.getTicketPrice(),
+                item.getLatitude(),
+                item.getLongitude(),
                 item.getResourceType(),
                 item.getResourceId(),
                 item.getSpecId(),
@@ -146,7 +148,7 @@ public class ItineraryController {
             @NotNull LocalDate startDate,
             @NotNull LocalDate endDate,
             @NotNull @Positive Integer partySize,
-            @NotNull @Positive Long budget,
+            Long budget,
             List<ItemRequest> items,
             List<String> warnings) {
     }
@@ -156,7 +158,7 @@ public class ItineraryController {
             @NotNull LocalDate startDate,
             @NotNull LocalDate endDate,
             @NotNull @Positive Integer partySize,
-            @NotNull @Positive Long budget,
+            Long budget,
             List<ItemRequest> items,
             List<String> warnings) {
     }
@@ -167,6 +169,8 @@ public class ItineraryController {
             String name,
             BigDecimal suggestedHours,
             Long ticketPrice,
+            BigDecimal latitude,
+            BigDecimal longitude,
             String resourceType,
             String resourceId,
             String specId,
@@ -206,6 +210,8 @@ public class ItineraryController {
             String description,
             BigDecimal suggestedHours,
             Long ticketPrice,
+            BigDecimal latitude,
+            BigDecimal longitude,
             String resourceType,
             String resourceId,
             String specId,

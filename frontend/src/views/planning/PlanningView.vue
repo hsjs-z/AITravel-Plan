@@ -1,165 +1,187 @@
 <template>
-  <el-container class="planning-page">
-    <el-main>
-      <el-card class="form-card">
-        <h2>智能规划</h2>
-        <el-form
-          ref="formRef"
-          :model="form"
-          :rules="rules"
-          label-position="top"
-          @submit.prevent="submit"
-        >
-          <el-row :gutter="16">
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="目的地" prop="destination">
-                <el-input v-model="form.destination" placeholder="如：云南" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="12" :sm="6">
-              <el-form-item label="天数（1–30）" prop="days">
-                <el-input-number v-model="form.days" :min="1" :max="30" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="12" :sm="6">
-              <el-form-item label="人数（1–20）" prop="partySize">
-                <el-input-number v-model="form.partySize" :min="1" :max="20" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="16">
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="预算（元）" prop="budget">
-                <el-input-number v-model="form.budget" :min="1" :step="100" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="偏好（可选）">
-                <el-input v-model="form.preferences" placeholder="如：亲子、美食、节奏轻松" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-alert v-if="error" :title="error" type="error" :closable="false" class="block-hint" />
-          <el-button type="primary" native-type="submit" :loading="submitting">开始规划</el-button>
+  <main class="planning-shell">
+    <section class="planning-wrap">
+      <header class="planning-hero">
+        <p class="eyebrow">AI TRAVEL STUDIO</p>
+        <h1>把想去的地方，交给一场好计划。</h1>
+        <p class="hero-sub">选择目的地与节奏，AI 会基于真实上架景区生成每日草稿。</p>
+      </header>
+
+      <el-card class="planning-card glass-card" :body-style="{ padding: '28px' }">
+        <el-form label-position="top" @submit.prevent="submit">
+          <div class="field-block">
+            <div class="field-head">
+              <label>出行天数</label>
+              <span>{{ days }} 天</span>
+            </div>
+            <div class="pill-row">
+              <button
+                v-for="n in 10"
+                :key="n"
+                type="button"
+                class="pill-option day-pill"
+                :class="{ 'is-active': days === n }"
+                @click="days = n"
+              >
+                {{ n }}
+              </button>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <div class="field-head">
+              <label>目的地</label>
+              <span>{{ destinationMode === 'hot' ? '热门地区' : '国内自由输入' }}</span>
+            </div>
+            <div class="mode-switch">
+              <button
+                type="button"
+                class="mode-button"
+                :class="{ 'is-active': destinationMode === 'hot' }"
+                @click="destinationMode = 'hot'"
+              >
+                热门地区
+              </button>
+              <button
+                type="button"
+                class="mode-button"
+                :class="{ 'is-active': destinationMode === 'free' }"
+                @click="destinationMode = 'free'"
+              >
+                其他地区
+              </button>
+            </div>
+
+            <div v-if="destinationMode === 'hot'" class="city-grid">
+              <button
+                v-for="city in hotDestinations"
+                :key="city.name"
+                type="button"
+                class="pill-option city-pill"
+                :class="{ 'is-active': selectedHot === city.name }"
+                @click="selectedHot = city.name"
+              >
+                {{ city.label }}
+              </button>
+            </div>
+            <div v-else class="free-input-block">
+              <el-input
+                v-model="freeDestination"
+                size="large"
+                placeholder="输入中国国内省份或城市，例如：大理"
+                maxlength="40"
+              />
+              <p class="field-hint">仅支持中国国内目的地；可输入省份或城市。</p>
+            </div>
+          </div>
+
+          <div class="field-block">
+            <div class="field-head">
+              <label>游览节奏</label>
+              <span>决定每天的行程容量</span>
+            </div>
+            <div class="pace-grid">
+              <button
+                v-for="item in paceOptions"
+                :key="item.value"
+                type="button"
+                class="pace-card"
+                :class="{ 'is-active': pace === item.value }"
+                @click="pace = item.value"
+              >
+                <span class="pace-name">{{ item.label }}</span>
+                <span class="pace-desc">{{ item.description }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-block compact">
+              <div class="field-head">
+                <label>出行人数</label>
+                <span>默认 1 人</span>
+              </div>
+              <el-input-number v-model="partySize" :min="1" :max="20" size="large" />
+            </div>
+            <div class="field-block compact">
+              <div class="field-head">
+                <label>旅行偏好</label>
+                <span>可选</span>
+              </div>
+              <el-input
+                v-model="preferences"
+                size="large"
+                maxlength="2000"
+                placeholder="风格 / 兴趣 / 预算 / 特殊要求"
+              />
+            </div>
+          </div>
+
+          <div v-if="error" class="error-line">{{ error }}</div>
+          <div v-if="task && task.status !== 'SUCCEEDED'" class="task-line">
+            <span>{{ statusLabel }}</span>
+            <span v-if="task.status === 'FAILED'" class="task-failure">{{ task.failureReason }}</span>
+            <el-button v-if="task.status === 'FAILED'" text type="primary" @click="retry">重试</el-button>
+          </div>
+
+          <el-button
+            class="submit-button"
+            type="primary"
+            native-type="submit"
+            size="large"
+            :loading="submitting"
+          >
+            开始规划
+          </el-button>
         </el-form>
       </el-card>
-
-      <el-card v-if="task" class="task-card">
-        <div class="task-head">
-          <span class="task-id">任务 {{ shortId(task.id) }}</span>
-          <el-tag :type="statusTagType" size="small">{{ statusLabel }}</el-tag>
-        </div>
-
-        <template v-if="task.status === 'SUCCEEDED'">
-          <el-alert
-            title="规划成功"
-            type="success"
-            :closable="false"
-            class="block-hint"
-          />
-          <p v-if="task.itineraryId" class="itinerary-hint">
-            已生成草稿行程，<router-link :to="`/itineraries/${task.itineraryId}`">去查看行程</router-link>
-          </p>
-          <div v-if="result" class="result-preview">
-            <h3>{{ result.destination }} · {{ result.totalDays ?? form.days }} 天 · 预算约 {{ result.estimatedBudget ?? form.budget }} 元</h3>
-            <el-collapse>
-              <el-collapse-item v-for="day in result.days ?? []" :key="day.day" :title="`第 ${day.day} 天`">
-                <p class="day-arrangements">{{ (day.arrangements ?? []).join('；') || '自由活动' }}</p>
-              </el-collapse-item>
-              <el-collapse-item title="推荐酒店">
-                <p v-for="item in result.hotels ?? []" :key="item.name">{{ item.name }}</p>
-              </el-collapse-item>
-              <el-collapse-item title="推荐景点">
-                <p v-for="item in result.attractions ?? []" :key="item.name">{{ item.name }}</p>
-              </el-collapse-item>
-              <el-collapse-item title="推荐美食">
-                <p v-for="item in result.foods ?? []" :key="item.name">{{ item.name }}</p>
-              </el-collapse-item>
-            </el-collapse>
-          </div>
-        </template>
-
-        <template v-if="task.status === 'FAILED'">
-          <el-alert
-            :title="`规划失败：${task.failureReason || '未知原因'}`"
-            type="error"
-            :closable="false"
-            class="block-hint"
-          />
-          <el-button type="warning" :loading="submitting" @click="retry">重试</el-button>
-        </template>
-      </el-card>
-    </el-main>
-  </el-container>
+    </section>
+  </main>
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, reactive, ref } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import { computed, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { createPlanningTask, getPlanningTask, retryPlanningTask } from '../../api/planning'
-import type { PlanningResult, PlanningTask } from '../../api/types'
+import type { Pace, PlanningTask } from '../../api/types'
+import { HOT_DESTINATIONS, isLikelyDomesticDestination } from './hotDestinations'
 
-const formRef = ref<FormInstance>()
-const form = reactive({
-  destination: '',
-  days: 5,
-  partySize: 2,
-  budget: 8000,
-  preferences: '',
-})
+type DestinationMode = 'hot' | 'free'
 
-const rules: FormRules = {
-  destination: [{ required: true, message: '请输入目的地', trigger: 'blur' }],
-  days: [{ required: true, message: '请输入天数', trigger: 'change' }],
-  partySize: [{ required: true, message: '请输入人数', trigger: 'change' }],
-  budget: [{ required: true, message: '请输入预算', trigger: 'change' }],
-}
-
+const router = useRouter()
+const hotDestinations = HOT_DESTINATIONS
+const destinationMode = ref<DestinationMode>('hot')
+const selectedHot = ref('')
+const freeDestination = ref('')
+const days = ref(5)
+const partySize = ref(1)
+const pace = ref<Pace>('BALANCED')
+const preferences = ref('')
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const task = ref<PlanningTask | null>(null)
-const result = computed<PlanningResult | null>(() => {
-  if (!task.value?.result) return null
-  try {
-    return JSON.parse(task.value.result) as PlanningResult
-  } catch {
-    return null
-  }
-})
+
+const paceOptions: Array<{ value: Pace; label: string; description: string }> = [
+  { value: 'RELAXED', label: '慵懒', description: '少走一点，留白多一点' },
+  { value: 'BALANCED', label: '散步', description: '松弛与探索的平衡' },
+  { value: 'VIBRANT', label: '精彩', description: '把一天装得充实一点' },
+]
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const statusLabel = computed(() => {
   switch (task.value?.status) {
     case 'PENDING':
-      return '已受理'
+      return '已受理，正在准备'
     case 'RUNNING':
-      return '处理中'
-    case 'SUCCEEDED':
-      return '已成功'
+      return '正在生成行程'
     case 'FAILED':
-      return '已失败'
+      return '规划失败'
     default:
       return ''
   }
 })
-
-const statusTagType = computed(() => {
-  switch (task.value?.status) {
-    case 'SUCCEEDED':
-      return 'success'
-    case 'FAILED':
-      return 'danger'
-    case 'RUNNING':
-      return 'warning'
-    default:
-      return 'info'
-  }
-})
-
-function shortId(id: string): string {
-  return id.length > 8 ? id.slice(0, 8) : id
-}
 
 function stopPolling() {
   if (pollTimer) {
@@ -174,8 +196,17 @@ function startPolling(taskId: string) {
     try {
       const next = await getPlanningTask(taskId)
       task.value = next
-      if (next.status === 'SUCCEEDED' || next.status === 'FAILED') {
+      if (next.status === 'FAILED') {
         stopPolling()
+        return
+      }
+      if (next.status === 'SUCCEEDED') {
+        stopPolling()
+        if (next.itineraryId) {
+          router.push({ name: 'planning-result', params: { taskId: next.id } })
+        } else {
+          error.value = '规划完成但没有生成草稿行程，请重试'
+        }
       }
     } catch (err) {
       stopPolling()
@@ -185,25 +216,40 @@ function startPolling(taskId: string) {
 }
 
 async function submit() {
-  if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  error.value = null
+  const destination =
+    destinationMode.value === 'hot' ? selectedHot.value : freeDestination.value.trim()
+  if (!destination) {
+    error.value = destinationMode.value === 'hot' ? '请选择一个热门地区' : '请输入目的地'
+    return
+  }
+  if (destinationMode.value === 'free' && !isLikelyDomesticDestination(destination)) {
+    error.value = '仅支持中国国内目的地，请检查输入'
+    return
+  }
 
   submitting.value = true
-  error.value = null
   task.value = null
   stopPolling()
   try {
     const created = await createPlanningTask({
-      destination: form.destination.trim(),
-      days: form.days,
-      partySize: form.partySize,
-      budget: form.budget,
-      preferences: form.preferences.trim() || undefined,
+      destination,
+      days: days.value,
+      partySize: partySize.value,
+      pace: pace.value,
+      preferences: preferences.value.trim() || undefined,
     })
-    task.value = { id: created.taskId, status: 'PENDING', itineraryId: null, failureReason: null, result: null }
+    task.value = {
+      id: created.taskId,
+      status: 'PENDING',
+      itineraryId: null,
+      failureReason: null,
+      result: null,
+      pace: pace.value,
+    }
     startPolling(created.taskId)
   } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : '提交失败')
     error.value = err instanceof Error ? err.message : '提交失败'
   } finally {
     submitting.value = false
@@ -229,42 +275,228 @@ onUnmounted(stopPolling)
 </script>
 
 <style scoped>
-.planning-page {
-  min-height: 100vh;
+.planning-shell {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+  padding: 56px 20px 72px;
 }
 
-.form-card,
-.task-card {
-  max-width: 960px;
-  margin: 0 auto 16px;
+.planning-wrap {
+  width: 100%;
+  max-width: 720px;
 }
 
-.block-hint {
-  margin-bottom: 16px;
+.planning-hero {
+  margin-bottom: 22px;
 }
 
-.task-head {
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--tp-brand-hover);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+
+.planning-hero h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  color: #f7f8fc;
+}
+
+.hero-sub {
+  margin: 12px 0 0;
+  color: var(--tp-text-secondary);
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.planning-card {
+  border-radius: 24px;
+}
+
+.field-block {
+  margin-bottom: 26px;
+}
+
+.field-block.compact {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.field-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
-.task-id {
-  color: #909399;
+.field-head label {
+  color: var(--tp-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field-head span {
+  color: var(--tp-text-secondary);
+  font-size: 12px;
+}
+
+.field-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.pill-row,
+.city-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-pill {
+  width: 40px;
+  min-height: 36px;
+  padding: 0;
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.city-pill {
+  width: 100%;
   font-size: 13px;
 }
 
-.itinerary-hint {
-  color: #606266;
+.mode-switch {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  margin-bottom: 12px;
+  border: 1px solid var(--tp-stroke-soft);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.result-preview h3 {
-  margin: 16px 0 8px;
+.mode-button {
+  border: 0;
+  border-radius: 100px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--tp-text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
 }
 
-.day-arrangements {
-  margin: 0;
-  color: #606266;
+.mode-button.is-active {
+  background: rgba(77, 107, 254, 0.16);
+  color: var(--tp-text);
+}
+
+.free-input-block .el-input {
+  max-width: 420px;
+}
+
+.field-hint {
+  margin: 8px 0 0;
+  color: var(--tp-text-secondary);
+  font-size: 12px;
+}
+
+.pace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pace-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--tp-stroke);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--tp-text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.pace-card:hover {
+  border-color: rgba(106, 132, 255, 0.65);
+  background: rgba(106, 132, 255, 0.08);
+}
+
+.pace-card.is-active {
+  border-color: var(--tp-brand);
+  background: rgba(77, 107, 254, 0.13);
+}
+
+.pace-name {
+  color: var(--tp-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.pace-desc {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.error-line,
+.task-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 128, 128, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 100, 100, 0.08);
+  color: #ffb4b4;
+  font-size: 13px;
+}
+
+.task-line {
+  border-color: rgba(106, 132, 255, 0.24);
+  background: rgba(77, 107, 254, 0.08);
+  color: var(--tp-text-secondary);
+}
+
+.task-failure {
+  color: #ffb4b4;
+}
+
+.submit-button {
+  width: 100%;
+  height: 46px;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .planning-shell {
+    padding: 32px 14px 48px;
+  }
+
+  .city-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pace-grid,
+  .field-row {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
 }
 </style>

@@ -39,11 +39,18 @@ function logout() {
   display: flex;
   align-items: center;
   gap: 24px;
-  border-bottom: 1px solid #e4e7ed;
+  height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(19, 22, 29, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .brand {
   font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--tp-text);
 }
 
 .nav-links {
@@ -53,12 +60,18 @@ function logout() {
 }
 
 .nav-links a {
-  color: #303133;
+  color: var(--tp-text-secondary);
   text-decoration: none;
+  font-size: 14px;
+  transition: color 150ms ease-out;
 }
 
 .nav-links a.router-link-active {
-  color: #409eff;
+  color: var(--tp-brand-hover);
   font-weight: 600;
+}
+
+.nav-links a:hover {
+  color: var(--tp-text);
 }
 </style>

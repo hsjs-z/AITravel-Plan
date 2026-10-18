@@ -1,4 +1,4 @@
-export type ResourceType = 'TRADABLE' | 'CONTENT'
+export type ResourceType = 'TRADABLE' | 'CONTENT' | 'ATTRACTION'
 
 export interface SpecView {
   specId: string
@@ -22,6 +22,17 @@ export interface ResourceSummary {
   priceTo: number | null
   availableTotal: number | null
   contentCategory: string | null
+  province?: string | null
+  city?: string | null
+  level?: string | null
+  honorTitle?: string | null
+  summary?: string | null
+  suggestedHours?: number | null
+  ticketPrice?: number | null
+  imageUrl?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  coordinateStatus?: string | null
 }
 
 export interface ResourceDetail {
@@ -62,12 +73,15 @@ export interface UserProfile {
 }
 
 export type PlanningStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED'
+export type Pace = 'RELAXED' | 'BALANCED' | 'VIBRANT'
+export type TimeSlot = 'MORNING' | 'AFTERNOON' | 'EVENING'
 
 export interface CreatePlanningTaskPayload {
   destination: string
   days: number
   partySize: number
-  budget: number
+  budget?: number
+  pace?: Pace
   preferences?: string
 }
 
@@ -77,27 +91,37 @@ export interface PlanningTask {
   itineraryId: string | null
   failureReason: string | null
   result: string | null
+  pace?: string
 }
 
-export interface PlanningDay {
-  day: number
-  arrangements: string[]
-}
-
-export interface PlanningNamedItem {
+export interface PlanningAttraction {
   name: string
-  dayIndex?: number
+  description: string | null
+  suggestedHours: number | null
+  ticketPrice: number | null
+  resourceId: string | null
+  specId: string | null
+  matched: boolean
+  bookable: boolean
+  priceLabel: string | null
+  latitude: number | null
+  longitude: number | null
+  coordinateStatus: string | null
+  timeSlot: TimeSlot
+  sortOrder: number
 }
 
 export interface PlanningResult {
   destination?: string
   totalDays?: number
-  partySize?: number
-  estimatedBudget?: number
-  days?: PlanningDay[]
-  hotels?: PlanningNamedItem[]
-  attractions?: PlanningNamedItem[]
-  foods?: PlanningNamedItem[]
+  pace?: Pace
+  days?: Array<{
+    day: number
+    theme: string
+    slots: Record<TimeSlot, PlanningAttraction[]>
+  }>
+  warnings?: string[]
+  tips?: string[]
 }
 
 export type ItineraryStatus = 'DRAFT' | 'CONFIRMED' | 'LOCKED' | 'COMPLETED'
@@ -106,11 +130,18 @@ export type ItineraryItemSource = 'AI' | 'MANUAL'
 export interface ItineraryItem {
   id: string
   dayDate: string
+  name: string | null
   description: string
+  suggestedHours: number | null
+  ticketPrice: number | null
+  latitude: number | null
+  longitude: number | null
   resourceType: string | null
   resourceId: string | null
   specId: string | null
   source: ItineraryItemSource
+  timeSlot: TimeSlot | null
+  sortOrder: number | null
 }
 
 export interface Itinerary {
@@ -120,19 +151,27 @@ export interface Itinerary {
   startDate: string
   endDate: string
   partySize: number
-  budget: number
+  budget: number | null
   status: ItineraryStatus
   hasOrder: boolean
   items: ItineraryItem[]
+  warnings: string[]
 }
 
 export interface ItineraryItemPayload {
   dayDate: string
+  name?: string
   description: string
+  suggestedHours?: number | null
+  ticketPrice?: number | null
+  latitude?: number | null
+  longitude?: number | null
   resourceType?: string
   resourceId?: string
   specId?: string
   source: ItineraryItemSource
+  timeSlot?: TimeSlot | null
+  sortOrder?: number | null
 }
 
 export interface UpdateItineraryPayload {
@@ -140,8 +179,47 @@ export interface UpdateItineraryPayload {
   startDate: string
   endDate: string
   partySize: number
-  budget: number
+  budget?: number | null
   items: ItineraryItemPayload[]
+  warnings?: string[]
+}
+
+export interface AddItineraryItemPayload {
+  dayDate: string
+  name?: string
+  description?: string
+  suggestedHours?: number | null
+  timeSlot: TimeSlot
+  resourceId: string
+  specId?: string | null
+}
+
+export interface AttractionItem {
+  resourceId: string
+  name: string
+  province: string | null
+  city: string | null
+  level: string | null
+  honorTitle: string | null
+  summary: string | null
+  suggestedHours: number | null
+  ticketPrice: number | null
+  free: boolean
+  latitude: number | null
+  longitude: number | null
+  coordinateStatus: string | null
+  specId: string | null
+  specName: string | null
+  price: number | null
+  available: number | null
+}
+
+export interface AttractionPage {
+  total: number
+  offset: number
+  limit: number
+  hasMore: boolean
+  items: AttractionItem[]
 }
 
 export type OrderStatus = 'CREATED' | 'BOOKED' | 'PAID' | 'CONFIRMED' | 'CANCELLED' | 'FAILED'

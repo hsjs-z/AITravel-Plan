@@ -1,0 +1,188 @@
+:root {
+  color-scheme: dark;
+  --tp-bg: #13161d;
+  --tp-brand: #4d6bfe;
+  --tp-brand-hover: #6a84ff;
+  --tp-text: #e8eaf2;
+  --tp-text-secondary: rgba(232, 234, 242, 0.6);
+  --tp-glass: rgba(255, 255, 255, 0.06);
+  --tp-glass-strong: rgba(255, 255, 255, 0.09);
+  --tp-stroke: rgba(255, 255, 255, 0.12);
+  --tp-stroke-soft: rgba(255, 255, 255, 0.08);
+}
+
+html.dark {
+  --el-color-primary: #4d6bfe;
+  --el-color-primary-light-3: #6a84ff;
+  --el-color-primary-light-5: #8fa2ff;
+  --el-color-primary-light-7: rgba(77, 107, 254, 0.35);
+  --el-color-primary-light-8: rgba(77, 107, 254, 0.22);
+  --el-color-primary-light-9: rgba(77, 107, 254, 0.14);
+  --el-color-primary-dark-2: #3a55d9;
+  --el-bg-color: #13161d;
+  --el-bg-color-page: #13161d;
+  --el-bg-color-overlay: #1a1e28;
+  --el-text-color-primary: #e8eaf2;
+  --el-text-color-regular: rgba(232, 234, 242, 0.78);
+  --el-text-color-secondary: rgba(232, 234, 242, 0.6);
+  --el-text-color-placeholder: rgba(232, 234, 242, 0.36);
+  --el-border-color: rgba(255, 255, 255, 0.12);
+  --el-border-color-light: rgba(255, 255, 255, 0.1);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.08);
+  --el-fill-color: rgba(255, 255, 255, 0.06);
+  --el-fill-color-light: rgba(255, 255, 255, 0.05);
+  --el-fill-color-lighter: rgba(255, 255, 255, 0.035);
+  --el-fill-color-blank: rgba(255, 255, 255, 0.02);
+  --el-mask-color: rgba(8, 10, 16, 0.72);
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: rgba(255, 255, 255, 0.04);
+  --el-table-border-color: rgba(255, 255, 255, 0.08);
+  --el-table-row-hover-bg-color: rgba(77, 107, 254, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--tp-bg);
+  color: var(--tp-text);
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+
+.app-shell::before {
+  content: "";
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(77, 107, 254, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(142, 92, 246, 0.17), transparent 32%),
+    radial-gradient(circle at 50% 92%, rgba(77, 107, 254, 0.1), transparent 42%);
+}
+
+.glass-card,
+.glass-panel {
+  background: var(--tp-glass);
+  border: 1px solid var(--tp-stroke);
+  border-radius: 20px;
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.pill-option {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--tp-stroke);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--tp-text-secondary);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+}
+
+.pill-option:hover {
+  border-color: rgba(106, 132, 255, 0.7);
+  background: rgba(106, 132, 255, 0.1);
+  color: var(--tp-text);
+}
+
+.pill-option.is-active {
+  border-color: var(--tp-brand);
+  background: rgba(77, 107, 254, 0.14);
+  color: var(--tp-text);
+}
+
+.el-card {
+  background: var(--tp-glass);
+  border: 1px solid var(--tp-stroke);
+  border-radius: 20px;
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.el-card__header {
+  border-bottom-color: var(--tp-stroke-soft);
+}
+
+.el-button {
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+}
+
+.el-button:hover,
+.el-button:focus {
+  transform: none;
+  box-shadow: none;
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 1px var(--tp-stroke) inset;
+  transition: box-shadow 150ms ease-out, background-color 150ms ease-out;
+}
+
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused,
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px var(--tp-brand) inset;
+}
+
+.el-collapse,
+.el-collapse-item__header,
+.el-collapse-item__wrap {
+  background: transparent;
+  border-color: var(--tp-stroke-soft);
+  color: var(--tp-text);
+}
+
+.el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: rgba(255, 255, 255, 0.04);
+  --el-table-border-color: rgba(255, 255, 255, 0.08);
+}
+
+.el-dialog,
+.el-message-box {
+  background: #1a1e28;
+  border: 1px solid var(--tp-stroke);
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+.el-overlay {
+  backdrop-filter: blur(4px);
+}
+
+.el-alert {
+  border-radius: 12px;
+}
+
+.el-tag {
+  border-radius: 100px;
+}
+
+::selection {
+  background: rgba(77, 107, 254, 0.35);
+}
