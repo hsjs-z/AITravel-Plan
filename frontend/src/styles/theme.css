@@ -1,12 +1,15 @@
 :root {
   color-scheme: light;
-  --tp-bg: #f6f9ff;
+  --tp-bg: #fafbff;
   --tp-brand: #4d6bfe;
   --tp-brand-hover: #3a57e8;
   --tp-text: #1f2733;
   --tp-text-secondary: rgba(31, 39, 51, 0.55);
   --tp-card: #ffffff;
-  --tp-glass: rgba(255, 255, 255, 0.72);
+  --tp-glass: #ffffff;
+  --tp-composer: rgba(255, 255, 255, 0.65);
+  --tp-composer-border: rgba(255, 255, 255, 0.8);
+  --tp-composer-shadow: 0 10px 32px rgba(77, 107, 254, 0.08);
   --tp-stroke: #e3eaf6;
   --tp-stroke-soft: #edf2fb;
   --tp-shadow: 0 8px 24px rgba(77, 107, 254, 0.08);
@@ -22,7 +25,7 @@
   --el-color-primary-light-9: #eef4ff;
   --el-color-primary-dark-2: #3a57e8;
   --el-bg-color: #ffffff;
-  --el-bg-color-page: #f6f9ff;
+  --el-bg-color-page: #fafbff;
   --el-bg-color-overlay: #ffffff;
   --el-text-color-primary: #1f2733;
   --el-text-color-regular: rgba(31, 39, 51, 0.75);
@@ -74,9 +77,10 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 16% 4%, rgba(191, 217, 255, 0.55), transparent 28%),
-    radial-gradient(circle at 82% 2%, rgba(232, 243, 255, 0.85), transparent 26%),
-    radial-gradient(circle at 52% 24%, rgba(191, 217, 255, 0.22), transparent 34%);
+    radial-gradient(ellipse 58% 48% at 8% 6%, rgba(199, 210, 254, 0.66), transparent 68%),
+    radial-gradient(ellipse 52% 44% at 94% 34%, rgba(219, 234, 254, 0.58), transparent 68%),
+    radial-gradient(ellipse 62% 48% at 12% 90%, rgba(226, 232, 240, 0.62), transparent 70%),
+    radial-gradient(ellipse 48% 40% at 72% 88%, rgba(219, 234, 254, 0.5), transparent 70%);
 }
 
 .glass-card,
@@ -89,12 +93,20 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
+.glass-card {
+  background: var(--tp-composer);
+  border-color: var(--tp-composer-border);
+  box-shadow: var(--tp-composer-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
 .pill-option {
   min-height: 38px;
   padding: 0 16px;
-  border: 1px solid var(--tp-button-border);
+  border: 1px solid var(--tp-stroke);
   border-radius: 100px;
-  background: var(--tp-button-bg);
+  background: #ffffff;
   color: var(--tp-text);
   font: inherit;
   cursor: pointer;
@@ -102,15 +114,15 @@ body {
 }
 
 .pill-option:hover {
-  border-color: var(--tp-brand);
-  background: var(--tp-button-hover);
+  border-color: var(--tp-button-border);
+  background: #f7faff;
   color: var(--tp-text);
 }
 
 .pill-option.is-active {
   border-color: var(--tp-brand);
-  background: var(--tp-brand);
-  color: #ffffff;
+  background: var(--tp-button-bg);
+  color: var(--tp-text);
 }
 
 .el-card {
@@ -118,6 +130,14 @@ body {
   border: 1px solid var(--tp-stroke);
   border-radius: 20px;
   box-shadow: var(--tp-shadow);
+}
+
+.el-card.glass-card {
+  background: var(--tp-composer);
+  border-color: var(--tp-composer-border);
+  box-shadow: var(--tp-composer-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .el-card__header {

@@ -4,6 +4,20 @@
 
 **Status**: Implementation complete, awaiting reviewer browser confirmation.
 
+## Round 2: DeepSeek-like light refinement
+
+- Page base updated to `#FAFBFF` with four fixed large radial clouds built from
+  `#C7D2FE`, `#DBEAFE`, and `#E2E8F0` at 0.5–0.7 opacity.
+- Navigation is transparent at the top and becomes
+  `rgba(255,255,255,0.7)` + `blur(12px)` + a very light bottom border after scroll.
+- Five composer cards now share `rgba(255,255,255,0.65)` + `blur(16px)` +
+  `1px rgba(255,255,255,0.8)`:
+  planning form, my orders, notification center, login, register.
+- Chips are white with light borders; selected chips use a brand-blue border and
+  light-blue fill. Primary buttons remain solid brand blue.
+- Result page map, day accordion, map panel and tips remain white cards for readability.
+- Build: PASS, 1719 modules; dev server `GET /` returned 200.
+
 ## 1. Build
 
 `cd frontend && npm run build`: PASS.

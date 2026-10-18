@@ -385,10 +385,10 @@ onUnmounted(stopPolling)
 }
 
 .mode-button {
-  border: 1px solid var(--tp-button-border);
+  border: 1px solid var(--tp-stroke);
   border-radius: 100px;
   padding: 8px 14px;
-  background: var(--tp-button-bg);
+  background: #ffffff;
   color: var(--tp-text);
   font: inherit;
   font-size: 13px;
@@ -398,8 +398,8 @@ onUnmounted(stopPolling)
 
 .mode-button.is-active {
   border-color: var(--tp-brand);
-  background: var(--tp-brand);
-  color: #ffffff;
+  background: var(--tp-button-bg);
+  color: var(--tp-text);
 }
 
 .free-input-block .el-input {
@@ -424,9 +424,9 @@ onUnmounted(stopPolling)
   align-items: flex-start;
   gap: 6px;
   padding: 14px;
-  border: 1px solid var(--tp-button-border);
+  border: 1px solid var(--tp-stroke);
   border-radius: 16px;
-  background: var(--tp-button-bg);
+  background: #ffffff;
   color: var(--tp-text-secondary);
   text-align: left;
   cursor: pointer;
@@ -435,12 +435,12 @@ onUnmounted(stopPolling)
 
 .pace-card:hover {
   border-color: var(--tp-brand);
-  background: var(--tp-button-hover);
+  background: #f7faff;
 }
 
 .pace-card.is-active {
   border-color: var(--tp-brand);
-  background: var(--tp-button-hover);
+  background: var(--tp-button-bg);
 }
 
 .pace-name {

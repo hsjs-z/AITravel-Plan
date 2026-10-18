@@ -111,6 +111,11 @@ onMounted(load)
 .page-card {
   max-width: 960px;
   margin: 0 auto;
+  background: var(--tp-composer);
+  border-color: var(--tp-composer-border);
+  box-shadow: var(--tp-composer-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .head-row {

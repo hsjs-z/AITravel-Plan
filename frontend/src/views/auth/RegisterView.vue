@@ -97,7 +97,7 @@ async function submit() {
   background:
     radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.9), transparent 26%),
     radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.68), transparent 24%),
-    linear-gradient(180deg, #dcf0ff, #f6f9ff);
+    linear-gradient(180deg, #dcf0ff, #fafbff);
 }
 
 .auth-page::after {
@@ -122,9 +122,11 @@ async function submit() {
 
 .auth-card {
   width: 380px;
-  background: #ffffff;
-  border: 1px solid #e3eaf6;
-  box-shadow: 0 8px 24px rgba(77, 107, 254, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 32px rgba(77, 107, 254, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .form-error {
