@@ -8,7 +8,8 @@
       </header>
 
       <el-card class="planning-card glass-card" :body-style="{ padding: '28px' }">
-        <el-form label-position="top" @submit.prevent="submit">
+        <PlanningWait v-if="isWaiting" :has-preferences="hasPreferences" />
+        <el-form v-else label-position="top" @submit.prevent="submit">
           <div class="field-block">
             <div class="field-head">
               <label>出行天数</label>
@@ -166,6 +167,7 @@ import { ElMessage } from 'element-plus'
 import { createPlanningTask, getPlanningTask, retryPlanningTask } from '../../api/planning'
 import type { Pace, PlanningTask } from '../../api/types'
 import { HOT_DESTINATIONS, isLikelyDomesticDestination } from './hotDestinations'
+import PlanningWait from '../../components/planning/PlanningWait.vue'
 
 type DestinationMode = 'hot' | 'free'
 
@@ -205,6 +207,11 @@ const statusLabel = computed(() => {
       return ''
   }
 })
+
+const isWaiting = computed(
+  () => task.value?.status === 'PENDING' || task.value?.status === 'RUNNING',
+)
+const hasPreferences = computed(() => preferences.value.trim().length > 0)
 
 function stopPolling() {
   if (pollTimer) {
