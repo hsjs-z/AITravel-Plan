@@ -155,20 +155,20 @@ contracts 与 quickstart。
 
 ### Tests for User Story 3
 
-- [ ] T033 [P] [US3] 测试每时段最多 3 个与添加/删除状态，
+- [X] T033 [P] [US3] 测试每时段最多 3 个与添加/删除状态，
   文件 `services/itinerary/src/test/java/com/travelplatform/itinerary/application/ItinerarySlotCapacityTest.java`
-- [ ] T034 [P] [US3] 测试确认/锁定后拒绝添加/删除，
+- [X] T034 [P] [US3] 测试确认/锁定后拒绝添加/删除，
   文件 `services/itinerary/src/test/java/com/travelplatform/itinerary/application/ItineraryReadOnlyTest.java`
 
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] 扩展 ItineraryItem 实体与查询排序，
+- [X] T035 [US3] 扩展 ItineraryItem 实体与查询排序，
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/domain/ItineraryItem.java`、
   `services/itinerary/src/main/java/com/travelplatform/itinerary/domain/ItineraryItemRepository.java`
-- [ ] T036 [US3] 实现草稿添加/删除行程项接口，
+- [X] T036 [US3] 实现草稿添加/删除行程项接口，
   文件 `services/itinerary/src/main/java/com/travelplatform/itinerary/api/ItineraryController.java`、
   `services/itinerary/src/main/java/com/travelplatform/itinerary/application/ItineraryService.java`
-- [ ] T037 [US3] 扩展 ItineraryClient Item 字段，
+- [X] T037 [US3] 扩展 ItineraryClient Item 字段，
   文件 `services/ai-planning/src/main/java/com/travelplatform/aiplanning/infrastructure/ItineraryClient.java`
 - [ ] T038 [US3] 新增结果页主视图，
   文件 `frontend/src/views/planning/PlanningResultView.vue`
