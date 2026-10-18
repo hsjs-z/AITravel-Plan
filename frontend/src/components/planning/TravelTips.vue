@@ -1,5 +1,6 @@
 <template>
   <section
+    id="travel-tips"
     class="tips-panel glass-panel"
     :class="{ 'is-loading': loading, 'just-finished': justFinished }"
   >
@@ -50,13 +51,14 @@ onUnmounted(() => {
 <style scoped>
 .tips-panel {
   margin-top: 16px;
+  scroll-margin-top: 16px;
   padding: 20px 22px;
   border-radius: 18px;
   background: var(--tp-glass);
 }
 
 .tips-panel.is-loading {
-  animation: tips-breathing 2s ease-in-out infinite;
+  animation: tips-breathing 4s ease-in-out infinite;
 }
 
 .tips-panel.just-finished {
@@ -67,28 +69,28 @@ onUnmounted(() => {
   0%,
   100% {
     box-shadow:
-      0 0 0 1px rgba(77, 107, 254, 0.18),
-      0 0 12px rgba(77, 107, 254, 0.08);
+      0 0 0 1px rgba(34, 197, 94, 0.18),
+      0 0 12px rgba(34, 197, 94, 0.08);
   }
 
   50% {
     box-shadow:
-      0 0 0 1px rgba(77, 107, 254, 0.55),
-      0 0 22px rgba(77, 107, 254, 0.35);
+      0 0 0 1px rgba(34, 197, 94, 0.55),
+      0 0 22px rgba(34, 197, 94, 0.35);
   }
 }
 
 @keyframes tips-finished {
   0% {
     box-shadow:
-      0 0 0 1px rgba(77, 107, 254, 0.8),
-      0 0 24px rgba(77, 107, 254, 0.45);
+      0 0 0 1px rgba(34, 197, 94, 0.8),
+      0 0 24px rgba(34, 197, 94, 0.45);
   }
 
   100% {
     box-shadow:
-      0 0 0 1px rgba(77, 107, 254, 0.18),
-      0 0 12px rgba(77, 107, 254, 0.08);
+      0 0 0 1px rgba(34, 197, 94, 0.18),
+      0 0 12px rgba(34, 197, 94, 0.08);
   }
 }
 

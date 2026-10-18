@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPlanningTask } from '../../api/planning'
@@ -342,6 +342,8 @@ async function confirmDraft() {
     )
     confirming.value = true
     itinerary.value = await confirmItinerary(itinerary.value.id)
+    await nextTick()
+    document.getElementById('travel-tips')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     ElMessage.success('行程已确认')
     startTipsPolling()
   } catch (err) {
