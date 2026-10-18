@@ -1,6 +1,7 @@
 package com.travelplatform.aiplanning.api;
 
 import com.travelplatform.aiplanning.application.PlanningService;
+import com.travelplatform.aiplanning.domain.Pace;
 import com.travelplatform.aiplanning.domain.PlanningTask;
 import com.travelplatform.common.api.ApiResponse;
 import jakarta.validation.Valid;
@@ -55,7 +56,8 @@ public class PlanningController {
                 task.getStatus().name(),
                 task.getItineraryId(),
                 task.getFailureReason(),
-                task.getResult());
+                task.getResult(),
+                task.getPace() == null ? Pace.BALANCED.name() : task.getPace().name());
     }
 
     public record CreateTaskRequest(
@@ -63,7 +65,13 @@ public class PlanningController {
             @NotNull @Min(1) @Max(30) Integer days,
             @NotNull @Min(1) @Max(20) Integer partySize,
             @NotNull @Positive Long budget,
+            Pace pace,
             String preferences) {
+
+        public CreateTaskRequest(String destination, Integer days, Integer partySize,
+                                 Long budget, String preferences) {
+            this(destination, days, partySize, budget, null, preferences);
+        }
     }
 
     public record CreateTaskResponse(String taskId) {
@@ -74,6 +82,7 @@ public class PlanningController {
             String status,
             String itineraryId,
             String failureReason,
-            String result) {
+            String result,
+            String pace) {
     }
 }

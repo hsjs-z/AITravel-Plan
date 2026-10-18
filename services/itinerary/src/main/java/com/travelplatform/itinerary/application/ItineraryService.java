@@ -1,5 +1,6 @@
 package com.travelplatform.itinerary.application;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travelplatform.common.api.BusinessException;
 import com.travelplatform.common.api.ErrorCode;
 import com.travelplatform.itinerary.api.ItineraryController;
@@ -23,14 +24,17 @@ public class ItineraryService {
     private final ItineraryRepository repository;
     private final ItineraryItemRepository itemRepository;
     private final ItineraryEventPublisher events;
+    private final ObjectMapper objectMapper;
     private final ItineraryStateMachine stateMachine = new ItineraryStateMachine();
 
     public ItineraryService(ItineraryRepository repository,
                             ItineraryItemRepository itemRepository,
-                            ItineraryEventPublisher events) {
+                            ItineraryEventPublisher events,
+                            ObjectMapper objectMapper) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.events = events;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -43,6 +47,7 @@ public class ItineraryService {
         itinerary.setEndDate(request.endDate());
         itinerary.setPartySize(request.partySize());
         itinerary.setBudget(request.budget());
+        itinerary.setWarnings(serializeWarnings(request.warnings()));
         itinerary.setStatus(ItineraryStatus.DRAFT);
         itinerary.setHasOrder(false);
         itinerary.setCreatedAt(Instant.now());
@@ -66,6 +71,18 @@ public class ItineraryService {
         return itemRepository.findByItineraryId(itineraryId);
     }
 
+    public List<String> warnings(Itinerary itinerary) {
+        if (itinerary.getWarnings() == null || itinerary.getWarnings().isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(itinerary.getWarnings(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
     @Transactional
     public Itinerary update(String userId, String itineraryId, ItineraryController.UpdateItineraryRequest request) {
         Itinerary itinerary = get(userId, itineraryId);
@@ -75,6 +92,7 @@ public class ItineraryService {
         itinerary.setEndDate(request.endDate());
         itinerary.setPartySize(request.partySize());
         itinerary.setBudget(request.budget());
+        itinerary.setWarnings(serializeWarnings(request.warnings()));
         itinerary.setUpdatedAt(Instant.now());
         repository.save(itinerary);
 
@@ -143,6 +161,19 @@ public class ItineraryService {
         item.setResourceId(request.resourceId());
         item.setSpecId(request.specId());
         item.setSource(request.source() == null ? ItineraryItemSource.AI : request.source());
+        item.setTimeSlot(request.timeSlot());
+        item.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         return item;
+    }
+
+    private String serializeWarnings(List<String> warnings) {
+        if (warnings == null || warnings.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(warnings);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

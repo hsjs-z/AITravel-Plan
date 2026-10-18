@@ -39,6 +39,19 @@
 - `timeSlot=null`
 - `sortOrder=0`
 
+## Warnings
+
+`POST /itineraries`、`PUT /itineraries/{itineraryId}` 接受可选
+`warnings: string[]`；`GET /itineraries/{itineraryId}` 与创建/更新响应原样返回：
+
+```json
+{
+  "warnings": ["第1天：玉龙雪山（4.0h）超出当日节奏容量，未安排"]
+}
+```
+
+warnings 是行程级字段，与 items 一起返回，供结果页展示；服务端不得只写日志。
+
 ## POST /itineraries/{itineraryId}/items
 
 用于结果页草稿态从库存添加。

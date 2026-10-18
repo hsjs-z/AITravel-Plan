@@ -1,6 +1,7 @@
 # V2-08 Acceptance Plan
 
-**Status**: Proposed. No V2-08 business code has been written.
+**Status**: Approved on 2026-10-18. Implementation is complete; acceptance evidence
+is awaiting review.
 
 ## 1. Scope and boundary
 

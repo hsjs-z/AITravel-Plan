@@ -49,6 +49,10 @@ public final class PlanningRunContext {
                 && (ref.specId() == null || ref.specId().isBlank());
     }
 
+    public synchronized AttractionRef find(String resourceId) {
+        return resourceId == null ? null : resources.get(resourceId);
+    }
+
     public synchronized List<String> destinations() {
         return List.copyOf(destinations);
     }

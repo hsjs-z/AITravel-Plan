@@ -5,6 +5,7 @@ import com.travelplatform.itinerary.application.ItineraryService;
 import com.travelplatform.itinerary.domain.Itinerary;
 import com.travelplatform.itinerary.domain.ItineraryItem;
 import com.travelplatform.itinerary.domain.ItineraryItemSource;
+import com.travelplatform.itinerary.domain.ItineraryTimeSlot;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -103,7 +104,8 @@ public class ItineraryController {
                 itinerary.getBudget(),
                 itinerary.getStatus().name(),
                 itinerary.getHasOrder(),
-                items.stream().map(this::toItemResponse).toList());
+                items.stream().map(this::toItemResponse).toList(),
+                itineraryService.warnings(itinerary));
     }
 
     private ItemResponse toItemResponse(ItineraryItem item) {
@@ -114,7 +116,9 @@ public class ItineraryController {
                 item.getResourceType(),
                 item.getResourceId(),
                 item.getSpecId(),
-                item.getSource().name());
+                item.getSource().name(),
+                item.getTimeSlot() == null ? null : item.getTimeSlot().name(),
+                item.getSortOrder());
     }
 
     public record CreateItineraryRequest(
@@ -123,7 +127,8 @@ public class ItineraryController {
             @NotNull LocalDate endDate,
             @NotNull @Positive Integer partySize,
             @NotNull @Positive Long budget,
-            List<ItemRequest> items) {
+            List<ItemRequest> items,
+            List<String> warnings) {
     }
 
     public record UpdateItineraryRequest(
@@ -132,7 +137,8 @@ public class ItineraryController {
             @NotNull LocalDate endDate,
             @NotNull @Positive Integer partySize,
             @NotNull @Positive Long budget,
-            List<ItemRequest> items) {
+            List<ItemRequest> items,
+            List<String> warnings) {
     }
 
     public record ItemRequest(
@@ -141,7 +147,9 @@ public class ItineraryController {
             String resourceType,
             String resourceId,
             String specId,
-            ItineraryItemSource source) {
+            ItineraryItemSource source,
+            ItineraryTimeSlot timeSlot,
+            Integer sortOrder) {
     }
 
     public record ItineraryResponse(
@@ -154,7 +162,8 @@ public class ItineraryController {
             Long budget,
             String status,
             Boolean hasOrder,
-            List<ItemResponse> items) {
+            List<ItemResponse> items,
+            List<String> warnings) {
     }
 
     public record ItemResponse(
@@ -164,6 +173,8 @@ public class ItineraryController {
             String resourceType,
             String resourceId,
             String specId,
-            String source) {
+            String source,
+            String timeSlot,
+            Integer sortOrder) {
     }
 }

@@ -42,6 +42,9 @@ public class Itinerary {
     @Column(nullable = false)
     private Boolean hasOrder;
 
+    @Column(columnDefinition = "TEXT")
+    private String warnings;
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -118,6 +121,14 @@ public class Itinerary {
 
     public void setHasOrder(Boolean hasOrder) {
         this.hasOrder = hasOrder;
+    }
+
+    public String getWarnings() {
+        return warnings;
+    }
+
+    public void setWarnings(String warnings) {
+        this.warnings = warnings;
     }
 
     public Instant getCreatedAt() {

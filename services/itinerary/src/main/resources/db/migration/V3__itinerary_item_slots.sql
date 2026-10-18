@@ -1,0 +1,3 @@
+ALTER TABLE itinerary_item
+  ADD COLUMN time_slot enum('MORNING','AFTERNOON','EVENING') DEFAULT NULL,
+  ADD COLUMN sort_order int NOT NULL DEFAULT 0;

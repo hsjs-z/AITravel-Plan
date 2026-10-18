@@ -35,6 +35,13 @@ public class ItineraryItem {
     @Column(nullable = false, length = 16)
     private ItineraryItemSource source;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "time_slot", length = 16)
+    private ItineraryTimeSlot timeSlot;
+
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder = 0;
+
     public String getId() {
         return id;
     }
@@ -97,5 +104,21 @@ public class ItineraryItem {
 
     public void setSource(ItineraryItemSource source) {
         this.source = source;
+    }
+
+    public ItineraryTimeSlot getTimeSlot() {
+        return timeSlot;
+    }
+
+    public void setTimeSlot(ItineraryTimeSlot timeSlot) {
+        this.timeSlot = timeSlot;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

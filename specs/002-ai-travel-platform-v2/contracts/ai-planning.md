@@ -135,6 +135,19 @@ Rules:
 
 `unavailableReason` 可选，用于解释免费/售罄/未匹配。
 
+`warnings` 是字符串数组，每个元素是一条可直接展示的中文提示，例如：
+
+```json
+["第1天：玉龙雪山（4.0h）超出当日节奏容量，未安排"]
+```
+
+规则：
+
+- 超过每日景点上限而截断的景点必须写一条 warning。
+- 因当前及后续时段容量/数量不足而未安排的景点，必须写 warning。
+- `warnings` 随草稿行程一起持久化，并由 itinerary 的创建/查询响应返回；
+  不能只写日志。
+
 ## 节奏与容量
 
 | Pace | Daily max | Daily hours | Morning | Afternoon | Evening |

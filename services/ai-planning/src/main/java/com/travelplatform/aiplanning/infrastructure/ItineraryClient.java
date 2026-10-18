@@ -22,7 +22,8 @@ public interface ItineraryClient {
             LocalDate endDate,
             Integer partySize,
             Long budget,
-            List<Item> items) {
+            List<Item> items,
+            List<String> warnings) {
     }
 
     record Item(
@@ -31,7 +32,9 @@ public interface ItineraryClient {
             String resourceType,
             String resourceId,
             String specId,
-            String source) {
+            String source,
+            String timeSlot,
+            Integer sortOrder) {
     }
 
     record ItineraryApiResponse(int code, String message, ItineraryData data) {

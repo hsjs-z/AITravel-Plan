@@ -45,7 +45,8 @@ class PlanningServiceMaterializeTest {
     private final PlanningTaskWriter writer = new PlanningTaskWriter(repository, events);
 
     private final PlanningService service = new PlanningService(
-            repository, planner, itineraryClient, objectMapper, writer, executor, tracer, propagator);
+            repository, planner, itineraryClient, new TimeSlotAllocator(),
+            objectMapper, writer, executor, tracer, propagator);
 
     @Test
     void materializesValidPaidPairIntoItineraryItem() {

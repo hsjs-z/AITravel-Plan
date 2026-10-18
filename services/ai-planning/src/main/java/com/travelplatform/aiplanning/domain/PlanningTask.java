@@ -31,6 +31,10 @@ public class PlanningTask {
     @Column(nullable = false)
     private Long budget;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private Pace pace = Pace.BALANCED;
+
     private String preferences;
 
     @Enumerated(EnumType.STRING)
@@ -99,6 +103,14 @@ public class PlanningTask {
 
     public void setBudget(Long budget) {
         this.budget = budget;
+    }
+
+    public Pace getPace() {
+        return pace;
+    }
+
+    public void setPace(Pace pace) {
+        this.pace = pace;
     }
 
     public String getPreferences() {
