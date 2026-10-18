@@ -14,17 +14,31 @@
               <label>出行天数</label>
               <span>{{ days }} 天</span>
             </div>
-            <div class="pill-row">
-              <button
-                v-for="n in 10"
-                :key="n"
-                type="button"
-                class="pill-option day-pill"
-                :class="{ 'is-active': days === n }"
-                @click="days = n"
+            <div class="day-strip-wrap">
+              <div
+                ref="dayStrip"
+                class="day-strip"
+                role="listbox"
+                aria-label="出行天数"
+                tabindex="0"
+                @scroll.passive="onDayScroll"
+                @keydown.left.prevent="selectDays(days - 1)"
+                @keydown.right.prevent="selectDays(days + 1)"
               >
-                {{ n }}
-              </button>
+                <button
+                  v-for="n in 10"
+                  :key="n"
+                  type="button"
+                  role="option"
+                  class="day-pill"
+                  :class="{ 'is-active': days === n }"
+                  :aria-selected="days === n"
+                  :data-day="n"
+                  @click="selectDays(n)"
+                >
+                  {{ n }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -146,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createPlanningTask, getPlanningTask, retryPlanningTask } from '../../api/planning'
@@ -167,6 +181,9 @@ const preferences = ref('')
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const task = ref<PlanningTask | null>(null)
+const dayStrip = ref<HTMLElement | null>(null)
+let scrollTimer: ReturnType<typeof setTimeout> | null = null
+let programmaticScroll = false
 
 const paceOptions: Array<{ value: Pace; label: string; description: string }> = [
   { value: 'RELAXED', label: '慵懒', description: '少走一点，留白多一点' },
@@ -194,6 +211,46 @@ function stopPolling() {
     clearInterval(pollTimer)
     pollTimer = null
   }
+}
+
+function selectDays(value: number) {
+  days.value = Math.min(10, Math.max(1, value))
+  nextTick(() => centerDay(days.value))
+}
+
+function centerDay(value: number) {
+  const container = dayStrip.value
+  if (!container) return
+  const button = container.querySelector<HTMLButtonElement>(`[data-day="${value}"]`)
+  if (!button) return
+  const target = button.offsetLeft - (container.clientWidth - button.offsetWidth) / 2
+  programmaticScroll = true
+  container.scrollTo({ left: Math.max(0, target), behavior: 'smooth' })
+  setTimeout(() => {
+    programmaticScroll = false
+  }, 320)
+}
+
+function onDayScroll() {
+  if (programmaticScroll) return
+  if (scrollTimer) clearTimeout(scrollTimer)
+  scrollTimer = setTimeout(() => {
+    const container = dayStrip.value
+    if (!container) return
+    const center = container.scrollLeft + container.clientWidth / 2
+    let nearest = days.value
+    let nearestDistance = Number.POSITIVE_INFINITY
+    container.querySelectorAll<HTMLButtonElement>('.day-pill').forEach((button) => {
+      const distance = Math.abs(
+        button.offsetLeft + button.offsetWidth / 2 - center,
+      )
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearest = Number(button.dataset.day)
+      }
+    })
+    if (nearest !== days.value) days.value = nearest
+  }, 90)
 }
 
 function startPolling(taskId: string) {
@@ -277,7 +334,14 @@ async function retry() {
   }
 }
 
-onUnmounted(stopPolling)
+onMounted(() => {
+  setTimeout(() => centerDay(days.value), 60)
+})
+
+onUnmounted(() => {
+  stopPolling()
+  if (scrollTimer) clearTimeout(scrollTimer)
+})
 </script>
 
 <style scoped>
@@ -372,13 +436,18 @@ onUnmounted(stopPolling)
   box-shadow: 0 0 0 1px var(--tp-brand) inset;
 }
 
+.party-size-input :deep(.el-input__inner) {
+  text-align: center;
+}
+
 .party-size-input :deep(.el-input-number__decrease),
 .party-size-input :deep(.el-input-number__increase) {
   top: 3px;
   bottom: 3px;
   width: 26px;
   border-radius: 100px;
-  background: var(--tp-button-bg);
+  border: 0;
+  background: transparent;
   color: var(--tp-brand);
   transition: background-color 150ms ease-out, color 150ms ease-out;
 }
@@ -389,17 +458,63 @@ onUnmounted(stopPolling)
   color: var(--tp-brand-hover);
 }
 
-.pill-row,
 .city-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+.day-strip-wrap {
+  position: relative;
+  mask-image: linear-gradient(to right, transparent 0, #000 10%, #000 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10%, #000 90%, transparent 100%);
+}
+
+.day-strip {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px calc(50% - 20px);
+  scroll-padding-inline: calc(50% - 20px);
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.day-strip::-webkit-scrollbar {
+  display: none;
+}
+
 .day-pill {
+  flex: 0 0 40px;
   width: 40px;
   min-height: 36px;
   padding: 0;
+  border: 1px solid var(--tp-stroke);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--tp-text);
+  font: inherit;
+  font-size: 13px;
+  opacity: 0.55;
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition: opacity 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+}
+
+.day-pill:hover {
+  border-color: var(--tp-button-border);
+  opacity: 0.85;
+}
+
+.day-pill.is-active {
+  border-color: var(--tp-brand);
+  background: var(--tp-button-bg);
+  color: var(--tp-text);
+  font-weight: 700;
+  opacity: 1;
 }
 
 .city-grid {
@@ -415,23 +530,28 @@ onUnmounted(stopPolling)
 .mode-switch {
   display: inline-flex;
   gap: 6px;
-  padding: 4px;
   margin-bottom: 12px;
-  border: 1px solid var(--tp-stroke-soft);
+  padding: 0;
+  border: 0;
   border-radius: 100px;
-  background: #f3f7ff;
+  background: transparent;
 }
 
 .mode-button {
   border: 1px solid var(--tp-stroke);
   border-radius: 100px;
   padding: 8px 14px;
-  background: #ffffff;
+  background: transparent;
   color: var(--tp-text);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 150ms ease-out, color 150ms ease-out;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+}
+
+.mode-button:hover {
+  border-color: var(--tp-button-border);
+  background: #f7faff;
 }
 
 .mode-button.is-active {

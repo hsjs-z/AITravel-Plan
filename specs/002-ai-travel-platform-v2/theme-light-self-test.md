@@ -31,6 +31,21 @@
 - Self-test: form party-size pill, logo gradient, and centered three-part nav all
   compile and render from the same layout.
 
+## Round 4: stepper, segmented tabs, and scroll-snap days
+
+- Party-size stepper `+/-` controls are transparent with brand-blue symbols; hover
+  keeps the light-blue feedback, and the number remains centered.
+- Hot/other destination tabs use transparent backgrounds with outlines; the active
+  tab uses a brand-blue outline and light-blue fill.
+- Day 1–10 is a horizontal scroll-snap strip: mandatory center alignment, centered
+  active item, dimmed sides, hidden native scrollbar, edge fade masks, click-to-select,
+  and left/right keyboard selection. Alignment uses CSS scroll-snap plus a small
+  offset calculation; no carousel library was added.
+- Build: PASS, 1719 modules; only the standard chunk-size warning.
+- Self-test: the code compiles and the selector has click and keyboard paths; browser
+  acceptance should specifically check snap settling. If the reviewer sees jitter,
+  the agreed fallback is to restore the prior static day pills.
+
 ## 1. Build
 
 `cd frontend && npm run build`: PASS.
