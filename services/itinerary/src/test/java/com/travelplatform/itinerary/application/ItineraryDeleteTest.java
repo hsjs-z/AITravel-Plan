@@ -33,7 +33,8 @@ class ItineraryDeleteTest {
             mock(ItineraryEventPublisher.class),
             new ObjectMapper(),
             mock(InventoryClient.class),
-            orderClient);
+            orderClient,
+            mock(ItineraryTipsService.class));
 
     @Test
     void draftCanBeDeleted() {

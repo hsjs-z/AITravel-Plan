@@ -1,6 +1,7 @@
 package com.travelplatform.aiplanning.api;
 
 import com.travelplatform.aiplanning.application.PlanningService;
+import com.travelplatform.aiplanning.application.TipsService;
 import com.travelplatform.aiplanning.domain.Pace;
 import com.travelplatform.aiplanning.domain.PlanningTask;
 import com.travelplatform.common.api.ApiResponse;
@@ -17,13 +18,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class PlanningController {
 
     private final PlanningService planningService;
+    private final TipsService tipsService;
 
-    public PlanningController(PlanningService planningService) {
+    public PlanningController(PlanningService planningService, TipsService tipsService) {
         this.planningService = planningService;
+        this.tipsService = tipsService;
     }
 
     @PostMapping("/planning/tasks")
@@ -48,6 +53,12 @@ public class PlanningController {
             @PathVariable("taskId") String taskId) {
         PlanningTask task = planningService.retry(userId, taskId);
         return ApiResponse.success(toResponse(task));
+    }
+
+    @PostMapping("/planning/tips")
+    public ApiResponse<List<String>> tips(@Valid @RequestBody TipsRequest request) {
+        return ApiResponse.success(tipsService.generate(
+                request.destination(), request.days(), request.attractions()));
     }
 
     private TaskResponse toResponse(PlanningTask task) {
@@ -75,6 +86,12 @@ public class PlanningController {
     }
 
     public record CreateTaskResponse(String taskId) {
+    }
+
+    public record TipsRequest(
+            @NotBlank String destination,
+            @NotNull @Min(1) Integer days,
+            List<String> attractions) {
     }
 
     public record TaskResponse(

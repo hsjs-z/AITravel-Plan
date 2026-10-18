@@ -97,6 +97,16 @@ inventory 资源详情回填，不随后续票价变化回写。
 
 warnings 是行程级字段，与 items 一起返回，供结果页展示；服务端不得只写日志。
 
+## Tips
+
+`GET /itineraries/{itineraryId}` 增加 `tips: string[]`（也为空数组）。
+
+- `POST /itineraries/{id}/confirm` 成功后清空旧 tips，并在事务提交后异步生成。
+- 生成依据是最终确认的 items：目的地、天数、景点名列表。
+- deepseek 失败/超时保持空数组，不影响行程 `CONFIRMED`。
+- 前端确认成功后每 2 秒轮询详情，60 秒上限；tips 非空即渲染。
+- `planning_task.result.tips` 旧字段保留，但前端不再读取。
+
 ## POST /itineraries/{itineraryId}/items
 
 用于结果页草稿态从库存添加。

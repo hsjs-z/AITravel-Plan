@@ -16,9 +16,12 @@ import com.travelplatform.itinerary.infrastructure.InventoryClient;
 import com.travelplatform.itinerary.infrastructure.OrderClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +36,7 @@ public class ItineraryService {
     private final ObjectMapper objectMapper;
     private final InventoryClient inventoryClient;
     private final OrderClient orderClient;
+    private final ItineraryTipsService tipsService;
     private final ItineraryStateMachine stateMachine = new ItineraryStateMachine();
 
     public ItineraryService(ItineraryRepository repository,
@@ -40,13 +44,15 @@ public class ItineraryService {
                             ItineraryEventPublisher events,
                             ObjectMapper objectMapper,
                             InventoryClient inventoryClient,
-                            OrderClient orderClient) {
+                            OrderClient orderClient,
+                            ItineraryTipsService tipsService) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.events = events;
         this.objectMapper = objectMapper;
         this.inventoryClient = inventoryClient;
         this.orderClient = orderClient;
+        this.tipsService = tipsService;
     }
 
     @Transactional
@@ -134,6 +140,18 @@ public class ItineraryService {
         }
     }
 
+    public List<String> tips(Itinerary itinerary) {
+        if (itinerary.getTips() == null || itinerary.getTips().isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(itinerary.getTips(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
     @Transactional
     public Itinerary update(String userId, String itineraryId, ItineraryController.UpdateItineraryRequest request) {
         Itinerary itinerary = get(userId, itineraryId);
@@ -164,9 +182,31 @@ public class ItineraryService {
     public Itinerary confirm(String userId, String itineraryId) {
         Itinerary itinerary = get(userId, itineraryId);
         stateMachine.confirm(itinerary);
+        itinerary.setTips(null);
         itinerary.setUpdatedAt(Instant.now());
         Itinerary confirmed = repository.save(itinerary);
         events.itineraryConfirmed(confirmed);
+        List<String> attractions = itemRepository
+                .findByItineraryIdOrderByDayDateAscTimeSlotAscSortOrderAsc(itineraryId)
+                .stream()
+                .map(item -> item.getName() == null || item.getName().isBlank()
+                        ? item.getDescription() : item.getName())
+                .filter(name -> name != null && !name.isBlank())
+                .distinct()
+                .toList();
+        int days = (int) ChronoUnit.DAYS.between(confirmed.getStartDate(), confirmed.getEndDate()) + 1;
+        Runnable generateTips = () -> tipsService.generateAsync(
+                confirmed.getId(), confirmed.getDestination(), Math.max(1, days), attractions);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    generateTips.run();
+                }
+            });
+        } else {
+            generateTips.run();
+        }
         return confirmed;
     }
 

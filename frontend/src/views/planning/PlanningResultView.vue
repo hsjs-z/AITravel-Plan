@@ -68,7 +68,11 @@
         </aside>
       </div>
 
-      <TravelTips :tips="tips" />
+      <TravelTips
+        :tips="tips"
+        :loading="tipsState === 'generating'"
+        :error="tipsState === 'failed' ? '生成失败，请刷新重试' : ''"
+      />
       <p v-if="mapUnavailable" class="map-fallback">地图暂不可用，已切换为纯行程列表。</p>
 
       <AttractionPicker
@@ -83,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPlanningTask } from '../../api/planning'
@@ -127,6 +131,9 @@ const pickerSlot = ref<TimeSlot>('MORNING')
 const selectedItemId = ref<string | null>(null)
 const mapUnavailable = ref(false)
 const confirming = ref(false)
+const tipsState = ref<'idle' | 'generating' | 'failed'>('idle')
+let tipsPolling = false
+let disposed = false
 
 const taskResult = computed<PlanningResult | null>(() => {
   if (!task.value?.result) return null
@@ -196,7 +203,47 @@ const globalWarnings = computed(() => {
   return warnings.filter((warning) => !dayPrefixes.some((prefix) => warning.startsWith(prefix)))
 })
 
-const tips = computed(() => taskResult.value?.tips ?? [])
+const tips = computed(() => itinerary.value?.tips ?? [])
+
+function startTipsPolling() {
+  if (tipsPolling || !itinerary.value || itinerary.value.status !== 'CONFIRMED') return
+  if ((itinerary.value.tips ?? []).length) {
+    tipsState.value = 'idle'
+    return
+  }
+  tipsPolling = true
+  tipsState.value = 'generating'
+  void pollTips()
+}
+
+async function pollTips() {
+  const id = itinerary.value?.id
+  if (!id) {
+    tipsPolling = false
+    return
+  }
+  const deadline = Date.now() + 60000
+  try {
+    while (!disposed && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      if (disposed) return
+      try {
+        const latest = await getItinerary(id)
+        if (disposed) return
+        itinerary.value = latest
+        if ((latest.tips ?? []).length) {
+          tipsState.value = 'idle'
+          return
+        }
+      } catch {
+        // keep polling until the 60s deadline
+      }
+    }
+    if (!disposed) tipsState.value = 'failed'
+  } finally {
+    tipsPolling = false
+  }
+}
 
 function addDays(date: string, offset: number): string {
   const value = new Date(`${date}T00:00:00`)
@@ -227,6 +274,7 @@ async function load() {
     openDays.value = open
     selectedItemId.value =
       itinerary.value.items.find((item) => item.latitude != null && item.longitude != null)?.id ?? null
+    startTipsPolling()
   } catch (err) {
     error.value = err instanceof Error ? err.message : '加载失败'
   } finally {
@@ -295,6 +343,7 @@ async function confirmDraft() {
     confirming.value = true
     itinerary.value = await confirmItinerary(itinerary.value.id)
     ElMessage.success('行程已确认')
+    startTipsPolling()
   } catch (err) {
     if (err !== 'cancel' && err !== 'close') {
       ElMessage.error(err instanceof Error ? err.message : '确认失败')
@@ -321,6 +370,9 @@ function handleMapError() {
 }
 
 onMounted(load)
+onUnmounted(() => {
+  disposed = true
+})
 </script>
 
 <style scoped>

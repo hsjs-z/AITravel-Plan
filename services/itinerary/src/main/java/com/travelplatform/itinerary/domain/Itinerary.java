@@ -45,6 +45,9 @@ public class Itinerary {
     @Column(columnDefinition = "TEXT")
     private String warnings;
 
+    @Column(columnDefinition = "TEXT")
+    private String tips;
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -129,6 +132,14 @@ public class Itinerary {
 
     public void setWarnings(String warnings) {
         this.warnings = warnings;
+    }
+
+    public String getTips() {
+        return tips;
+    }
+
+    public void setTips(String tips) {
+        this.tips = tips;
     }
 
     public Instant getCreatedAt() {

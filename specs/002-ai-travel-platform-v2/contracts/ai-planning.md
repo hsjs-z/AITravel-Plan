@@ -1,5 +1,24 @@
 # ai-planning v2
 
+## POST /planning/tips
+
+内部只读接口，由 itinerary 在确认后异步调用：
+
+```json
+{
+  "destination": "西安",
+  "days": 2,
+  "attractions": ["大雁塔", "西安城墙"]
+}
+```
+
+返回 `data: string[]`，3-5 条，每条不超过 30 字。
+
+- system 只保留角色与格式；user 仅含目的地、天数、景点名。
+- deepseek：`temperature=0.4`、`maxTokens=400`，单次调用。
+- mock：按最终行程模板毫秒级拼接。
+- 超时或失败返回空数组，由 itinerary 保持 tips 为空。
+
 ## POST /planning/tasks
 
 请求：

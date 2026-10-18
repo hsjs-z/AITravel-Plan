@@ -27,7 +27,8 @@ class ItineraryReadOnlyTest {
     private final ItineraryItemRepository itemRepository = mock(ItineraryItemRepository.class);
     private final ItineraryService service = new ItineraryService(
             repository, itemRepository, mock(ItineraryEventPublisher.class),
-            new ObjectMapper(), mock(InventoryClient.class), mock(OrderClient.class));
+            new ObjectMapper(), mock(InventoryClient.class), mock(OrderClient.class),
+            mock(ItineraryTipsService.class));
 
     @Test
     void addAndDeleteReturn409ForConfirmedLockedAndCompleted() {

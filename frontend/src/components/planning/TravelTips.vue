@@ -4,7 +4,9 @@
       <span class="tips-mark">✦</span>
       <h3>旅行建议</h3>
     </div>
-    <ul v-if="tips.length">
+    <p v-if="loading" class="tips-empty">正在生成个性化建议…</p>
+    <p v-else-if="error" class="tips-empty">{{ error }}</p>
+    <ul v-else-if="tips.length">
       <li v-for="tip in tips" :key="tip">{{ tip }}</li>
     </ul>
     <p v-else class="tips-empty">AI 暂无额外建议。</p>
@@ -14,6 +16,8 @@
 <script setup lang="ts">
 defineProps<{
   tips: string[]
+  loading?: boolean
+  error?: string
 }>()
 </script>
 

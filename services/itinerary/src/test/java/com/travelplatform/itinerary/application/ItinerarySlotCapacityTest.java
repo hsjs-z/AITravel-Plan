@@ -38,7 +38,7 @@ class ItinerarySlotCapacityTest {
     private final InventoryClient inventoryClient = mock(InventoryClient.class);
     private final ItineraryService service = new ItineraryService(
             repository, itemRepository, events, new ObjectMapper(), inventoryClient,
-            mock(OrderClient.class));
+            mock(OrderClient.class), mock(ItineraryTipsService.class));
 
     @Test
     void manualAddUsesInventorySnapshotAndAppendsSortOrder() {

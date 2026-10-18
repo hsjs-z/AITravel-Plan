@@ -158,6 +158,7 @@ export interface Itinerary {
   completedOrderCount: number
   items: ItineraryItem[]
   warnings: string[]
+  tips: string[]
 }
 
 export interface ItinerarySummary {

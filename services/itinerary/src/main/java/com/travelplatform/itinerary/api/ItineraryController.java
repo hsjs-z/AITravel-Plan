@@ -150,7 +150,8 @@ public class ItineraryController {
                 counts.activeOrderCount(),
                 counts.completedOrderCount(),
                 items.stream().map(this::toItemResponse).toList(),
-                itineraryService.warnings(itinerary));
+                itineraryService.warnings(itinerary),
+                itineraryService.tips(itinerary));
     }
 
     private ItemResponse toItemResponse(ItineraryItem item) {
@@ -230,7 +231,8 @@ public class ItineraryController {
             long activeOrderCount,
             long completedOrderCount,
             List<ItemResponse> items,
-            List<String> warnings) {
+            List<String> warnings,
+            List<String> tips) {
     }
 
     public record ItinerarySummaryResponse(
