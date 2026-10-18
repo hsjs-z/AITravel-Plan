@@ -74,6 +74,7 @@
         :error="tipsState === 'failed' ? '生成失败，请刷新重试' : ''"
         :pending="itinerary?.status !== 'CONFIRMED'"
       />
+      <HotelPromoCard />
       <p v-if="mapUnavailable" class="map-fallback">地图暂不可用，已切换为纯行程列表。</p>
 
       <AttractionPicker
@@ -111,6 +112,7 @@ import AmapPanel from '../../components/planning/AmapPanel.vue'
 import TravelTips from '../../components/planning/TravelTips.vue'
 import AttractionPicker from '../../components/planning/AttractionPicker.vue'
 import PlanningWait from '../../components/planning/PlanningWait.vue'
+import HotelPromoCard from '../../components/planning/HotelPromoCard.vue'
 
 interface DayView {
   day: number
