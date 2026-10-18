@@ -53,7 +53,9 @@
               {{ itinerary.startDate }} ~ {{ itinerary.endDate }}
             </el-descriptions-item>
             <el-descriptions-item label="人数">{{ itinerary.partySize }} 人</el-descriptions-item>
-            <el-descriptions-item label="预算">{{ itinerary.budget ?? '—' }} 元</el-descriptions-item>
+            <el-descriptions-item label="总金额">
+              ¥{{ ticketTotal }}（门票预估）
+            </el-descriptions-item>
             <el-descriptions-item label="订单">{{ orderLabel }}</el-descriptions-item>
           </el-descriptions>
 
@@ -246,6 +248,13 @@ const orderLabel = computed(() => {
     return `已出行（${current.completedOrderCount} 笔已完成订单）`
   }
   return '未预订'
+})
+
+const ticketTotal = computed(() => {
+  const current = itinerary.value
+  if (!current) return 0
+  const perPerson = current.items.reduce((sum, item) => sum + (item.ticketPrice ?? 0), 0)
+  return perPerson * current.partySize
 })
 
 const canDelete = computed(() => {
