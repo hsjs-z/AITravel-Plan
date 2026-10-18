@@ -175,11 +175,11 @@
 }
 
 .text-warm {
-  background: linear-gradient(90deg, #f59e0b, #fb7185);
+  background-image: linear-gradient(90deg, #f59e0b, #fb7185);
 }
 
 .text-cool {
-  background: linear-gradient(90deg, #4d6bfe, #3a57e8);
+  background-image: linear-gradient(90deg, #4d6bfe, #3a57e8);
 }
 
 .brand-subtitle {
