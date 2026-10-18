@@ -93,6 +93,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPlanningTask } from '../../api/planning'
+import { searchAttractions } from '../../api/resources'
 import {
   addItineraryItem,
   confirmItinerary,
@@ -136,6 +137,7 @@ const selectedItemId = ref<string | null>(null)
 const mapUnavailable = ref(false)
 const confirming = ref(false)
 const tipsState = ref<'idle' | 'generating' | 'failed'>('idle')
+const imageByResourceId = ref<Record<string, string>>({})
 let tipsPolling = false
 let disposed = false
 
@@ -249,7 +251,7 @@ async function pollTips() {
       try {
         const latest = await getItinerary(id)
         if (disposed) return
-        itinerary.value = latest
+        setItinerary(latest)
         if ((latest.tips ?? []).length) {
           tipsState.value = 'idle'
           return
@@ -279,6 +281,33 @@ function daysBetween(start: string, end: string): number {
   return Math.max(0, Math.round((b - a) / 86400000))
 }
 
+function setItinerary(value: Itinerary) {
+  itinerary.value = {
+    ...value,
+    items: value.items.map((item) => ({
+      ...item,
+      imageUrl: item.resourceId ? imageByResourceId.value[item.resourceId] ?? null : null,
+    })),
+  }
+}
+
+async function loadImages() {
+  const current = itinerary.value
+  if (!current) return
+  try {
+    const page = await searchAttractions({ destination: current.destination, limit: 50 })
+    const entries: Array<[string, string]> = []
+    for (const attraction of page.items) {
+      const imageUrl = attraction.imageUrl?.trim()
+      if (imageUrl) entries.push([attraction.resourceId, imageUrl])
+    }
+    imageByResourceId.value = Object.fromEntries(entries)
+  } catch {
+    imageByResourceId.value = {}
+  }
+  if (itinerary.value) setItinerary(itinerary.value)
+}
+
 async function load() {
   loading.value = true
   error.value = null
@@ -295,13 +324,15 @@ async function load() {
     if (!task.value?.itineraryId) {
       throw new Error('规划任务尚未生成草稿行程')
     }
-    itinerary.value = await getItinerary(task.value.itineraryId)
+    const loaded = await getItinerary(task.value.itineraryId)
+    setItinerary(loaded)
     const open = new Set<number>()
     open.add(1)
     openDays.value = open
     selectedItemId.value =
-      itinerary.value.items.find((item) => item.latitude != null && item.longitude != null)?.id ?? null
+      loaded.items.find((item) => item.latitude != null && item.longitude != null)?.id ?? null
     startTipsPolling()
+    void loadImages()
   } catch (err) {
     error.value = err instanceof Error ? err.message : '加载失败'
   } finally {
@@ -329,7 +360,7 @@ function openPicker(day: DayView, slot: TimeSlot) {
 async function handlePicked(item: AttractionItem) {
   if (!itinerary.value) return
   try {
-    itinerary.value = await addItineraryItem(itinerary.value.id, {
+    setItinerary(await addItineraryItem(itinerary.value.id, {
       dayDate: pickerDate.value,
       name: item.name,
       description: item.summary ?? undefined,
@@ -337,7 +368,7 @@ async function handlePicked(item: AttractionItem) {
       timeSlot: pickerSlot.value,
       resourceId: item.resourceId,
       specId: item.free ? null : item.specId,
-    })
+    }))
     ElMessage.success('已加入行程')
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : '添加失败')
@@ -350,7 +381,7 @@ async function removeItem(item: ItineraryItem) {
     await ElMessageBox.confirm(`从草稿中移除「${item.name ?? item.description}」？`, '移除景点', {
       type: 'warning',
     })
-    itinerary.value = await deleteItineraryItem(itinerary.value.id, item.id)
+    setItinerary(await deleteItineraryItem(itinerary.value.id, item.id))
     ElMessage.success('已移除')
   } catch (err) {
     if (err !== 'cancel' && err !== 'close') {
@@ -368,7 +399,7 @@ async function confirmDraft() {
       { type: 'info' },
     )
     confirming.value = true
-    itinerary.value = await confirmItinerary(itinerary.value.id)
+    setItinerary(await confirmItinerary(itinerary.value.id))
     await nextTick()
     document.getElementById('travel-tips')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     ElMessage.success('行程已确认')

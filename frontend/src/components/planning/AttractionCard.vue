@@ -1,5 +1,13 @@
 <template>
   <article class="attraction-card">
+    <img
+      v-if="item.imageUrl"
+      class="card-thumb"
+      :src="item.imageUrl"
+      :alt="displayName"
+      loading="lazy"
+      @error="hideImage"
+    />
     <div class="card-main">
       <div class="card-title-row">
         <h4>{{ displayName }}</h4>
@@ -63,6 +71,11 @@ const priceClass = computed(() => ({
   'is-free': props.item.resourceId && props.item.ticketPrice === 0,
   'is-unavailable': !props.item.resourceId,
 }))
+
+function hideImage(event: Event) {
+  const image = event.target as HTMLImageElement | null
+  if (image) image.style.display = 'none'
+}
 </script>
 
 <style scoped>
@@ -75,6 +88,15 @@ const priceClass = computed(() => ({
   border-radius: 14px;
   background: #ffffff;
   transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+
+.card-thumb {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f4f7fe;
 }
 
 .attraction-card:hover {

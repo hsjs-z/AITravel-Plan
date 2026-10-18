@@ -38,6 +38,7 @@ public final class AttractionToolResponse {
             String specId,
             String specName,
             Long price,
-            Integer available) {
+            Integer available,
+            String imageUrl) {
     }
 }

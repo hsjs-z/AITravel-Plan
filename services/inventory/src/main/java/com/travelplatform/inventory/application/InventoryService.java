@@ -271,7 +271,8 @@ public class InventoryService {
                 ticketSpec == null ? null : ticketSpec.getId(),
                 ticketSpec == null ? null : ticketSpec.getName(),
                 price,
-                available);
+                available,
+                resource.getImageUrl());
     }
 
     private Spec selectTicketSpec(List<Spec> specs) {

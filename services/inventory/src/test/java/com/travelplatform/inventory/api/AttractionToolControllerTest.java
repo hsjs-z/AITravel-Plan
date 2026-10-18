@@ -35,7 +35,7 @@ class AttractionToolControllerTest {
                 "r-yulong", "玉龙雪山", "云南省", "丽江", "5A", "国家地质公园",
                 "雪山景区", new java.math.BigDecimal("4.0"), 100L, false,
                 new java.math.BigDecimal("27.096143"), new java.math.BigDecimal("100.179253"),
-                "READY", "s-yulong", "成人票", 100L, 200);
+                "READY", "s-yulong", "成人票", 100L, 200, "/images/yulong.jpg");
         when(inventoryService.attractions(
                 eq("丽江"), isNull(), isNull(), eq(date), eq(20), eq(0)))
                 .thenReturn(new AttractionToolResponse.AttractionPage(
@@ -48,7 +48,8 @@ class AttractionToolControllerTest {
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.items[0].resourceId").value("r-yulong"))
                 .andExpect(jsonPath("$.data.items[0].specId").value("s-yulong"))
-                .andExpect(jsonPath("$.data.items[0].available").value(200));
+                .andExpect(jsonPath("$.data.items[0].available").value(200))
+                .andExpect(jsonPath("$.data.items[0].imageUrl").value("/images/yulong.jpg"));
     }
 
     @Test

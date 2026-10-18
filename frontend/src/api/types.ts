@@ -142,6 +142,7 @@ export interface ItineraryItem {
   source: ItineraryItemSource
   timeSlot: TimeSlot | null
   sortOrder: number | null
+  imageUrl?: string | null
 }
 
 export interface Itinerary {
@@ -228,6 +229,7 @@ export interface AttractionItem {
   specName: string | null
   price: number | null
   available: number | null
+  imageUrl?: string | null
 }
 
 export interface AttractionPage {
