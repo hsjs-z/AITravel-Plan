@@ -218,7 +218,7 @@ onMounted(async () => {
   z-index: 20;
   display: grid;
   place-items: center;
-  background: rgba(18, 24, 38, 0.62);
+  background: rgba(18, 24, 38, 0.3);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
