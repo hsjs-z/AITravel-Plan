@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { searchAttractions } from '../../api/resources'
 import type { AttractionItem } from '../../api/types'
 
@@ -51,6 +51,7 @@ type GalleryItem = Omit<AttractionItem, 'imageUrl'> & { imageUrl: string }
 
 const GALLERY_CITY = '图片'
 const GALLERY_LIMIT = 50
+const ROUTE_BODY_CLASS = 'content-gallery-route'
 
 const attractions = ref<GalleryItem[]>([])
 const loadFailed = ref(false)
@@ -72,6 +73,14 @@ function openDetail(item: GalleryItem) {
 function closeDetail() {
   selectedItem.value = null
 }
+
+onMounted(() => {
+  document.body.classList.add(ROUTE_BODY_CLASS)
+})
+
+onUnmounted(() => {
+  document.body.classList.remove(ROUTE_BODY_CLASS)
+})
 
 onMounted(async () => {
   try {
@@ -95,6 +104,7 @@ onMounted(async () => {
   position: relative;
   height: calc(100vh - 64px);
   padding: 18px 20px;
+  background: transparent;
   overflow: hidden;
 }
 
@@ -114,6 +124,20 @@ onMounted(async () => {
   height: 100%;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 72px,
+    black calc(100% - 72px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 72px,
+    black calc(100% - 72px),
+    transparent 100%
+  );
 }
 
 .gallery-column {
@@ -142,8 +166,8 @@ onMounted(async () => {
   padding: 8px;
   border-radius: 22px;
   cursor: pointer;
-  background-image: linear-gradient(145deg, rgba(245, 247, 251, 0.96), rgba(232, 237, 246, 0.9));
-  box-shadow: 0 10px 26px rgba(31, 39, 51, 0.06);
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(244, 248, 252, 0.75));
+  box-shadow: 0 18px 45px rgba(90, 140, 200, 0.14);
 }
 
 .gallery-image {
@@ -252,5 +276,29 @@ onMounted(async () => {
   to {
     transform: translateY(0);
   }
+}
+</style>
+
+<style>
+body.content-gallery-route {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(199, 210, 254, 0.68), transparent 34%),
+    radial-gradient(circle at 82% 26%, rgba(219, 234, 254, 0.62), transparent 36%),
+    radial-gradient(circle at 50% 86%, rgba(226, 232, 240, 0.64), transparent 38%),
+    linear-gradient(180deg, #f7fbff, #fff8f2);
+  background-attachment: fixed;
+}
+
+body.content-gallery-route .app-shell::before {
+  background: none;
+}
+
+body.content-gallery-route .app-shell .app-nav,
+body.content-gallery-route .app-shell .app-nav.is-scrolled {
+  border-bottom-color: transparent;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 </style>
