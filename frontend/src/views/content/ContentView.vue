@@ -150,15 +150,11 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   will-change: transform;
-  animation: gallery-up 40s linear infinite;
+  animation: gallery-up 55s linear infinite;
 }
 
 .gallery-column.is-down .gallery-track {
   animation-name: gallery-down;
-}
-
-.gallery-column:hover .gallery-track {
-  animation-play-state: paused;
 }
 
 .gallery-card {
@@ -181,7 +177,7 @@ onMounted(async () => {
 
 .gallery-center-card {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 50%;
   z-index: 2;
   width: min(380px, 82%);
@@ -206,7 +202,7 @@ onMounted(async () => {
   line-height: 1.2;
   letter-spacing: 0.08em;
   text-align: center;
-  background-image: linear-gradient(105deg, #4d6bfe, #7c3aed 46%, #f59e0b);
+  background-image: linear-gradient(160deg, #4d8bf0 0%, #6f7fe8 48%, #8b6fd8 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -282,10 +278,14 @@ onMounted(async () => {
 <style>
 body.content-gallery-route {
   background:
-    radial-gradient(circle at 18% 18%, rgba(199, 210, 254, 0.68), transparent 34%),
-    radial-gradient(circle at 82% 26%, rgba(219, 234, 254, 0.62), transparent 36%),
-    radial-gradient(circle at 50% 86%, rgba(226, 232, 240, 0.64), transparent 38%),
-    linear-gradient(180deg, #f7fbff, #fff8f2);
+    radial-gradient(
+      ellipse 85% 65% at 50% 45%,
+      rgba(150, 205, 245, 0.55) 0%,
+      rgba(178, 222, 232, 0.4) 32%,
+      rgba(203, 236, 214, 0.3) 55%,
+      rgba(255, 255, 255, 0) 80%
+    ),
+    #fcfeff;
   background-attachment: fixed;
 }
 
