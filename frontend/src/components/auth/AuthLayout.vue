@@ -159,7 +159,9 @@ import authBrandWatercolor from '../../assets/auth/auth-brand-watercolor.jpg';
   place-items: center;
   min-width: 0;
   padding: 32px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 250, 246, 0.42));
+  background:
+    radial-gradient(ellipse 55% 45% at 85% 80%, rgba(150, 205, 245, 0.16) 0%, rgba(203, 236, 214, 0.10) 45%, rgba(255, 255, 255, 0) 75%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 250, 246, 0.42));
 }
 
 .auth-card {
