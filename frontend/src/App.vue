@@ -2,11 +2,11 @@
   <div class="app-shell">
     <el-header v-if="showNav" class="app-nav" :class="{ 'is-scrolled': scrolled }">
       <div class="nav-brand">
-        <span class="brand">AI 旅行规划平台</span>
+        <span class="brand">AI游策云图</span>
       </div>
       <nav class="nav-links">
-        <router-link to="/content">内容资源</router-link>
-        <router-link to="/planning">智能规划</router-link>
+        <router-link to="/content">享受自我</router-link>
+        <router-link to="/planning">云图规划</router-link>
         <router-link to="/itineraries">我的行程</router-link>
         <router-link to="/orders">我的订单</router-link>
         <router-link to="/notifications">通知中心</router-link>

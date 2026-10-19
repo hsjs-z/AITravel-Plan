@@ -162,7 +162,6 @@ onMounted(async () => {
   padding: 8px;
   border-radius: 22px;
   cursor: pointer;
-  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(244, 248, 252, 0.75));
   box-shadow: 0 18px 45px rgba(90, 140, 200, 0.14);
 }
 
