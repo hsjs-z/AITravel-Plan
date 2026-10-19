@@ -184,7 +184,6 @@ onMounted(async () => {
   padding: 34px 36px;
   border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.65);
   box-shadow: 0 20px 52px rgba(31, 39, 51, 0.14);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
