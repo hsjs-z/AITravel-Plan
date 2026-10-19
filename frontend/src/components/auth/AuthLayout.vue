@@ -1,20 +1,10 @@
 <template>
   <main class="auth-shell">
-    <section class="auth-brand" aria-hidden="true">
-      <div class="brand-mountains">
-        <svg class="mountain mountain-back" viewBox="0 0 900 260" preserveAspectRatio="none">
-          <path d="M0 220 L120 120 L210 190 L330 80 L450 200 L580 110 L700 190 L820 90 L900 170 V260 H0 Z" />
-        </svg>
-        <svg class="mountain mountain-middle" viewBox="0 0 900 260" preserveAspectRatio="none">
-          <path d="M0 240 L100 180 L220 220 L340 150 L460 230 L600 160 L720 225 L840 170 L900 210 V260 H0 Z" />
-        </svg>
-        <svg class="mountain mountain-front" viewBox="0 0 900 260" preserveAspectRatio="none">
-          <path d="M0 255 L150 210 L280 245 L420 195 L560 250 L700 205 L820 245 L900 225 V260 H0 Z" />
-        </svg>
-      </div>
-
-      <span class="brand-orb orb-a" />
-      <span class="brand-orb orb-b" />
+    <section
+      class="auth-brand"
+      :style="{ backgroundImage: `url(${authBrandWatercolor})` }"
+      aria-hidden="true"
+    >
 
       <div class="brand-content">
         <p class="brand-eyebrow">AI TRAVEL STUDIO</p>
@@ -39,6 +29,10 @@
   </main>
 </template>
 
+<script setup lang="ts">
+import authBrandWatercolor from '../../assets/auth/auth-brand-watercolor.jpg';
+</script>
+
 <style scoped>
 .auth-shell {
   position: relative;
@@ -58,80 +52,18 @@
   align-items: center;
   overflow: hidden;
   padding: 8vh 11% 8vh 9%;
-  background:
-    radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.94), transparent 27%),
-    radial-gradient(circle at 82% 18%, rgba(232, 243, 255, 0.9), transparent 30%),
-    linear-gradient(180deg, #dcf0ff 0%, #eff7ff 58%, #fff8f2 100%);
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
-.auth-brand::before {
+.auth-brand::after {
   content: "";
   position: absolute;
-  inset: auto 0 0;
-  height: 38%;
+  inset: 0;
+  z-index: 2;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 80% 90% at 18% 100%, rgba(255, 170, 110, 0.3), transparent 65%),
-    radial-gradient(ellipse 70% 80% at 78% 100%, rgba(255, 145, 145, 0.24), transparent 68%),
-    radial-gradient(ellipse 52% 70% at 50% 100%, rgba(255, 210, 150, 0.22), transparent 70%);
-}
-
-.brand-mountains {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  height: 34%;
-  pointer-events: none;
-}
-
-.mountain {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-}
-
-.mountain-back {
-  height: 100%;
-  fill: rgba(77, 107, 254, 0.08);
-}
-
-.mountain-middle {
-  height: 78%;
-  fill: rgba(77, 107, 254, 0.12);
-}
-
-.mountain-front {
-  height: 56%;
-  fill: rgba(77, 107, 254, 0.18);
-}
-
-.brand-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(8px);
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.72), transparent 70%);
-  animation: brand-float 18s ease-in-out infinite;
-}
-
-.orb-a {
-  top: 10%;
-  left: 8%;
-  width: 220px;
-  height: 220px;
-}
-
-.orb-b {
-  top: 52%;
-  right: 16%;
-  width: 150px;
-  height: 150px;
-  animation-delay: -6s;
-  animation-duration: 14s;
+  background-image: linear-gradient(to right, transparent 78%, #eff7fc 100%);
 }
 
 .brand-content {
@@ -220,17 +152,6 @@
   color: rgba(31, 39, 51, 0.36);
   font-size: 11px;
   letter-spacing: 0.12em;
-}
-
-@keyframes brand-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, -12px, 0);
-  }
 }
 
 .auth-form-area {
